@@ -15,9 +15,13 @@
 import tkinter as tk
 from tkinter import *
 
+import urllib.request
+import json
+
 #####################################
 # Imports End                       #
 #####################################
+
 
 class ClockView(tk.Canvas):
     """Inherits from tkinter Canvas class
@@ -89,9 +93,15 @@ class SelectionFrame(tk.Frame):
         Constructor: SelectionFrame(tk.Tk(), TemperaturePlotApp())
         """
         super().__init__(master)
-        self._parent=parent
-        self._select=tk.Label(self,text="Time Selection: ")
-        self._select.pack(side=tk.LEFT,fill=tk.X,expand=1)
+        self._parent = parent
+        self._select = tk.Label(self, text = "Time Selection: ")
+        self._select.pack(side = tk.LEFT, fill = tk.X, expand = 1)
+        self._timeLabel = tk.Label(self, text = " : ")
+        self._hour = Entry(self)
+        self._minutes =  Entry(self)
+        self._hour.pack(side = tk.LEFT)
+        self._timeLabel.pack(side = tk.LEFT)
+        self._minutes.pack(side = tk.LEFT)
 
     def update_data(self, data):
         """Updates the classes data variable
@@ -221,8 +231,33 @@ class ClockApp(object):
                         "The file: '"+file+"' is already open")
 
 
+def getWeather():
+    """Sends an HTTP request to the engg2800-weather.uqcloud.net on port 80
+    and asks for 'weather.json'.
+
+    getWeather() -> array describing weather (e.g. ["windy", "storm"])
+    
+    """
+    request = urllib.request.urlopen("http://engg2800-weather.uqcloud.net/weather.json", data=None)
+    output = request.read()
+    
+    data = str(output)[2:-1] #Strip the quotes it comes in to allow for JSON parsing
+    weather_list = json.loads(data)
+    weather = weather_list['weather']['main']
+    request.close;
+
+    return(weather)
+
+def is_int(x):
+    """Determine if input into time fields are numbers"""
+    try:
+        x = int(x)
+        return True
+    except:
+        return False
 
 def main():
+    print(getWeather())
     root = tk.Tk()
     app = ClockApp(root)
     root.geometry("640x480")
