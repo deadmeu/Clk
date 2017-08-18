@@ -17,6 +17,7 @@ from tkinter import *
 
 import math
 import datetime
+import time
 
 import urllib.request
 import json
@@ -25,7 +26,7 @@ import json
 # Imports End                       #
 #####################################
 
-
+hour_disp = True
 hour = 2
 minute = 20
 am_pm = "PM"
@@ -53,16 +54,17 @@ class ClockView(tk.Canvas):
         self._x = self.winfo_width()
         self._y = self.winfo_height()
 
+        #Drawing ring
         cx = self._x/2
         cy = self._y/2
 
         a = math.pi/6
         off = math.pi/2
+        rad = 10
         r = (min(self._x, self._y) - 50)/2
         c = "#fff"
         for i in range(12):
-            
-            if(i == hour):
+            if(i == hour and hour_disp):
                 c = "#f0f"
             elif(i <= minute / 5):
                 if(am_pm == "AM"):
@@ -71,8 +73,38 @@ class ClockView(tk.Canvas):
                     c = "#ff0"
             else:
                 c = "#fff"
-            self.create_circle(cx + math.cos(a*i - off)*r, cy + math.sin(a*i - off)*r, 10, outline="#000", fill=c)
-            
+            self.create_circle(cx + math.cos(a*i - off)*r, cy + math.sin(a*i - off)*r, rad, outline="#000", fill=c)
+
+        #Drawing square
+        spc = (r - 25)/4
+        rem = minute % 5
+        for i in range(4):
+            for j in range(4):
+                if(i == 0 and j == 0 and rem > 0):
+                    if(am_pm == "AM"):
+                        c = "#0f0"
+                    else:
+                        c = "#ff0"
+                elif(i == 3 and j == 0 and rem > 1):
+                    if(am_pm == "AM"):
+                        c = "#0f0"
+                    else:
+                        c = "#ff0"
+                elif(i == 0 and j == 3 and rem > 2):
+                    if(am_pm == "AM"):
+                        c = "#0f0"
+                    else:
+                        c = "#ff0"
+                elif(i == 3 and j == 3 and rem > 3):
+                    if(am_pm == "AM"):
+                        c = "#0f0"
+                    else:
+                        c = "#ff0"
+                else:
+                    c = "#fff"
+                self.create_circle(cx - (1.5 * spc + 3 * rad) + (2 * rad + spc) * i, cy - (1.5 * spc + 3 * rad) + (2 * rad + spc) * j, rad, outline="#000", fill=c)
+
+        
     def create_circle(self, x, y, r, **kwargs):
         return self.create_oval(x-r, y-r, x+r, y+r, **kwargs)
         
@@ -127,6 +159,11 @@ class SelectionFrame(tk.Frame):
         get_time() -> None (Update time and display)
         """
         time = [self._hour.get(), self._min.get(), self._am_pm.get()]
+
+        global hour
+        global minute
+        global am_pm
+        
         hour = int(time[0])
         minute = int(time[1])
         am_pm = time[2]
@@ -167,6 +204,9 @@ def getTime():
     """
     return datetime.datetime.now().time()
 
+def millis():
+    return int(round(time.time() * 1000))
+
 def getWeather():
     """Sends an HTTP request to the engg2800-weather.uqcloud.net on port 80
     and asks for 'weather.json'.
@@ -194,11 +234,22 @@ def is_int(x):
 
 def main():
     print(getWeather())
-
+    global hour_disp
     root = tk.Tk()
     app = ClockApp(root)
     root.geometry("640x480")
-    root.mainloop()
+
+    old = millis()
+    
+    
+    while 1:
+        cur = millis()
+        root.update_idletasks()
+        root.update()
+        if(cur - old > 500):
+            hour_disp = not hour_disp
+            app._clock.draw_clock()
+            old = cur
 
 if __name__ == '__main__':
     main()
