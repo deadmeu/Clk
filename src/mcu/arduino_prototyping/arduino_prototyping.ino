@@ -1,6 +1,6 @@
 #include <FastLED.h>
 
-#define NUM_LEDS 1
+#define NUM_LEDS 3
 #define DATA_PIN 8
 #define RED 0
 #define GREEN 1
@@ -38,7 +38,7 @@ int r,g,b = saturation;
 int threshold = 2;
 int multiplier = 4;
 int cycle_state = RED_GREEN;
-
+int seconds;
 
 void setup() {
     Serial.begin(19200);
@@ -47,6 +47,7 @@ void setup() {
     cur_time = millis();
     state = RED;
     r=255;
+    seconds=0;
 }
 
 void loop() {
@@ -57,12 +58,26 @@ void loop() {
 //    Serial.print(" ");
 //    Serial.println(b);
 
-    static uint8_t hue = 0;
-    FastLED.showColor(CHSV(hue, 255, 255)); 
-    if (cur_time - prev_time >= 10) { 
+    //static uint8_t hue = 0;
+    //FastLED.showColor(CHSV(hue, 255, 255)); 
+    //if (cur_time - prev_time >= 10) { 
+      //prev_time = cur_time;
+      //hue++;
+    //}
+
+/////////////////PROTOTYPE CLOCK////////////////////
+    if (cur_time - prev_time >= 1000) {
       prev_time = cur_time;
-      hue++;
+      seconds++;
+      display_time();
+      FastLED.show();
     }
+    
+////////////////////////////////////////////////////
+
+
+
+    
 
 //    if (cur_time - prev_time >= 1000 ) {
 //      prev_time = cur_time;
@@ -87,49 +102,49 @@ void loop() {
 //    leds[0] = CRGB(r,g,b);
 ///////////////////////////////////////////////////////////////////////////////////////
 
-//    FastLED.show();
+    
 }
 
-void cycle(int led) {
-  if (cur_time - prev_time >= threshold) {
-    prev_time = cur_time;
-    switch(cycle_state) {
-      case RED_GREEN:
-        if (g < 255) {
-          g += 1 + multiplier;
-        } else {
-          r -= 1 + multiplier;
-        }
-        if (r <= saturation) {
-          cycle_state = GREEN_BLUE;
-        }
-        break;
-      case GREEN_BLUE:
-        if (b < 255) {
-          b += 1 ;
-        } else {
-          g -= 1 + multiplier;
-        }
-        if (g <= saturation) {
-          cycle_state = BLUE_RED;
-        }
-        break;
-      case BLUE_RED:
-        if (r < 255) {
-          r += 1 + multiplier;
-        } else {
-          b -= 1 + multiplier;
-        }
-        if (b <= saturation) {
-          cycle_state = RED_GREEN;
-        }
-        break;
-    }
-  }
-
-  leds[0] = CRGB(r,g,b);
-  
-}
+//void cycle(int led) {
+//  if (cur_time - prev_time >= threshold) {
+//    prev_time = cur_time;
+//    switch(cycle_state) {
+//      case RED_GREEN:
+//        if (g < 255) {
+//          g += 1 + multiplier;
+//        } else {
+//          r -= 1 + multiplier;
+//        }
+//        if (r <= saturation) {
+//          cycle_state = GREEN_BLUE;
+//        }
+//        break;
+//      case GREEN_BLUE:
+//        if (b < 255) {
+//          b += 1 ;
+//        } else {
+//          g -= 1 + multiplier;
+//        }
+//        if (g <= saturation) {
+//          cycle_state = BLUE_RED;
+//        }
+//        break;
+//      case BLUE_RED:
+//        if (r < 255) {
+//          r += 1 + multiplier;
+//        } else {
+//          b -= 1 + multiplier;
+//        }
+//        if (b <= saturation) {
+//          cycle_state = RED_GREEN;
+//        }
+//        break;
+//    }
+//  }
+//
+//  leds[0] = CRGB(r,g,b);
+//  
+//}
 
 void update_colour(int led_number) {
   switch(state) {
@@ -145,6 +160,18 @@ void update_colour(int led_number) {
 
 void change_state() {
   state = (state+1) % 3;
+}
+
+void display_time() {
+  int bit_val;
+
+  for (int i = 0; i < NUM_LEDS; i++) {
+    if (bitRead(seconds, i)) {
+      leds[i] = CRGB::Red;
+    } else {
+      leds[i] = CRGB::Black;
+    }
+  }
 }
 
 
