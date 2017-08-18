@@ -14,6 +14,7 @@
 
 import tkinter as tk
 from tkinter import *
+from tkinter import messagebox
 
 import math
 import datetime
@@ -159,6 +160,14 @@ class SelectionFrame(tk.Frame):
         self._weather = tk.Label(self, text = weather)
         self._weather.grid(row = 1, column = 0)
 
+    def reset_input(self):
+        """Resets the value in the input
+
+        reset_input() -> None
+        """
+        self._hour.set(hour)
+        self._min.set(minute)
+    
     def set_time(self):
         """Gets values from the inputs in the menu
 
@@ -179,9 +188,12 @@ class SelectionFrame(tk.Frame):
                minute = m
                am_pm = ap
                self._parent._clock.draw_clock()
-               print("time set to " + str(h) + ":" + str(m) + " " + ap)
+               messagebox.showinfo("Time Set", "Time set to " + str(h) + ":" + str(m) + " " + ap)
+               print("Time set to " + str(h) + ":" + str(m) + " " + ap)
             else:
-                print("invalid input: " + str(h) + ":" + str(m) + " " + ap)
+                messagebox.showerror("Invalid Input", "Invalid input: " + str(h) + ":" + str(m) + " " + ap)
+                print("Invalid input: " + str(h) + ":" + str(m) + " " + ap)
+                self.reset_input()
 
 
 class ClockApp(object):
@@ -257,8 +269,11 @@ def main():
     
     while 1:
         cur = millis()
-        root.update_idletasks()
-        root.update()
+        try:
+            root.update_idletasks()
+            root.update()
+        except:
+            break
         if(cur - old > 500):
             hour_disp = not hour_disp
             app._clock.draw_clock()
