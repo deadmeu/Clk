@@ -16,6 +16,7 @@ import tkinter as tk
 from tkinter import *
 
 import math
+import datetime
 
 import urllib.request
 import json
@@ -25,9 +26,9 @@ import json
 #####################################
 
 
-hour = 10
-minute = 59
-am_pm = "AM"
+hour = 2
+minute = 20
+am_pm = "PM"
 
 class ClockView(tk.Canvas):
     """Inherits from tkinter Canvas class
@@ -56,14 +57,21 @@ class ClockView(tk.Canvas):
         cy = self._y/2
 
         a = math.pi/6
-        r = 50
+        off = math.pi/2
+        r = (min(self._x, self._y) - 50)/2
         c = "#fff"
         for i in range(12):
-            if(i%h == 0):
+            
+            if(i == hour):
                 c = "#f0f"
+            elif(i <= minute / 5):
+                if(am_pm == "AM"):
+                    c = "#0f0"
+                else:
+                    c = "#ff0"
             else:
                 c = "#fff"
-            create_circle(cx+cos(a*i), cy+sin(a*i), outline="#000", fill=c)
+            self.create_circle(cx + math.cos(a*i - off)*r, cy + math.sin(a*i - off)*r, 10, outline="#000", fill=c)
             
     def create_circle(self, x, y, r, **kwargs):
         return self.create_oval(x-r, y-r, x+r, y+r, **kwargs)
@@ -122,6 +130,8 @@ class SelectionFrame(tk.Frame):
         hour = int(time[0])
         minute = int(time[1])
         am_pm = time[2]
+        
+        self._parent._clock.draw_clock()
         print(time)
         
 
@@ -148,6 +158,14 @@ class ClockApp(object):
         self._clock = ClockView(master,self)
         self._clock.pack(side=tk.RIGHT,expand=1,fill=tk.BOTH)
 
+
+def getTime():
+    """
+    gets current time from computer
+
+    getTime() -> array [hour, minute, seconds, milliseconds]
+    """
+    return datetime.datetime.now().time()
 
 def getWeather():
     """Sends an HTTP request to the engg2800-weather.uqcloud.net on port 80
