@@ -30,6 +30,7 @@ hour_disp = True
 hour = 2
 minute = 20
 am_pm = "PM"
+weather = ""
 
 class ClockView(tk.Canvas):
     """Inherits from tkinter Canvas class
@@ -132,8 +133,8 @@ class SelectionFrame(tk.Frame):
         """
         super().__init__(master)
         self._parent = parent
+        #Time selection
         self._select = tk.Label(self, text = "Time:")
-        self._select.pack(side = tk.LEFT, fill = tk.X, expand = 1)
         self._timeLabel = tk.Label(self, text = " : ")
 
         self._hr = StringVar(self, value = str(hour))
@@ -147,11 +148,16 @@ class SelectionFrame(tk.Frame):
         self._am_pm = StringVar(self, value = am_pm)
         self._am_pm_option = OptionMenu(self, self._am_pm, *self._choices)
 
-        self._hour.pack(side = tk.LEFT)
-        self._timeLabel.pack(side = tk.LEFT)
-        self._min.pack(side = tk.LEFT)
-        self._am_pm_option.pack(side = tk.LEFT)
-        self._set.pack(side = tk.LEFT)
+        self._select.grid(row = 0, column = 0)
+        self._hour.grid(row = 0, column = 1)
+        self._timeLabel.grid(row = 0, column = 2)
+        self._min.grid(row = 0, column = 3)
+        self._am_pm_option.grid(row = 0, column = 4)
+        self._set.grid(row = 0, column = 5)
+
+        #Weather display
+        self._weather = tk.Label(self, text = weather)
+        self._weather.grid(row = 1, column = 0)
 
     def set_time(self):
         """Gets values from the inputs in the menu
@@ -159,18 +165,24 @@ class SelectionFrame(tk.Frame):
         get_time() -> None (Update time and display)
         """
         time = [self._hour.get(), self._min.get(), self._am_pm.get()]
-
+        
         global hour
         global minute
         global am_pm
-        
-        hour = int(time[0])
-        minute = int(time[1])
-        am_pm = time[2]
-        
-        self._parent._clock.draw_clock()
-        print(time)
-        
+        h = int(time[0])
+        m = int(time[1])
+        ap = time[2]
+
+        if(isInt(h) and isInt(m)):
+            if((h < 13 and h >= 0) and (m < 60 and m >= 0)):
+               hour = h
+               minute = m
+               am_pm = ap
+               self._parent._clock.draw_clock()
+               print("time set to " + str(h) + ":" + str(m) + " " + ap)
+            else:
+                print("invalid input: " + str(h) + ":" + str(m) + " " + ap)
+
 
 class ClockApp(object):
     """Main class that keeps all the other classes together (Base class)
@@ -224,7 +236,7 @@ def getWeather():
 
     return(weather)
 
-def is_int(x):
+def isInt(x):
     """Determine if input into time fields are numbers"""
     try:
         x = int(x)
@@ -233,8 +245,9 @@ def is_int(x):
         return False
 
 def main():
-    print(getWeather())
+    global weather
     global hour_disp
+    weather = getWeather()
     root = tk.Tk()
     app = ClockApp(root)
     root.geometry("640x480")
