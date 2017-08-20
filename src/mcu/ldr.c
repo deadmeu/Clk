@@ -1,6 +1,2 @@
-#include <stdio.h>
+#include "ldr.h"
 
-int main(int argc, char* argv) {
-    printf("Ayy lmao");
-    return 0;
-}
