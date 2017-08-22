@@ -41,7 +41,7 @@ int main(void) {
 }
 
 /*
- * Set the data direction for the IR IO. 
+ * Set the data direction for the IR IO and turn it off. 
  */
 void init_carrier(void) {
 	DDRD = 0xFF;
@@ -50,6 +50,7 @@ void init_carrier(void) {
 
 /*
  * We're sending a 38kHz carrier wave.
+ * The delay values were manually tuned by inspection of oscilloscope.
  */
 void enable_carrier(void) {
 	PORTD = 0xFF;
@@ -63,6 +64,9 @@ void enable_carrier(void) {
  */
 void IR_carrier(uint16_t IRTimeMicroSeconds) {
 	int i;
+	/*
+	 * Divide by 26 because that is the period of the 38kHz carrier.
+	 */
 	for (i = 0; i < IRTimeMicroSeconds/26; i++) {
 		enable_carrier();
 	}
@@ -72,10 +76,10 @@ void IR_carrier(uint16_t IRTimeMicroSeconds) {
  * Send a 0 bit on the carrier wave.
  */
 void send_0(void) {
-/*
- * The rest time for a 0 bit is 560us
- */
 	IR_carrier(bitTime);
+	/*
+	 * The rest time for a 0 bit is 560us
+	 */
 	_delay_us(560);
 }
 
@@ -83,32 +87,35 @@ void send_0(void) {
  * Send a 1 bit on the carrier wave.
  */
 void send_1(void) {
-/*
- * The rest time for a 1 bit is 1690us
- */
  	IR_carrier(bitTime);
+	/*
+	 * The rest time for a 1 bit is 1690us
+	 */
 	_delay_us(1690);
 }
 
 void send_code(uint32_t IRcode) {
-/*
- * The NEC protocol begins with a 9ms start burst.
- */
+	/*
+	 * The NEC protocol begins with a 9ms start burst.
+	 */
  	IR_carrier(9000);
-/*
- * 4.5ms silence follows.
- */
+	/*
+	 * 4.5ms silence follows.
+	 */
  	_delay_us(4500);
 	int i;
 	for (i = 0; i < 32; i++) {
 		/*
-		 * Get the MSB
+		 * Get the MSB, NEC protocol sends MSB first.
 		 */
 		if (IRcode & 0x80000000) {
 			send_1();
 		} else {
 			send_0();
 		}
+		/*
+		 * Get the next bit to send.
+		 */
 		IRcode <<= 1;
 	}
 }
