@@ -1,11 +1,8 @@
 /*
-* Light_WS2812 library example - RGB_blinky
-*
-* cycles one LED through red, green, blue
-*
-* This example is configured for a ATtiny85 with PLL clock fuse set and
-* the WS2812 string connected to PB4.
-*/
+ * Flashes RGB on 4 leds and fades from black to white.
+ * Adapted from the light_ws2812 blinky example.
+ * Written by Huy Nguyen.
+ */
 
 #ifndef F_CPU
 #define F_CPU 16000000L

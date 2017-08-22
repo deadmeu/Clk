@@ -1,3 +1,8 @@
+/*
+ * Implements the NEC IR communication protocol.
+ * Written by Huy Nguyen, adapted from Dave Jone's IR tutorial.
+ */
+
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <util/delay.h>
