@@ -1,0 +1,14 @@
+'alarm:HH:MM:AM/PM'
+eg 'alarm:10:20:0' -> 10:20am
+
+'time:HH:MM:AM/PM'
+eg 'time:03:49:1' -> 3:49pm
+
+'weather:ENUM'
+eg 'weather:0' -> sunny
+
+0 Sunny
+1 Cloudy
+2 Rain
+3 Windy
+4 Storm

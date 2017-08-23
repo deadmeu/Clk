@@ -158,16 +158,26 @@ class SelectionFrame(tk.Frame):
 
         #Weather display
         self._weather = tk.Label(self, text = weather)
+        self._request_weather = Button(self, text="Get Weather", command = self.update_weather);
         self._weather.grid(row = 1, column = 0)
+        self._request_weather.grid(row = 2, column = 0);
 
     def reset_input(self):
         """Resets the value in the input
 
         reset_input() -> None
         """
-        self._hour.set(hour)
-        self._min.set(minute)
-    
+        self._hr = StringVar(self, value = str(hour))
+        self._mn = StringVar(self, value = str(minute))
+        self._hour.config(textvariable = self._hr)
+        self._min.config(textvariable = self._mn)
+
+    def update_weather(self):
+        global weather
+        weather = get_weather();
+        print(weather);
+        self._weather.config(text = weather);
+        
     def set_time(self):
         """Gets values from the inputs in the menu
 
@@ -178,11 +188,11 @@ class SelectionFrame(tk.Frame):
         global hour
         global minute
         global am_pm
-        h = int(time[0])
-        m = int(time[1])
         ap = time[2]
 
-        if(isInt(h) and isInt(m)):
+        if(is_int(time[0]) and is_int(time[1])):
+            h = int(time[0])
+            m = int(time[1])
             if((h < 13 and h >= 0) and (m < 60 and m >= 0)):
                hour = h
                minute = m
@@ -191,8 +201,14 @@ class SelectionFrame(tk.Frame):
                messagebox.showinfo("Time Set", "Time set to " + str(h) + ":" + str(m) + " " + ap)
                print("Time set to " + str(h) + ":" + str(m) + " " + ap)
             else:
-                messagebox.showerror("Invalid Input", "Invalid input: " + str(h) + ":" + str(m) + " " + ap)
+                messagebox.showerror("Invalid Input", "Invalid input: " + str(h) + ":" + str(m) + " " + ap + "\n Please ensure you enter numbers\n"
+                                     "Between 1 and 12 for the hour and\n Between 0 and 59 for the minute")
                 print("Invalid input: " + str(h) + ":" + str(m) + " " + ap)
+                self.reset_input()
+        else:
+                messagebox.showerror("Invalid Input", "Invalid input: " + str(time[0]) + ":" + str(time[1]) + " " + ap + "\n Please ensure you enter numbers\n"
+                                     "Between 1 and 12 for the hour and\nBetween 0 and 59 for the minute")
+                print("Invalid input: " + str(time[0]) + ":" + str(time[1]) + " " + ap)
                 self.reset_input()
 
 
@@ -231,7 +247,7 @@ def getTime():
 def millis():
     return int(round(time.time() * 1000))
 
-def getWeather():
+def get_weather():
     """Sends an HTTP request to the engg2800-weather.uqcloud.net on port 80
     and asks for 'weather.json'.
 
@@ -248,7 +264,7 @@ def getWeather():
 
     return(weather)
 
-def isInt(x):
+def is_int(x):
     """Determine if input into time fields are numbers"""
     try:
         x = int(x)
@@ -259,7 +275,7 @@ def isInt(x):
 def main():
     global weather
     global hour_disp
-    weather = getWeather()
+    weather = get_weather()
     root = tk.Tk()
     app = ClockApp(root)
     root.geometry("640x480")
