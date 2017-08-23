@@ -2,3 +2,5 @@
 #define SPLASH_H_
 
 #endif
+
+void splash_screen(void);
