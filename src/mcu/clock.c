@@ -1,4 +1,13 @@
+/*
+ * clock.c
+ *
+ * Written by Alex Subaric.
+ */
+
+#include <stdint.h>
+
 #include "clock.h"
+#include "ledarray.h"
 
 uint8_t is_splash;
 
