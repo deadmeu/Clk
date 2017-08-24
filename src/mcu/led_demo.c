@@ -4,10 +4,6 @@
  * Written by Huy Nguyen.
  */
 
-#ifndef F_CPU
-#define F_CPU 16000000L
-#endif
-
 #include <util/delay.h>
 #include <avr/io.h>
 #include <avr/interrupt.h>

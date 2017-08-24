@@ -5,6 +5,7 @@
  */
 
 #include <avr/io.h>
+#include <util/delay.h>
 
 #include "clock.h"
 //#include "ir.h"
@@ -14,9 +15,8 @@
 //#include "timer.h"
 
 #ifndef F_CPU
-#define F_CPU 16000000UL
+#define F_CPU 8000000UL
 #endif
-#include <util/delay.h>
 
 void initialise_hardware(void);
 void initialise_clock(void);

@@ -7,10 +7,6 @@
 #include <avr/interrupt.h>
 #include <util/delay.h>
 
-#ifndef F_CPU
-#define F_CPU 16000000L
-#endif
-
 void init_carrier(void);
 void enable_carrier(void);
 void IR_carrier(uint16_t IRTimeMicroSeconds);
