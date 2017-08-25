@@ -7,10 +7,6 @@
 #include <avr/interrupt.h>
 #include <util/delay.h>
 
-#ifndef F_CPU
-#define F_CPU 16000000L
-#endif
-
 void init_carrier(void);
 void enable_carrier(void);
 void IR_carrier(uint16_t IRTimeMicroSeconds);
@@ -28,17 +24,17 @@ uint32_t IRcode = 0b11000001110001111100000000111111;
  */
 uint16_t bitTime = 562;
 
-/*
- * Main loop.
- */
-int main(void) {
-	while(1) {
-		init_carrier();
-		send_code(IRcode);
-		_delay_ms(500);
-	}
-	return 0;
-}
+///*
+ //* Main loop.
+ //*/
+//int main(void) {
+	//while(1) {
+		//init_carrier();
+		//send_code(IRcode);
+		//_delay_ms(500);
+	//}
+	//return 0;
+//}
 
 /*
  * Set the data direction for the IR IO and turn it off. 

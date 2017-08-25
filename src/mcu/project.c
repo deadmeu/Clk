@@ -4,18 +4,19 @@
  * Written by Alex Subaric.
  */
 
+#include <avr/io.h>
+
+#include "clock.h"
+#include "ir.h"
+#include "ldr.h"
+#include "ledarray.h"
+#include "splash.h"
+#include "timer.h"
+
 #ifndef F_CPU
 #define F_CPU 16000000UL
 #endif
 #include <util/delay.h>
-#include <avr/io.h>
-
-#include "clock.h"
-//#include "ir.h"
-#include "ldr.h"
-#include "ledarray.h"
-#include "splash.h"
-//#include "timer.h"
 
 void initialise_hardware(void);
 void initialise_clock(void);
