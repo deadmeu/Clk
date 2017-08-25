@@ -9,4 +9,4 @@
 
 void splash_screen(void);
 
-#endif
+#endif /* SPLASH_H_ */

@@ -7,4 +7,4 @@
 #ifndef LDR_H_
 #define LDR_H_
 
-#endif
+#endif /* LDR_H_ */
