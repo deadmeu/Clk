@@ -8,9 +8,15 @@
 #define CLOCK_H_
 
 void init_clock(void);
+void play_weather_animation(void);
+void stop_weather_animation(void);
+uint8_t animation_playing(void);
+uint8_t reached_new_minute(void);
 void set_time(uint32_t time);
+void show_display(void);
+void toggle_hour_marker(void);
 void splash_off(void);
-void tick_clock(void);
+void increment_seconds(void);
 void update_display(void);
 
 #endif /* CLOCK_H_ */

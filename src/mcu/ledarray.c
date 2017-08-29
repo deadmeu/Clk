@@ -9,6 +9,9 @@
 #include "light_ws2812.h"
 #include "pixel_colour.h"
 
+void enable_leds(struct cRGB *ledarray, uint8_t size) {
+    ws2812_setleds(ledarray, size);
+}
 
 void update_pixel(struct cRGB *pixel, uint8_t r, uint8_t g, uint8_t b) {
     // r, g, b values must be between 0 and 255

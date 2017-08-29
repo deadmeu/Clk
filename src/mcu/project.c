@@ -19,7 +19,9 @@
 #endif
 #include <util/delay.h>
 
-#define DISPLAY_UPDATE_DELAY 600
+#define DISPLAY_UPDATE_DELAY        100     // 100 ms
+#define DISPLAY_HOUR_MARKER_DELAY   500     // 500 ms 
+#define DISPLAY_ANIMATION_TIME      4000    // 4 seconds
 
 void initialise_hardware(void);
 void initialise_clock(void);
@@ -54,20 +56,39 @@ void initialise_clock(void) {
 void run_clock(void) {
     uint32_t last_clock_tick_time;
     uint32_t last_display_time;
+    uint32_t start_animation_time;
 
-    last_clock_tick_time = last_display_time = get_clock_ticks();
+    last_clock_tick_time = last_display_time = start_animation_time = get_clock_ticks();
 
     while(1) {
         if (get_clock_ticks() - last_display_time >= DISPLAY_UPDATE_DELAY) {
-            // Half a second has passed since the last display tick, so update the display
+            if (get_clock_ticks() - last_display_time >= DISPLAY_HOUR_MARKER_DELAY) {
+                toggle_hour_marker();
+            }
+            // Time for a new 'frame' of the clock to be rendered & displayed
             update_display();
             last_display_time = get_clock_ticks();
         }
-        if (get_clock_ticks() - last_clock_tick_time >= 1000) {
-            // One second has passed since the last clock tick, so increment the time by 1 second
-            tick_clock();
 
+        // New Second
+        if (get_clock_ticks() - last_clock_tick_time >= 1000) {
+            // One second has passed since the last clock tick, so increment the clock time by 1 second
+            increment_seconds();
+
+            // Turn on the weather animation
+            if (reached_new_minute()) {
+                play_weather_animation();
+                start_animation_time = get_clock_ticks();
+            }
+            
+            // Turn off the weather animation after it's played for long enough
+            if (animation_playing() && get_clock_ticks() - start_animation_time >= DISPLAY_ANIMATION_TIME) {
+                stop_weather_animation();
+            }
+
+            last_clock_tick_time = get_clock_ticks();
         }
+        show_display();
     }
 }
 
