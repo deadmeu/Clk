@@ -177,9 +177,9 @@ class SelectionFrame(tk.Frame):
         self._mn = StringVar(self, value = str(minute))
         self._hour.config(textvariable = self._hr)
         self._min.config(textvariable = self._mn)
-        self._am_pm = StringVar(self, value = am_pm);
+        self._am_pm.set(am_pm);
 
-        print(str(hour) + ":" +  str(minute) + ":" + am_pm + ":" + self._am_pm.get())
+        print(str(hour) + ":" +  str(minute) + ":" + am_pm)
 
     def update_weather(self):
         """Uses the get weather function and updates the gui to display current weather
@@ -293,7 +293,7 @@ def get_weather():
     
     data = str(output)[2:-1] #Strip the quotes it comes in to allow for JSON parsing
     weather_list = json.loads(data)
-    weather = weather_list['weather']['main']
+    weather = weather_list['weather']#['main']
     request.close;
 
     return(weather)
