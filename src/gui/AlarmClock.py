@@ -3,6 +3,8 @@
 #                                                                 #
 #   ENGG2800 Alarm Clock Software                                 #
 #                                                                 #
+#   Team01                                                        #
+#                                                                 #
 #   Student Number: 43948378                                      #
 #   Student Name: Barney Whiteman                                 #
 #                                                                 #
@@ -156,11 +158,15 @@ class SelectionFrame(tk.Frame):
         self._am_pm_option.grid(row = 0, column = 4)
         self._set.grid(row = 0, column = 5)
 
+        #Get current time button
+        self._get_time = Button(self, text = "Get Current Time", command = self.get_time);
+        self._get_time.grid(row = 1, column = 0)
+
         #Weather display
         self._weather = tk.Label(self, text = weather)
-        self._request_weather = Button(self, text="Get Weather", command = self.update_weather);
-        self._weather.grid(row = 1, column = 0)
-        self._request_weather.grid(row = 2, column = 0);
+        self._request_weather = Button(self, text = "Get Weather", command = self.update_weather);
+        self._weather.grid(row = 2, column = 0)
+        self._request_weather.grid(row = 3, column = 0)
 
     def reset_input(self):
         """Resets the value in the input
@@ -171,12 +177,40 @@ class SelectionFrame(tk.Frame):
         self._mn = StringVar(self, value = str(minute))
         self._hour.config(textvariable = self._hr)
         self._min.config(textvariable = self._mn)
+        self._am_pm = StringVar(self, value = am_pm);
+
+        print(str(hour) + ":" +  str(minute) + ":" + am_pm + ":" + self._am_pm.get())
 
     def update_weather(self):
+        """Uses the get weather function and updates the gui to display current weather
+
+        update_weather() -> None (Updates the gui)
+        """
         global weather
         weather = get_weather();
         print(weather);
-        self._weather.config(text = weather);
+        self._weather.config(text = weather)
+
+    def get_time(self):
+        """Uses the date_time library to get the current computer time and updates the clock
+
+        get_time() -> None (Updates display and time variables)
+        """
+        global hour
+        global minute
+        global am_pm
+        time = datetime.datetime.now().time()
+        if(time.hour > 12):
+            hour = time.hour - 12;
+            am_pm = "PM"
+        else:
+            hour = time.hour
+            am_pm = "AM"
+        minute = time.minute
+        print(str(hour) + ":" +  str(minute) + ":" + am_pm)
+        self._parent._clock.draw_clock()
+        self.reset_input()
+        
         
     def set_time(self):
         """Gets values from the inputs in the menu
