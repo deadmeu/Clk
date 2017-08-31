@@ -21,17 +21,26 @@
 
 // static void increment_hours(void);
 // static void increment_minutes(void);
-static void init_ledarrays(void);
+static void init_leds(void);
 
-struct cRGB ledring[RING_LEDS];
-struct cRGB ledgrid[GRID_LEDS];
+// LED arrays
+struct cRGB led_ring[RING_LEDS];
+struct cRGB led_grid[GRID_LEDS];
 
-                                         // [0]   [3] ~Index numbers~
-                                         // {1 0 0 2}
-                                         // {0 0 0 0} Grid is arranged in a 4x4 layout with minute markers
-int grid_minute_states[4] = {0,  3,      // {0 0 0 0} in each corner.
-                             12, 15};    // {3 0 0 4}
-                                         // [12] [15] ~Index numbers~
+// RGB arrays
+struct cRGB rgb_ring[RING_LEDS];
+struct cRGB rgb_grid[GRID_LEDS];
+
+// Opacity arrays
+uint8_t opacity_ring[RING_LEDS];
+uint8_t opacity_grid[GRID_LEDS];
+
+                                            // [0]   [3] ~Index numbers~
+                                            // {1 0 0 2}
+                                            // {0 0 0 0} Grid is arranged in a 4x4 layout with minute markers
+uint8_t grid_minute_states[4] = {0,  3,     // {0 0 0 0} in each corner.
+                                12, 15};    // {3 0 0 4}
+                                            // [12] [15] ~Index numbers~
    
 uint32_t time;
 uint32_t last_time;
@@ -46,7 +55,7 @@ uint8_t alarm_time;
 
 
 void init_clock(void) {
-    init_ledarrays();
+    init_leds();
   
     last_time = time = 0L;
     // seconds = 0;
@@ -105,11 +114,27 @@ void set_time(uint32_t new_time) {
 }
 
 void show_display(void) {
-    enable_leds(&ledring, RING_LEDS);
+    enable_leds(led_ring, RING_LEDS);
 }
 
 void toggle_hour_marker(void) {
     hour_marker_flag ^= 1;
+}
+
+void apply_opacity(void) {
+    // Adjust the ring 
+    for (uint8_t i = 0; i < RING_LEDS; i++) {
+        // Set each pixel to (r * opacity)/100, (g * opacity)/100, (b * opacity)/100
+        update_pixel(&led_ring[i], (rgb_ring[i].r * opacity_ring[i]) / 100, 
+            (rgb_ring[i].g * opacity_ring[i]) / 100, (rgb_ring[i].b * opacity_ring[i]) / 100);
+    }
+
+    // Adjust the grid 
+    for (uint8_t i = 0; i < GRID_LEDS; i++) {
+        // Set each pixel to (r * opacity)/100, (g * opacity)/100, (b * opacity)/100
+        update_pixel(&led_grid[i], (rgb_grid[i].r * opacity_grid[i]) / 100, 
+            (rgb_grid[i].g * opacity_grid[i]) / 100, (rgb_grid[i].b * opacity_grid[i]) / 100);
+    }
 }
 
 void update_display(void) {
@@ -117,30 +142,31 @@ void update_display(void) {
     for (uint8_t i = 0; i * 5 <= MINUTES; i++) {        // iterate over each 5 minute marker up to and including the marker
                                                         // corresponding to the current minutes.
         //if (i * (60 / RING_LEDS) <= MINUTES) {
-        update_pixel(&ledring[i], RED);
+        update_pixel(&rgb_ring[i], RED);
         //}
     }
 
     // Add hour marker to grid if necessary
     if (hour_marker_flag) {
-        update_pixel(&ledring[HOURS % RING_LEDS], GREEN);
+        update_pixel(&rgb_ring[HOURS % RING_LEDS], GREEN);
     }
 
     // Update grid
     if (animation_playing()) {      // display the animation
-
+        // TODO animation logic
     } else {                        
         // Display the fours
         if (MINUTES % 5) {          // between 1-4 minutes past a 5 minute marker
             for (uint8_t i = 0; i < FOURS; i++) {
-                update_pixel(&ledgrid[grid_minute_states[i]], RED);
+                update_pixel(&rgb_grid[grid_minute_states[i]], RED);
             }
         } else {
-            ledarray_clear(ledgrid, GRID_LEDS);
+            led_array_clear(&rgb_grid, GRID_LEDS);
         }
     }
 }
 
+// All of this is redundant with the new time logic
 // static void increment_hours(void) {
 //     if (hours == 23) {
 //         // 23 hours have already passed, now entering the 24th hour so
@@ -163,7 +189,16 @@ void update_display(void) {
 // }
 
 // Setup the LED arrays, clearing the r, g, b values
-static void init_ledarrays(void) {
-    ledarray_clear(&ledring, RING_LEDS);
-    ledarray_clear(&ledgrid, GRID_LEDS);
+static void init_leds(void) {
+    // Clear the LED arrays
+    led_array_clear(&led_ring, RING_LEDS);
+    led_array_clear(&led_grid, GRID_LEDS);
+    
+    // Clear the RGB arrays
+    led_array_clear(&rgb_ring, RING_LEDS);
+    led_array_clear(&rgb_grid, GRID_LEDS);
+
+    // Clear the opacity arrays
+    opacity_array_clear(opacity_ring, RING_LEDS);
+    opacity_array_clear(opacity_grid, GRID_LEDS);
 }
