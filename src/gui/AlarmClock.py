@@ -121,7 +121,11 @@ class ClockView(tk.Canvas):
         try:
             self.draw_clock()
         except:
-            pass        
+            pass
+
+    def num_from_ang(self, angle):
+        pi = math.pi
+        return math.ceil((((angle / (2 * pi)) * 12) + 2.5)) % 12
 
 class SelectionFrame(tk.Frame):
     """A class that inherits from the tkinter Frame class
