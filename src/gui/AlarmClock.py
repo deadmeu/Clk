@@ -136,6 +136,12 @@ class ClockView(tk.Canvas):
             pass
 
     def down(self, event):
+        """Checks to see if the mouse pointer (when initially pressed) is
+        in the correct radius and whether it is changing the hour or minute
+
+        down(event) -> None (sets flags describing if it's in range and whether
+        to change the minute or hour)
+        """
         self._x = self.winfo_width()
         self._y = self.winfo_height()
         cx = self._x/2
@@ -156,18 +162,19 @@ class ClockView(tk.Canvas):
 
         if(r < self._r + 10 and r > self._r - 10):
             self._in_range = True
-            print("in range")
         else:
             self._in_range = False
 
         if(a < h_a + 0.1 and a > h_a - 0.1):
             self._set_hour = True
-            print("set hour")
         else:
             self._set_hour = False
-            print("set minute")
     
     def click_drag(self, event):
+        """Changes the time based on the mouses position
+
+        click_drag(event) -> None (changes the hour/minute values and updates display)
+        """
         if(self._in_range):
             self._x = self.winfo_width()
             self._y = self.winfo_height()
@@ -183,29 +190,47 @@ class ClockView(tk.Canvas):
 
             if(self._set_hour):
                 global hour
+                global am_pm
+                ph = hour
                 hour = self.hour_from_ang(a)
-                self._parent._select.reset_input
+                if((ph == 12 and hour == 11) or (ph == 11 and hour == 12)):
+                    if(am_pm == "AM"):
+                        am_pm = "PM"
+                    else:
+                        am_pm = "AM"
+                self._parent._select.reset_input()
                 self.draw_clock
             else:
                 global minute
                 minute = self.minute_from_ang(a)
-                self._parent._select.reset_input
+                self._parent._select.reset_input()
                 self.draw_clock
             #print(str(x) + ":" + str(y))
         
     def hour_from_ang(self, angle):
+        """Gets the hour based on the angle on the clock face
+
+        hour_from_ang(float) -> int (Hour)
+        """
         pi = math.pi
-        return math.ceil((((angle / (2 * pi)) * 12) - 3.5)) % 12
+        hr = math.ceil((((angle / (2 * pi)) * 12) - 3.5)) % 12
+        if(hr == 0):
+            hr = 12
+        return hr
     
     def minute_from_ang(self, angle):
+        """Gets the minute based on the angle on the clock face
+
+        minute_from_ang(float) -> int (Hour)
+        """
         pi = math.pi
         return math.ceil((((angle / (2 * pi)) * 60) - 15.5)) % 60
 
 class SelectionFrame(tk.Frame):
     """A class that inherits from the tkinter Frame class
 
-    creates and displays the checkboxes used for toggeling
-    whether to display a stations data or not
+    creates and displays the inputs for the clock. (Set time/get time, weather query
+    and display, set alarm, etc)
     """
     def __init__(self,master,parent):
         """initializes the internal data
@@ -250,7 +275,7 @@ class SelectionFrame(tk.Frame):
     def reset_input(self):
         """Resets the value in the input
 
-        reset_input() -> None
+        reset_input() -> None (Changes the display to reflect the stored hr/min vals)
         """
         self._hr = StringVar(self, value = str(hour))
         self._mn = StringVar(self, value = str(minute))
@@ -393,13 +418,18 @@ def is_int(x):
 def main():
     global weather
     global hour_disp
+    global hour
+    global minute
+    global am_pm
     weather = get_weather()
     root = tk.Tk()
     app = ClockApp(root)
     root.geometry("640x480")
 
     old = millis()
-    
+    s = datetime.datetime.now().time().second
+    app._select.get_time()
+    s_set = False
     
     while 1:
         cur = millis()
@@ -410,6 +440,25 @@ def main():
             break
         if(cur - old > 500):
             hour_disp = not hour_disp
+            if(hour_disp):
+                s = datetime.datetime.now().time().second
+                if(s != 0):
+                    s_set = False
+            if(s == 0 and not s_set):
+                s_set = True
+                app._select.update_weather()
+                minute += 1
+                if(minute == 60):
+                    minute = 0
+                    hour += 1
+                if(hour == 12):
+                    if(am_pm == "AM"):
+                        am_pm = "PM"
+                    else:
+                        am_pm = "AM"
+                if(hour == 13):
+                    hour = 1
+                app._select.reset_input()
             app._clock.draw_clock()
             old = cur
 
