@@ -47,6 +47,16 @@ class ClockView(tk.Canvas):
         super().__init__(master,bg="white",relief=tk.SUNKEN)
         self._parent = parent
         self.bind('<Configure>', self.resize)
+        self.bind('<B1-Motion>', self.click_drag)
+        self.bind('<Button-1>', self.down)
+        
+        #variables for click and drag time setting
+        self._in_range = False
+        self._set_hour = False
+        self._tmp_hr = 0
+        self._tmp_min = 0
+        self._r = 0
+        
 
     def draw_clock(self):
         """Takes the station data and uses the CoordinateTranslator class
@@ -66,9 +76,11 @@ class ClockView(tk.Canvas):
         off = math.pi/2
         rad = 10
         r = (min(self._x, self._y) - 50)/2
+        self._r = r
         c = "#fff"
         for i in range(12):
-            if(i == hour and hour_disp):
+            h = hour % 12
+            if(i == h and hour_disp):
                 c = "#f0f"
             elif(i <= minute / 5):
                 if(am_pm == "AM"):
@@ -123,9 +135,71 @@ class ClockView(tk.Canvas):
         except:
             pass
 
-    def num_from_ang(self, angle):
+    def down(self, event):
+        self._x = self.winfo_width()
+        self._y = self.winfo_height()
+        cx = self._x/2
+        cy = self._y/2
+
+        x = event.x
+        y = event.y
+
+        dy = cy - y
+        dx = cx - x
+        
+        r = math.sqrt((dx ** 2) + (dy ** 2))
+        a = math.atan2(dy, dx) % (2 * math.pi)
+
+        h = (hour % 12) + 3
+        h_a = (math.pi/6 * h) % (2 * math.pi)
+        print(str(h_a) + ":" + str(a))
+
+        if(r < self._r + 10 and r > self._r - 10):
+            self._in_range = True
+            print("in range")
+        else:
+            self._in_range = False
+
+        if(a < h_a + 0.1 and a > h_a - 0.1):
+            self._set_hour = True
+            print("set hour")
+        else:
+            self._set_hour = False
+            print("set minute")
+    
+    def click_drag(self, event):
+        if(self._in_range):
+            self._x = self.winfo_width()
+            self._y = self.winfo_height()
+            cx = self._x/2
+            cy = self._y/2
+
+            x = event.x
+            y = event.y
+
+            dy = cy - y
+            dx = cx - x
+            a = math.atan2(dy, dx) % (2 * math.pi)
+
+            if(self._set_hour):
+                global hour
+                hour = self.hour_from_ang(a)
+                self._parent._select.reset_input
+                self.draw_clock
+            else:
+                global minute
+                minute = self.minute_from_ang(a)
+                self._parent._select.reset_input
+                self.draw_clock
+            #print(str(x) + ":" + str(y))
+        
+    def hour_from_ang(self, angle):
         pi = math.pi
-        return math.ceil((((angle / (2 * pi)) * 12) + 2.5)) % 12
+        return math.ceil((((angle / (2 * pi)) * 12) - 3.5)) % 12
+    
+    def minute_from_ang(self, angle):
+        pi = math.pi
+        return math.ceil((((angle / (2 * pi)) * 60) - 15.5)) % 60
 
 class SelectionFrame(tk.Frame):
     """A class that inherits from the tkinter Frame class
@@ -154,12 +228,13 @@ class SelectionFrame(tk.Frame):
         self._choices = {"PM", "AM"}
         self._am_pm = StringVar(self, value = am_pm)
         self._am_pm_option = OptionMenu(self, self._am_pm, *self._choices)
+        self._am_pm_option.config(width = 5)
 
         self._select.grid(row = 0, column = 0)
         self._hour.grid(row = 0, column = 1)
         self._timeLabel.grid(row = 0, column = 2)
         self._min.grid(row = 0, column = 3)
-        self._am_pm_option.grid(row = 0, column = 4)
+        self._am_pm_option.grid(row = 0, column = 4, sticky = 'ew')
         self._set.grid(row = 0, column = 5)
 
         #Get current time button
@@ -167,10 +242,10 @@ class SelectionFrame(tk.Frame):
         self._get_time.grid(row = 1, column = 0)
 
         #Weather display
-        self._weather = tk.Label(self, text = weather)
+        self._weather = tk.Label(self, text = weather, width = 10)
         self._request_weather = Button(self, text = "Get Weather", command = self.update_weather);
-        self._weather.grid(row = 2, column = 0)
-        self._request_weather.grid(row = 3, column = 0)
+        self._weather.grid(row = 2, column = 0, sticky = 'w')
+        self._request_weather.grid(row = 3, column = 0, sticky = 'ew')
 
     def reset_input(self):
         """Resets the value in the input
@@ -204,14 +279,15 @@ class SelectionFrame(tk.Frame):
         global minute
         global am_pm
         time = datetime.datetime.now().time()
-        if(time.hour > 12):
+        if(time.hour >= 12):
             hour = time.hour - 12;
             am_pm = "PM"
         else:
             hour = time.hour
             am_pm = "AM"
+        if(hour == 0):
+            hour = 12
         minute = time.minute
-        print(str(hour) + ":" +  str(minute) + ":" + am_pm)
         self._parent._clock.draw_clock()
         self.reset_input()
         
@@ -232,12 +308,16 @@ class SelectionFrame(tk.Frame):
             h = int(time[0])
             m = int(time[1])
             if((h < 13 and h >= 0) and (m < 60 and m >= 0)):
-               hour = h
-               minute = m
-               am_pm = ap
-               self._parent._clock.draw_clock()
-               messagebox.showinfo("Time Set", "Time set to " + str(h) + ":" + str(m) + " " + ap)
-               print("Time set to " + str(h) + ":" + str(m) + " " + ap)
+                hour = h
+                minute = m
+                am_pm = ap
+                if(hour == 0):
+                    hour = 12
+                    h = 12
+                self._parent._clock.draw_clock()
+                self.reset_input()
+                messagebox.showinfo("Time Set", "Time set to " + str(h) + ":" + str(m) + " " + ap)
+                print("Time set to " + str(h) + ":" + str(m) + " " + ap)
             else:
                 messagebox.showerror("Invalid Input", "Invalid input: " + str(h) + ":" + str(m) + " " + ap + "\n Please ensure you enter numbers\n"
                                      "Between 1 and 12 for the hour and\n Between 0 and 59 for the minute")
