@@ -22,12 +22,15 @@
 #define DISPLAY_UPDATE_DELAY        100     // 100 ms
 #define DISPLAY_HOUR_MARKER_DELAY   500     // 500 ms 
 #define DISPLAY_ANIMATION_TIME      4000    // 4 seconds
+#define PLAY_ALARM_TIME             10000   // 10 seconds
 
 void initialise_hardware(void);
 void initialise_clock(void);
 void run_clock(void);
+void update_clock(void);
 void reset_clock(void);
 
+/* The program's main function. */
 int main(void) {
     initialise_hardware();
     splash_screen();
@@ -36,62 +39,86 @@ int main(void) {
     while(1) {
         initialise_clock();
         run_clock();
+        update_clock();
         reset_clock();
     }
 }
 
+/* Initialises the ATmega328P built-in timer0. */
 void initialise_hardware(void) {
     // Setup the main timer, providing an interrupt every millisecond
     init_timer0();
 
     // Turn on global interrupts
     sei();
-
 }
 
+/* Initialises the clock flags, timers, counters, and other variables. */
 void initialise_clock(void) {
     init_clock();
 }
 
+/* Handles the main clock program (displaying time, animations, alarm, etc.) */
 void run_clock(void) {
     uint32_t last_clock_tick_time;
     uint32_t last_display_time;
     uint32_t start_animation_time;
+    uint32_t start_alarm_time;
 
-    last_clock_tick_time = last_display_time = start_animation_time = get_clock_ticks();
+    last_clock_tick_time = last_display_time = start_animation_time = start_alarm_time = get_clock_ticks();
 
     while(1) {
-        if (get_clock_ticks() - last_display_time >= DISPLAY_UPDATE_DELAY) {
-            if (get_clock_ticks() - last_display_time >= DISPLAY_HOUR_MARKER_DELAY) {
-                toggle_hour_marker();
-            }
-            // Time for a new 'frame' of the clock to be rendered & displayed
-            update_display();
-            last_display_time = get_clock_ticks();
-        }
-
-        // New Second
+        // Handle new second
         if (get_clock_ticks() - last_clock_tick_time >= 1000) {
             // One second has passed since the last clock tick, so increment the clock time by 1 second
             increment_seconds();
-
-            // Turn on the weather animation
-            if (reached_new_minute()) {
-                play_weather_animation();
-                start_animation_time = get_clock_ticks();
-            }
-            
-            // Turn off the weather animation after it's played for long enough
-            if (animation_playing() && get_clock_ticks() - start_animation_time >= DISPLAY_ANIMATION_TIME) {
-                stop_weather_animation();
-            }
-
             last_clock_tick_time = get_clock_ticks();
+        }
+
+        // Turn on the weather animation
+        if (weather_is_set() && reached_new_minute() && !animation_is_playing()) {
+            play_weather_animation();
+            start_animation_time = get_clock_ticks();
+            reset_minute_flag();
+        }
+
+        // If the weather animation is playing, turn it off after it's played for long enough
+        if (animation_is_playing() && (get_clock_ticks() - start_animation_time >= DISPLAY_ANIMATION_TIME)) {
+            stop_weather_animation();
+        }
+
+        // Handle alarm
+        if (alarm_is_set() && reached_alarm_time() && !alarm_is_playing()) {
+            play_alarm_sound();
+            start_alarm_time = get_clock_ticks();
+            reset_alarm_flag();
+        }
+
+        // If the alarm is playing, turn it off after it's played for long enough
+        if (alarm_is_playing() && (get_clock_ticks() - start_alarm_time >= PLAY_ALARM_TIME)) {
+            stop_alarm_sound();
+        }
+
+        // Handle new frame draw
+        if (get_clock_ticks() - last_display_time >= DISPLAY_UPDATE_DELAY) {
+            // Check if the hour marker needs to be drawn
+            if (get_clock_ticks() - last_display_time >= DISPLAY_HOUR_MARKER_DELAY) {
+                toggle_hour_marker();
+            }
+            // Time for a new 'frame' of the clock to be drawn & displayed
+            update_display();
+            last_display_time = get_clock_ticks();
         }
         show_display();
     }
 }
 
+/* Handles settings & config updates via IR communication. */
+void update_clock(void) {
+}
+
+/* The clock is gracefully stopped. */
 void reset_clock(void) {
-    while (1) { ; } //hang the system
+    while (1) {     //hang the system
+    }
 }

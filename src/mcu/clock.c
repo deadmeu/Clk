@@ -41,30 +41,41 @@ uint8_t opacity_grid[GRID_LEDS];
 uint8_t grid_minute_states[4] = {0,  3,     // {0 0 0 0} in each corner.
                                 12, 15};    // {3 0 0 4}
                                             // [12] [15] ~Index numbers~
-   
+
 uint32_t time;
-uint32_t last_time;
+uint32_t alarm_time;
+
+// Flags
 uint8_t splash_flag;
 uint8_t animation_flag;
+uint8_t alarm_flag;
 uint8_t hour_marker_flag;
+uint8_t new_minute_flag;
+uint8_t alarm_playing_flag;
+uint8_t weather_set_flag;
+uint8_t alarm_set_flag;
 // uint8_t seconds; // current seconds counter
 // uint8_t minutes; // current minutes counter
 // uint8_t hours; // current hours counter
-uint8_t alarm_time;
 
 
 
 void init_clock(void) {
     init_leds();
   
-    last_time = time = 0L;
+    time = 67354L;
     // seconds = 0;
     // minutes = 0;
     // hours = 0;
-    alarm_time = 60;    // 1 minute past midnight
+    alarm_time = 60L;    // 1 minute past midnight
     splash_flag = 1;
     animation_flag = 0;
     hour_marker_flag = 1;
+    new_minute_flag = 0;
+    weather_set_flag = 0;
+    alarm_set_flag = 1;
+    alarm_flag = 0;
+    alarm_playing_flag = 0;
 }
 
 void splash_off(void) {
@@ -76,6 +87,12 @@ void splash_off(void) {
 // TODO: should interrupts be disabled before incrementing this stuff?
 void increment_seconds(void) {
     time++;
+    if (MINUTES % 60 == 0) {
+        new_minute_flag = 1;
+    }
+    if (time == alarm_time) {
+        alarm_flag = 1;
+    }
     // if (SECONDS == 59) {
     //     // 59 seconds have already passed, now entering the 60th second so
     //     // reset the counter and increment the minutes counter by one.
@@ -95,13 +112,45 @@ void stop_weather_animation(void) {
     animation_flag = 0;
 }
 
-uint8_t animation_playing(void) {
+void play_alarm_sound(void) {
+    alarm_flag = 1;
+}
+
+void stop_alarm_sound(void) {
+    alarm_playing_flag = 0;
+}
+
+uint8_t alarm_is_playing(void) {
+    return alarm_playing_flag;
+}
+
+uint8_t animation_is_playing(void) {
     return animation_flag;
+}
+
+uint8_t alarm_is_set(void) {
+    return alarm_set_flag;
+}
+
+uint8_t weather_is_set(void) {
+    return weather_set_flag;
 }
 
 // TODO: maybe put this in a timekeeper.c file? or maybe not?
 uint8_t reached_new_minute(void) {
-    return MINUTES % 60 == 0;
+    return new_minute_flag;
+}
+
+uint8_t reached_alarm_time(void) {
+    return alarm_flag;
+}
+
+void reset_minute_flag(void) {
+    new_minute_flag = 0;
+}
+
+void reset_alarm_flag(void) {
+    alarm_flag = 0;
 }
 
 // sets the clock seconds, minutes, and hours counters to the supplied time in seconds.
@@ -152,7 +201,7 @@ void update_display(void) {
     }
 
     // Update grid
-    if (animation_playing()) {      // display the animation
+    if (animation_is_playing()) {      // display the animation
         // TODO animation logic
     } else {                        
         // Display the fours
@@ -161,7 +210,7 @@ void update_display(void) {
                 update_pixel(&rgb_grid[grid_minute_states[i]], RED);
             }
         } else {
-            led_array_clear(&rgb_grid, GRID_LEDS);
+            led_array_clear(rgb_grid, GRID_LEDS);
         }
     }
 }
@@ -191,12 +240,12 @@ void update_display(void) {
 // Setup the LED arrays, clearing the r, g, b values
 static void init_leds(void) {
     // Clear the LED arrays
-    led_array_clear(&led_ring, RING_LEDS);
-    led_array_clear(&led_grid, GRID_LEDS);
+    led_array_clear(led_ring, RING_LEDS);
+    led_array_clear(led_grid, GRID_LEDS);
     
     // Clear the RGB arrays
-    led_array_clear(&rgb_ring, RING_LEDS);
-    led_array_clear(&rgb_grid, GRID_LEDS);
+    led_array_clear(rgb_ring, RING_LEDS);
+    led_array_clear(rgb_grid, GRID_LEDS);
 
     // Clear the opacity arrays
     opacity_array_clear(opacity_ring, RING_LEDS);

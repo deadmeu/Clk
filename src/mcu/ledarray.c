@@ -9,7 +9,7 @@
 #include "light_ws2812.h"
 #include "pixel_colour.h"
 
-void enable_leds(struct cRGB *led_array[], uint8_t size) {
+void enable_leds(struct cRGB *led_array, uint8_t size) {
     ws2812_setleds(led_array, size);
 }
 
@@ -21,12 +21,12 @@ void update_pixel(struct cRGB *pixel, uint8_t r, uint8_t g, uint8_t b) {
     pixel->b = b;
 }
 
-void led_array_clear(struct cRGB *led_array[], uint8_t size) {
+void led_array_clear(struct cRGB *led_array, uint8_t size) {
     // Set each pixel to black
     for (uint8_t i = 0; i < size; i++) {
-        led_array[i]->r = 0;
-        led_array[i]->g = 0;
-        led_array[i]->b = 0;
+        led_array[i].r = 0;
+        led_array[i].g = 0;
+        led_array[i].b = 0;
     }
     // memset(led_array, 0, size * sizeof(led_array));
 }
@@ -34,6 +34,6 @@ void led_array_clear(struct cRGB *led_array[], uint8_t size) {
 void opacity_array_clear(uint8_t *opacity_array, uint8_t size) {
     // Set each element to 100 (full brightness)
     for (uint8_t i = 0; i < size; i++) {
-        opacity_array[i] = 0;
+        opacity_array[i] = 100;
     }
 }
