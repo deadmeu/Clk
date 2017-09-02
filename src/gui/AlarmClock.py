@@ -17,6 +17,7 @@
 import tkinter as tk
 from tkinter import *
 from tkinter import messagebox
+from tkinter import ttk
 
 import math
 import datetime
@@ -89,7 +90,7 @@ class ClockView(tk.Canvas):
                     c = "#ff0"
             else:
                 c = "#fff"
-            self.create_circle(cx + math.cos(a*i - off)*r, cy + math.sin(a*i - off)*r, rad, outline="#000", fill=c)
+            self.create_circle(cx + math.cos(a*i - off)*r, cy + math.sin(a*i - off)*r, rad, outline="#000", fill=c, width=2)
 
         #Drawing square
         spc = (r - 25)/4
@@ -118,7 +119,7 @@ class ClockView(tk.Canvas):
                         c = "#ff0"
                 else:
                     c = "#fff"
-                self.create_circle(cx - (1.5 * spc + 3 * rad) + (2 * rad + spc) * i, cy - (1.5 * spc + 3 * rad) + (2 * rad + spc) * j, rad, outline="#000", fill=c)
+                self.create_circle(cx - (1.5 * spc + 3 * rad) + (2 * rad + spc) * i, cy - (1.5 * spc + 3 * rad) + (2 * rad + spc) * j, rad, outline="#000", fill=c, width=2)
 
         
     def create_circle(self, x, y, r, **kwargs):
@@ -240,19 +241,19 @@ class SelectionFrame(tk.Frame):
         super().__init__(master)
         self._parent = parent
         #Time selection
-        self._select = tk.Label(self, text = "Time:")
-        self._timeLabel = tk.Label(self, text = " : ")
+        self._select = ttk.Label(self, text = "Time:")
+        self._timeLabel = ttk.Label(self, text = " : ")
 
         self._hr = StringVar(self, value = str(hour))
         self._mn = StringVar(self, value = str(minute))
         
-        self._hour = Entry(self, width = 2, textvariable = self._hr)
-        self._min =  Entry(self, width = 2, textvariable = self._mn)
-        self._set = Button(self, text="set", command = self.set_time)
+        self._hour = ttk.Entry(self, width = 2, textvariable = self._hr)
+        self._min =  ttk.Entry(self, width = 2, textvariable = self._mn)
+        self._set = ttk.Button(self, text="set", command = self.set_time)
 
-        self._choices = {"PM", "AM"}
+        self._choices = {"", "PM", "AM"}
         self._am_pm = StringVar(self, value = am_pm)
-        self._am_pm_option = OptionMenu(self, self._am_pm, *self._choices)
+        self._am_pm_option = ttk.OptionMenu(self, self._am_pm, *self._choices)
         self._am_pm_option.config(width = 5)
 
         self._select.grid(row = 0, column = 0)
@@ -263,12 +264,12 @@ class SelectionFrame(tk.Frame):
         self._set.grid(row = 0, column = 5)
 
         #Get current time button
-        self._get_time = Button(self, text = "Get Current Time", command = self.get_time);
+        self._get_time = ttk.Button(self, text = "Get Current Time", command = self.get_time);
         self._get_time.grid(row = 1, column = 0)
 
         #Weather display
-        self._weather = tk.Label(self, text = weather, width = 10)
-        self._request_weather = Button(self, text = "Get Weather", command = self.update_weather);
+        self._weather = ttk.Label(self, text = weather, width = 10)
+        self._request_weather = ttk.Button(self, text = "Get Weather", command = self.update_weather);
         self._weather.grid(row = 2, column = 0, sticky = 'w')
         self._request_weather.grid(row = 3, column = 0, sticky = 'ew')
 
@@ -277,13 +278,14 @@ class SelectionFrame(tk.Frame):
 
         reset_input() -> None (Changes the display to reflect the stored hr/min vals)
         """
-        self._hr = StringVar(self, value = str(hour))
-        self._mn = StringVar(self, value = str(minute))
-        self._hour.config(textvariable = self._hr)
-        self._min.config(textvariable = self._mn)
-        self._am_pm.set(am_pm);
+        if(not self._hour.get() == str(hour) or not self._min.get() == str(minute) ):
+            self._hr = StringVar(self, value = str(hour))
+            self._mn = StringVar(self, value = str(minute))
+            self._hour.config(textvariable = self._hr)
+            self._min.config(textvariable = self._mn)
+            self._am_pm.set(am_pm);
 
-        print(str(hour) + ":" +  str(minute) + ":" + am_pm)
+            print(str(hour) + ":" +  str(minute) + ":" + am_pm)
 
     def update_weather(self):
         """Uses the get weather function and updates the gui to display current weather
@@ -375,7 +377,7 @@ class ClockApp(object):
         self._select = SelectionFrame(master, self)
         self._select.pack(side=tk.LEFT, anchor=tk.N)
 
-        self._clock = ClockView(master,self)
+        self._clock = ClockView(master, self)
         self._clock.pack(side=tk.RIGHT,expand=1,fill=tk.BOTH)
 
 
