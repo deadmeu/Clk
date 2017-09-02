@@ -1,7 +1,8 @@
 /*
  * timer.c
  *
- * Written by Alex Subaric, adapted from Peter Sutton's timer0.c.
+ * Written by Alex Subaric, adapted from work by Peter Sutton, and
+ * from http://www.8bit-era.cz/arduino-timer-interrupts-calculator.html.
  */
 
 #include <avr/io.h>
@@ -9,7 +10,8 @@
 
 #include "timer.h"
 
-// The internal clock tick count, gets incremented every millisecond
+// The internal clock tick count, gets incremented every millisecond. This counter
+// will overflow after 49.7 days of continuous incrementing.
 static volatile uint32_t clock_ticks;
 
 // Setup timer0 to fire an interrupt every millisecond.

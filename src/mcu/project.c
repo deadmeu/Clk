@@ -22,6 +22,7 @@
 #define DISPLAY_UPDATE_DELAY        100     // 100 ms
 #define DISPLAY_HOUR_MARKER_DELAY   500     // 500 ms 
 #define DISPLAY_ANIMATION_TIME      4000    // 4 seconds
+#define ANIMATION_FRAME_TIME        500     // 500 ms
 #define PLAY_ALARM_TIME             10000   // 10 seconds
 
 void initialise_hardware(void);
@@ -72,6 +73,7 @@ void run_clock(void) {
         if (get_clock_ticks() - last_clock_tick_time >= 1000) {
             // One second has passed since the last clock tick, so increment the clock time by 1 second
             increment_seconds();
+            call_ring_redraw();
             last_clock_tick_time = get_clock_ticks();
         }
 
@@ -82,9 +84,16 @@ void run_clock(void) {
             reset_minute_flag();
         }
 
+        // Update animation frame
+        if (animation_is_playing() && (get_clock_ticks() - start_animation_time >= ANIMATION_FRAME_TIME)) {
+            update_animation_frame();
+            call_grid_redraw();
+        }
+
         // If the weather animation is playing, turn it off after it's played for long enough
         if (animation_is_playing() && (get_clock_ticks() - start_animation_time >= DISPLAY_ANIMATION_TIME)) {
             stop_weather_animation();
+            call_grid_redraw();
         }
 
         // Handle alarm
@@ -100,13 +109,21 @@ void run_clock(void) {
         }
 
         // Handle new frame draw
-        if (get_clock_ticks() - last_display_time >= DISPLAY_UPDATE_DELAY) {
+        if ((redraw_ring_needed() || redraw_grid_needed()) 
+                && (get_clock_ticks() - last_display_time >= DISPLAY_UPDATE_DELAY)) {
             // Check if the hour marker needs to be drawn
             if (get_clock_ticks() - last_display_time >= DISPLAY_HOUR_MARKER_DELAY) {
                 toggle_hour_marker();
+                call_ring_redraw();
             }
             // Time for a new 'frame' of the clock to be drawn & displayed
             update_display();
+            // Update the opacity for the ring and grid
+            apply_opacity();
+            // Frame has been drawn - reset the redraw flags
+            reset_ring_redraw();
+            reset_grid_redraw();
+
             last_display_time = get_clock_ticks();
         }
         show_display();

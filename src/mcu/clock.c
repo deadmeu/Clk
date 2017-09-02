@@ -19,8 +19,6 @@
 #define SECONDS     (time - 3600 * HOURS) - 60 * MINUTES
 #define FOURS       MINUTES % 5
 
-// static void increment_hours(void);
-// static void increment_minutes(void);
 static void init_leds(void);
 
 // LED arrays
@@ -42,8 +40,10 @@ uint8_t grid_minute_states[4] = {0,  3,     // {0 0 0 0} in each corner.
                                 12, 15};    // {3 0 0 4}
                                             // [12] [15] ~Index numbers~
 
+// Other variables
 uint32_t time;
 uint32_t alarm_time;
+uint8_t opacity_amount;
 
 // Flags
 uint8_t splash_flag;
@@ -54,11 +54,8 @@ uint8_t new_minute_flag;
 uint8_t alarm_playing_flag;
 uint8_t weather_set_flag;
 uint8_t alarm_set_flag;
-// uint8_t seconds; // current seconds counter
-// uint8_t minutes; // current minutes counter
-// uint8_t hours; // current hours counter
-
-
+uint8_t draw_ring_flag;
+uint8_t draw_grid_flag;
 
 void init_clock(void) {
     init_leds();
@@ -76,6 +73,9 @@ void init_clock(void) {
     alarm_set_flag = 1;
     alarm_flag = 0;
     alarm_playing_flag = 0;
+    draw_ring_flag = 1;
+    draw_grid_flag = 1;
+    opacity_amount = 100;
 }
 
 void splash_off(void) {
@@ -120,6 +120,22 @@ void stop_alarm_sound(void) {
     alarm_playing_flag = 0;
 }
 
+void call_ring_redraw(void) {
+    draw_ring_flag = 1;
+}
+
+void call_grid_redraw(void) {
+    draw_grid_flag = 1;
+}
+
+uint8_t redraw_ring_needed(void) {
+    return draw_ring_flag;
+}
+
+uint8_t redraw_grid_needed(void) {
+    return draw_grid_flag;
+}
+
 uint8_t alarm_is_playing(void) {
     return alarm_playing_flag;
 }
@@ -145,6 +161,14 @@ uint8_t reached_alarm_time(void) {
     return alarm_flag;
 }
 
+void reset_ring_redraw(void) {
+    draw_ring_flag = 0;
+}
+
+void reset_grid_redraw(void) {
+    draw_grid_flag = 0;
+}
+
 void reset_minute_flag(void) {
     new_minute_flag = 0;
 }
@@ -155,10 +179,10 @@ void reset_alarm_flag(void) {
 
 // sets the clock seconds, minutes, and hours counters to the supplied time in seconds.
 void set_time(uint32_t new_time) {
-    if (!(new_time >= 0L && new_time <= MAX_TIME)) return;  // new_time (in seconds) is not between 00:00:00 and 23:59:59 inclusive
-    // hours = new_time / 3600;
-    // minutes = (new_time - 3600 * hours) / 60;
-    // seconds = (new_time - 3600 * hours) - 60 * minutes;
+    if (!(new_time >= 0L && new_time <= MAX_TIME)) {    // new_time (in seconds) isn't between
+                                                        // 00:00:00 and 23:59:59 inclusive.
+        return;
+    }
     time = new_time;
 }
 
@@ -173,26 +197,39 @@ void toggle_hour_marker(void) {
 void apply_opacity(void) {
     // Adjust the ring 
     for (uint8_t i = 0; i < RING_LEDS; i++) {
-        // Set each pixel to (r * opacity)/100, (g * opacity)/100, (b * opacity)/100
-        update_pixel(&led_ring[i], (rgb_ring[i].r * opacity_ring[i]) / 100, 
-            (rgb_ring[i].g * opacity_ring[i]) / 100, (rgb_ring[i].b * opacity_ring[i]) / 100);
+        // Set each element of the led array to the combination of the rgb array and opacity array
+        //update_pixel(&led_ring[i], (rgb_ring[i].r * opacity_ring[i]) / 100, 
+        //    (rgb_ring[i].g * opacity_ring[i]) / 100, (rgb_ring[i].b * opacity_ring[i]) / 100);
+
+        // This is using a constant opacity amount
+        update_pixel(&led_ring[i], (rgb_ring[i].r * opacity_amount) / 100, 
+            (rgb_ring[i].g * opacity_amount) / 100, (rgb_ring[i].b * opacity_amount) / 100);
     }
 
     // Adjust the grid 
     for (uint8_t i = 0; i < GRID_LEDS; i++) {
-        // Set each pixel to (r * opacity)/100, (g * opacity)/100, (b * opacity)/100
-        update_pixel(&led_grid[i], (rgb_grid[i].r * opacity_grid[i]) / 100, 
-            (rgb_grid[i].g * opacity_grid[i]) / 100, (rgb_grid[i].b * opacity_grid[i]) / 100);
+        // Set each element of the led array to the combination of the rgb array and opacity array
+        //update_pixel(&led_grid[i], (rgb_grid[i].r * opacity_grid[i]) / 100, 
+        //    (rgb_grid[i].g * opacity_grid[i]) / 100, (rgb_grid[i].b * opacity_grid[i]) / 100);
+
+        // This is using a constant opacity amount
+        update_pixel(&led_grid[i], (rgb_grid[i].r * opacity_amount) / 100, 
+            (rgb_grid[i].g * opacity_amount) / 100, (rgb_grid[i].b * opacity_amount) / 100);
     }
+}
+
+void update_animation_frame(void) {
+    // TODO animation logic
 }
 
 void update_display(void) {
     // Update entire ring
-    for (uint8_t i = 0; i * 5 <= MINUTES; i++) {        // iterate over each 5 minute marker up to and including the marker
-                                                        // corresponding to the current minutes.
-        //if (i * (60 / RING_LEDS) <= MINUTES) {
-        update_pixel(&rgb_ring[i], RED);
-        //}
+    if (draw_ring_flag) {
+        for (uint8_t i = 0; RING_LEDS; i++) { 
+            if (i * (60 / RING_LEDS) <= MINUTES) {
+                update_pixel(&rgb_ring[i], RED);
+            }
+        }
     }
 
     // Add hour marker to grid if necessary
@@ -201,41 +238,21 @@ void update_display(void) {
     }
 
     // Update grid
-    if (animation_is_playing()) {      // display the animation
-        // TODO animation logic
-    } else {                        
-        // Display the fours
-        if (MINUTES % 5) {          // between 1-4 minutes past a 5 minute marker
-            for (uint8_t i = 0; i < FOURS; i++) {
-                update_pixel(&rgb_grid[grid_minute_states[i]], RED);
+    if (draw_grid_flag) {
+        if (animation_is_playing()) {      // display the animation
+            // TODO animation logic
+        } else {                        
+            // Display the fours
+            if (MINUTES % 5) {          // between 1-4 minutes past a 5 minute marker
+                for (uint8_t i = 0; i < FOURS; i++) {
+                    update_pixel(&rgb_grid[grid_minute_states[i]], RED);
+                }
+            } else {
+                led_array_clear(rgb_grid, GRID_LEDS);
             }
-        } else {
-            led_array_clear(rgb_grid, GRID_LEDS);
         }
     }
 }
-
-// All of this is redundant with the new time logic
-// static void increment_hours(void) {
-//     if (hours == 23) {
-//         // 23 hours have already passed, now entering the 24th hour so
-//         // reset the counter.
-//         hours = 0;
-//     } else {
-//         hours++;
-//     }
-// }
-
-// static void increment_minutes(void) {
-//     if (minutes == 59) {
-//         // 59 minutes have already passed, now entering the 60th minute so
-//         // reset the counter and increment the hours counter by one.
-//         minutes = 0;
-//         increment_hours();
-//     } else {
-//         minutes++;
-//     }
-// }
 
 // Setup the LED arrays, clearing the r, g, b values
 static void init_leds(void) {
