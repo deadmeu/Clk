@@ -254,24 +254,25 @@ class SelectionFrame(tk.Frame):
         self._choices = {"", "PM", "AM"}
         self._am_pm = StringVar(self, value = am_pm)
         self._am_pm_option = ttk.OptionMenu(self, self._am_pm, *self._choices)
-        self._am_pm_option.config(width = 5)
+        self._am_pm_option.config(width = 3)
 
         self._select.grid(row = 0, column = 0)
-        self._hour.grid(row = 0, column = 1)
-        self._timeLabel.grid(row = 0, column = 2)
-        self._min.grid(row = 0, column = 3)
-        self._am_pm_option.grid(row = 0, column = 4, sticky = 'ew')
-        self._set.grid(row = 0, column = 5)
+        self._set.grid(row = 1, column = 0, sticky = 'ew', pady = 2)
+        self._hour.grid(row = 1, column = 1)
+        self._timeLabel.grid(row = 1, column = 2)
+        self._min.grid(row = 1, column = 3)
+        self._am_pm_option.grid(row = 1, column = 4, sticky = 'ew')
+        
 
         #Get current time button
         self._get_time = ttk.Button(self, text = "Get Current Time", command = self.get_time);
-        self._get_time.grid(row = 1, column = 0)
+        self._get_time.grid(row = 3, column = 0, columnspan = 5, sticky = 'ew')
 
         #Weather display
-        self._weather = ttk.Label(self, text = weather, width = 10)
+        self._weather = ttk.Label(self, text = weather, width = 15)
         self._request_weather = ttk.Button(self, text = "Get Weather", command = self.update_weather);
-        self._weather.grid(row = 2, column = 0, sticky = 'w')
-        self._request_weather.grid(row = 3, column = 0, sticky = 'ew')
+        self._weather.grid(row = 4, column = 0, columnspan = 5)
+        self._request_weather.grid(row = 5, column = 0, columnspan = 5, sticky = 'ew')
 
     def reset_input(self):
         """Resets the value in the input
