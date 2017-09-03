@@ -59,22 +59,23 @@ uint8_t draw_grid_flag;
 
 void init_clock(void) {
     init_leds();
+    
+    stop_alarm_sound();
+    stop_weather_animation();
+
+    reset_alarm_flag();
+    reset_minute_flag();
+
+    call_ring_redraw();
+    call_grid_redraw();
   
-    time = 67354L;
-    // seconds = 0;
-    // minutes = 0;
-    // hours = 0;
+    time = 67354L;       // 18:42:34
     alarm_time = 60L;    // 1 minute past midnight
     splash_flag = 1;
-    animation_flag = 0;
     hour_marker_flag = 1;
-    new_minute_flag = 0;
     weather_set_flag = 0;
     alarm_set_flag = 1;
-    alarm_flag = 0;
-    alarm_playing_flag = 0;
-    draw_ring_flag = 1;
-    draw_grid_flag = 1;
+    
     opacity_amount = 100;
 }
 
@@ -167,6 +168,11 @@ void reset_ring_redraw(void) {
 
 void reset_grid_redraw(void) {
     draw_grid_flag = 0;
+}
+
+void reset_redraw_flags(void) {
+    reset_ring_redraw();
+    reset_grid_redraw();
 }
 
 void reset_minute_flag(void) {

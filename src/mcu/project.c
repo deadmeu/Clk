@@ -61,6 +61,7 @@ void initialise_clock(void) {
 
 /* Handles the main clock program (displaying time, animations, alarm, etc.) */
 void run_clock(void) {
+    // TODO only look at redrawing each pixel that is changed?
     uint32_t last_clock_tick_time;
     uint32_t last_display_time;
     uint32_t start_animation_time;
@@ -121,8 +122,7 @@ void run_clock(void) {
             // Update the opacity for the ring and grid
             apply_opacity();
             // Frame has been drawn - reset the redraw flags
-            reset_ring_redraw();
-            reset_grid_redraw();
+            reset_redraw_flags();
 
             last_display_time = get_clock_ticks();
         }
@@ -132,10 +132,12 @@ void run_clock(void) {
 
 /* Handles settings & config updates via IR communication. */
 void update_clock(void) {
+    // TODO this logic
 }
 
 /* The clock is gracefully stopped. */
 void reset_clock(void) {
+    // TODO this logic
     while (1) {     //hang the system
     }
 }

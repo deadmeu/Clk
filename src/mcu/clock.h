@@ -21,6 +21,7 @@ void increment_seconds(void);
 void reset_minute_flag(void);
 void reset_alarm_flag(void);
 void update_display(void);
+void reset_redraw_flags(void);
 void reset_ring_redraw(void);
 void reset_grid_redraw(void);
 void call_ring_redraw(void);
