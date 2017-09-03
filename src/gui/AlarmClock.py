@@ -265,7 +265,7 @@ class SelectionFrame(tk.Frame):
         
 
         #Get current time button
-        self._get_time = ttk.Button(self, text = "Get Current Time", command = self.get_time);
+        self._get_time = ttk.Button(self, text = "Set to PC Time", command = self.get_time);
         self._get_time.grid(row = 3, column = 0, columnspan = 5, sticky = 'ew')
 
         #Weather display
