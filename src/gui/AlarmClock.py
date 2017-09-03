@@ -31,8 +31,8 @@ import json
 #####################################
 
 hour_disp = True
-hour = 2
-minute = 20
+hour = 0
+minute = 0
 am_pm = "PM"
 weather = ""
 
@@ -249,15 +249,15 @@ class SelectionFrame(tk.Frame):
         
         self._hour = ttk.Entry(self, width = 2, textvariable = self._hr)
         self._min =  ttk.Entry(self, width = 2, textvariable = self._mn)
-        self._set = ttk.Button(self, text="set", command = self.set_time)
+        self._set = ttk.Button(self, text = "Set", command = self.set_time)
 
         self._choices = {"", "PM", "AM"}
         self._am_pm = StringVar(self, value = am_pm)
         self._am_pm_option = ttk.OptionMenu(self, self._am_pm, *self._choices)
         self._am_pm_option.config(width = 3)
 
-        self._select.grid(row = 0, column = 0)
-        self._set.grid(row = 1, column = 0, sticky = 'ew', pady = 2)
+        self._select.grid(row = 0, column = 0, pady = 10)
+        self._set.grid(row = 1, column = 0, sticky = 'ew', pady = 10)
         self._hour.grid(row = 1, column = 1)
         self._timeLabel.grid(row = 1, column = 2)
         self._min.grid(row = 1, column = 3)
@@ -266,13 +266,13 @@ class SelectionFrame(tk.Frame):
 
         #Get current time button
         self._get_time = ttk.Button(self, text = "Set to PC Time", command = self.get_time);
-        self._get_time.grid(row = 3, column = 0, columnspan = 5, sticky = 'ew')
+        self._get_time.grid(row = 3, column = 0, columnspan = 5, sticky = 'ew', pady = 10)
 
         #Weather display
-        self._weather = ttk.Label(self, text = weather, width = 15)
+        self._weather = ttk.Label(self, text = weather, width = 20, justify = LEFT)
         self._request_weather = ttk.Button(self, text = "Get Weather", command = self.update_weather);
-        self._weather.grid(row = 4, column = 0, columnspan = 5)
-        self._request_weather.grid(row = 5, column = 0, columnspan = 5, sticky = 'ew')
+        self._weather.grid(row = 4, column = 0, columnspan = 5, pady = 5)
+        self._request_weather.grid(row = 5, column = 0, columnspan = 5, sticky = 'ew', pady = 10)
 
     def reset_input(self):
         """Resets the value in the input
