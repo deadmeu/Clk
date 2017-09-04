@@ -1,165 +1,143 @@
 /*
- * Modified by Alex Subaric from work made by Peter Sutton.
- */ 
+ * project.c
+ *
+ * Written by Alex Subaric.
+ */
 
-// #include <avr/io.h>
-// #include "spi.h"
-// #include "ledarray.h"
+#include <avr/io.h>
+#include <avr/interrupt.h>
 
-// int main(int argc, char** argv) {
-//     //ledmatrix_setup();
+#include "clock.h"
+#include "ir.h"
+#include "ldr.h"
+#include "ledarray.h"
+#include "splash.h"
+#include "timer.h"
 
-//     return 0;
-// }
+#ifndef F_CPU
+#define F_CPU 16000000UL
+#endif
+#include <util/delay.h>
 
+#define DISPLAY_UPDATE_DELAY        100     // 100 ms
+#define DISPLAY_HOUR_MARKER_DELAY   500     // 500 ms 
+#define DISPLAY_ANIMATION_TIME      4000    // 4 seconds
+#define ANIMATION_FRAME_TIME        500     // 500 ms
+#define PLAY_ALARM_TIME             10000   // 10 seconds
 
+void initialise_hardware(void);
+void initialise_clock(void);
+void run_clock(void);
+void update_clock(void);
+void reset_clock(void);
 
+/* The program's main function. */
+int main(void) {
+    initialise_hardware();
+    splash_screen();
+    splash_off();
 
-//////////// KEVIN DARRAH CODE///////////////////
-// taken from https://www.youtube.com/watch?v=VAa4duqMrgs
-
-
-//VARIABLES AND DEFINES HERE - NEEDED BY THE WS2812 DRIVER CODE
-#define WS2812_pin 8 // only digital pin 8 works right now
-#define numberOfLEDs 3// total number of RGB LEDs
-byte RGB[9];//take your number of LEDs and multiply by 3
-
-// FUNCTIONS HERE
-void RGB_update(int LED, byte RED, byte GREEN, byte BLUE);//function to drive LEDs
-
-void setup() {
-  pinMode(WS2812_pin, OUTPUT);
-}//setup
-
-
-void loop() {
-
-
-RGB_update(0,0,0,0);//LED#, RED, GREEN, BLUE
-delay(1000);
-
-}//loop
-
-
-
-//WS2812 Driver Function
-void RGB_update(int LED, byte RED, byte GREEN, byte BLUE) {
-  // LED is the LED number starting with 0
-  // RED, GREEN, BLUE is the brightness 0..255 setpoint for that LED
-  byte ExistingPort, WS2812pinHIGH;//local variables here to speed up pinWrites
-  
-  if(LED>=0){//map the REG GREEN BLUE Values into the RGB[] array
-  RGB[LED * 3] = GREEN;
-  RGB[LED * 3 + 1] = RED;
-  RGB[LED * 3 + 2] = BLUE;
-  }
-  
-  noInterrupts();//kill the interrupts while we send the bit stream out...
-  ExistingPort = PORTB; // save the status of the entire PORT B - let's us write to the entire port without messing up the other pins on that port
-  WS2812pinHIGH = PORTB | 1; //this gives us a byte we can use to set the whole PORTB with the WS2812 pin HIGH
-  int bitStream = numberOfLEDs * 3;//total bytes in the LED string
-
-//This for loop runs through all of the bits (8 at a time) to set the WS2812 pin ON/OFF times
-  for (int i = 0; i < bitStream; i++) {
-
-    PORTB = WS2812pinHIGH;//bit 7  first, set the pin HIGH - it always goes high regardless of a 0/1 
-    
-    //here's the tricky part, check if the bit in the byte is high/low then right that status to the pin
-    // (RGB[i] & B10000000) will strip away the other bits in RGB[i], so here we'll be left with B10000000 or B00000000
-    // then it's easy to check if the bit is high or low by AND'ing that with the bit mask ""&& B10000000)"" this gives 1 or 0
-    // if it's a 1, we'll OR that with the Existing port, thus keeping the pin HIGH, if 0 the pin is written LOW
-    PORTB = ((RGB[i] & B10000000) && B10000000) | ExistingPort; 
-    __asm__("nop\n\t""nop\n\t""nop\n\t""nop\n\t""nop\n\t");//these are NOPS - these let us delay clock cycles for more precise timing 
-    PORTB = ExistingPort;//okay, here we know we have to be LOW regardless of the 0/1 bit state
-    __asm__("nop\n\t""nop\n\t""nop\n\t""nop\n\t""nop\n\t""nop\n\t""nop\n\t");//minimum LOW time for pin regardless of 0/1 bit state
-
-    // then do it again for the next bit and so on... see the last bit though for a slight change
-
-    PORTB = WS2812pinHIGH;//bit 6
-    PORTB = ((RGB[i] & B01000000) && B01000000) | ExistingPort;
-    __asm__("nop\n\t""nop\n\t""nop\n\t""nop\n\t""nop\n\t");
-    PORTB = ExistingPort;
-    __asm__("nop\n\t""nop\n\t""nop\n\t""nop\n\t""nop\n\t""nop\n\t""nop\n\t");
-
-    PORTB = WS2812pinHIGH;//bit 5
-    PORTB = ((RGB[i] & B00100000) && B00100000) | ExistingPort;
-    __asm__("nop\n\t""nop\n\t""nop\n\t""nop\n\t""nop\n\t");
-    PORTB = ExistingPort;
-    __asm__("nop\n\t""nop\n\t""nop\n\t""nop\n\t""nop\n\t""nop\n\t""nop\n\t");
-
-    PORTB = WS2812pinHIGH;//bit 4
-    PORTB = ((RGB[i] & B00010000) && B00010000) | ExistingPort;
-    __asm__("nop\n\t""nop\n\t""nop\n\t""nop\n\t""nop\n\t");
-    PORTB = ExistingPort;
-    __asm__("nop\n\t""nop\n\t""nop\n\t""nop\n\t""nop\n\t""nop\n\t""nop\n\t");
-
-    PORTB = WS2812pinHIGH;//bit 3
-    PORTB = ((RGB[i] & B00001000) && B00001000) | ExistingPort;
-    __asm__("nop\n\t""nop\n\t""nop\n\t""nop\n\t""nop\n\t");
-    PORTB = ExistingPort;
-    __asm__("nop\n\t""nop\n\t""nop\n\t""nop\n\t""nop\n\t""nop\n\t""nop\n\t");
-
-    PORTB = WS2812pinHIGH;//bit 2
-    PORTB = ((RGB[i] & B00000100) && B00000100) | ExistingPort;
-    __asm__("nop\n\t""nop\n\t""nop\n\t""nop\n\t""nop\n\t");
-    PORTB = ExistingPort;
-    __asm__("nop\n\t""nop\n\t""nop\n\t""nop\n\t""nop\n\t""nop\n\t""nop\n\t");
-
-    PORTB = WS2812pinHIGH;//bit 1
-    PORTB = ((RGB[i] & B00000010) && B00000010) | ExistingPort;
-    __asm__("nop\n\t""nop\n\t""nop\n\t""nop\n\t""nop\n\t");
-    PORTB = ExistingPort;
-    __asm__("nop\n\t""nop\n\t""nop\n\t""nop\n\t""nop\n\t""nop\n\t""nop\n\t");
-
-    PORTB = WS2812pinHIGH;//bit 0
-    __asm__("nop\n\t");//on this last bit, the check is much faster, so had to add a NOP here
-    PORTB = ((RGB[i] & B00000001) && B00000001) | ExistingPort;
-    __asm__("nop\n\t""nop\n\t""nop\n\t""nop\n\t""nop\n\t"); 
-    PORTB = ExistingPort;//note there are no NOPs after writing the pin LOW, this is because the FOR Loop uses clock cycles that we can use instead of the NOPS
-  }//for loop
-
-  
-  interrupts();//enable the interrupts
-
-// all done!
-}//void RGB_update
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//////////////////////////// Arduino ////////////////////////////
-
-#include "libraries/fastled/FastLED.h"
-#define NUM_LEDS 3
-#define DATA_PIN 6
-
-CRGB leds[NUM_LEDS];
-
-void setup() {
-    FastLED.addLeds<NEOPIXEL, DATA_PIN>(leds, NUM_LEDS);
+    while(1) {
+        initialise_clock();
+        run_clock();
+        update_clock();
+        reset_clock();
+    }
 }
 
-void loop() {
-    // Turn the first led red for 1 second
-    leds[0] = CRGB::Red; 
-    FastLED.show();
-    delay(1000);
-    
-    // Set the first led back to black for 1 second
-    leds[0] = CRGB::Black;
-    FastLED.show();
-    delay(1000);
+/* Initialises the ATmega328P built-in timer0. */
+void initialise_hardware(void) {
+    // Setup the main timer, providing an interrupt every millisecond
+    init_timer0();
+
+    // Turn on global interrupts
+    sei();
+}
+
+/* Initialises the clock flags, timers, counters, and other variables. */
+void initialise_clock(void) {
+    init_clock();
+}
+
+/* Handles the main clock program (displaying time, animations, alarm, etc.) */
+void run_clock(void) {
+    // TODO only look at redrawing each pixel that is changed?
+    uint32_t last_clock_tick_time;
+    uint32_t last_display_time;
+    uint32_t start_animation_time;
+    uint32_t start_alarm_time;
+
+    last_clock_tick_time = last_display_time = start_animation_time = start_alarm_time = get_clock_ticks();
+
+    while(1) {
+        // Handle new second
+        if (get_clock_ticks() - last_clock_tick_time >= 1000) {
+            // One second has passed since the last clock tick, so increment the clock time by 1 second
+            increment_seconds();
+            call_ring_redraw();
+            last_clock_tick_time = get_clock_ticks();
+        }
+
+        // Turn on the weather animation
+        if (weather_is_set() && reached_new_minute() && !animation_is_playing()) {
+            play_weather_animation();
+            start_animation_time = get_clock_ticks();
+            reset_minute_flag();
+        }
+
+        // Update animation frame
+        if (animation_is_playing() && (get_clock_ticks() - start_animation_time >= ANIMATION_FRAME_TIME)) {
+            update_animation_frame();
+            call_grid_redraw();
+        }
+
+        // If the weather animation is playing, turn it off after it's played for long enough
+        if (animation_is_playing() && (get_clock_ticks() - start_animation_time >= DISPLAY_ANIMATION_TIME)) {
+            stop_weather_animation();
+            call_grid_redraw();
+        }
+
+        // Handle alarm
+        if (alarm_is_set() && reached_alarm_time() && !alarm_is_playing()) {
+            play_alarm_sound();
+            start_alarm_time = get_clock_ticks();
+            reset_alarm_flag();
+        }
+
+        // If the alarm is playing, turn it off after it's played for long enough
+        if (alarm_is_playing() && (get_clock_ticks() - start_alarm_time >= PLAY_ALARM_TIME)) {
+            stop_alarm_sound();
+        }
+
+        // Handle new frame draw
+        if ((redraw_ring_needed() || redraw_grid_needed()) 
+                && (get_clock_ticks() - last_display_time >= DISPLAY_UPDATE_DELAY)) {
+            // Check if the hour marker needs to be drawn
+            if (get_clock_ticks() - last_display_time >= DISPLAY_HOUR_MARKER_DELAY) {
+                toggle_hour_marker();
+                call_ring_redraw();
+            }
+            // Time for a new 'frame' of the clock to be drawn & displayed
+            update_display();
+            // Update the opacity for the ring and grid
+            apply_opacity();
+            // Frame has been drawn - reset the redraw flags
+            reset_redraw_flags();
+
+            last_display_time = get_clock_ticks();
+        }
+        show_display();
+    }
+}
+
+/* Handles settings & config updates via IR communication. */
+void update_clock(void) {
+    // TODO this logic
+}
+
+/* The clock is gracefully stopped. */
+void reset_clock(void) {
+    // TODO this logic
+    while (1) {     //hang the system
+    }
 }
