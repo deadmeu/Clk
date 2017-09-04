@@ -10,7 +10,7 @@
 #include <util/delay.h>
 
 #ifndef F_CPU 
-#define F_CPU 1000000UL
+#define F_CPU 8000000UL
 #endif
 
 /*
@@ -30,21 +30,23 @@ Here are the note frequencies
 #define G6 1567.98
 #define A6 1760.00
 #define B6 1975.53
+#define C7 2093.00
 
 void play_note(int note);
+void delay_note(int duration);
 void setup_sound(void);
+void play_scale(void);
+void play_octaves(void);
+void play_big_ben(void);
+void play_alarm(void);
+void silence(int duration);
 
 int main(void)
 {
 	setup_sound();
     /* Replace with your application code */
     while (1) {
-		play_note(C5);
-		_delay_ms(1000);
-		play_note(E5);
-		_delay_ms(1000);
-		play_note(G5);
-		_delay_ms(1000);
+		play_alarm();
     }
 }
 
@@ -67,5 +69,90 @@ The formula for outputting a frequency is
 OCR1A = (f_clk / f_out * 2 * prescale) - 1.
 */
 void play_note(int note) {
-	OCR1A = (F_CPU / note * 2) - 1;
+/*
+A value of 2000000 seems to give clear sounding notes, chosen by trial and error.
+*/
+	OCR1A = (2000000 / note * 2) - 1;
+}
+
+void delay_note(int duration) {
+	while (duration--) {
+		_delay_ms(1);
+	}
+}
+
+void silence(int duration) {
+	DDRB &= ~(1 << PORTB1);
+	delay_note(duration);
+	DDRB |= 1 << PORTB1;
+}
+
+void play_scale(void) {
+	int notes[] = {C5,D5,E5,F5,G5,A5,B5,C6,D6,E6,F6,G6,A6,B6,C7};
+	int i;
+	for (i = 0; i < sizeof(notes) / sizeof(notes[0]); i++){
+		play_note(notes[i]);
+		_delay_ms(2000);
+	}
+	for (i = sizeof(notes) / sizeof(notes[0]) - 1; i > 0; i--){
+		play_note(notes[i]);
+		_delay_ms(2000);
+	}
+}
+
+void play_octaves(void) {
+	int notes[] = {C5,C6,D5,D6,E5,E6,F5,F6,G5,G6,A5,A6,B5,B6,C6,C7};
+	int i;
+	for (i = 0; i < sizeof(notes) / sizeof(notes[0]); i++){
+		play_note(notes[i]);
+		_delay_ms(2000);
+	}
+}
+
+void play_big_ben(void) {
+/*
+Play a note for its corresponding duration
+*/
+	int notesAndBreaks[] = {E5,4000, 
+			C5,4000, 
+			D5,4000,
+			G5,12000,
+			G5,4000,
+			D5,4000,
+			E5,4000,
+			C5,12000,
+			E5,4000,
+			D5,4000,
+			C5,4000,
+			G5,12000,
+			G5,4000,
+			D5,4000,
+			E5,4000,
+			C5,12000};
+	int i;
+	for (i = 0; i < sizeof(notesAndBreaks) / sizeof(notesAndBreaks[0]); i+=2) {
+		play_note(notesAndBreaks[i]);
+		delay_note(notesAndBreaks[i+1]);
+	}
+}
+
+void play_alarm(void) {
+	int notesAndBreaks[] = {C5,1000,
+	E5,1000,
+	G5,2000,
+	E5,1000,
+	G5,1000,
+	C6,6000,
+	C5,1000,
+	E5,1000,
+	G5,2000,
+	E5,1000,
+	G5,1000,
+	C6,8000};
+	int i;
+	for (i = 0; i < sizeof(notesAndBreaks) / sizeof(notesAndBreaks[0]); i+=2) {
+		play_note(notesAndBreaks[i]);
+		delay_note(notesAndBreaks[i+1]);
+	}
+	silence(8000);
 }
