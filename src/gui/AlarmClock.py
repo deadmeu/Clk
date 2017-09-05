@@ -90,7 +90,7 @@ class ClockView(tk.Canvas):
                     c = "#ff0"
             else:
                 c = "#fff"
-            self.create_circle(cx + math.cos(a*i - off)*r, cy + math.sin(a*i - off)*r, rad, outline="#000", fill=c, width=2)
+            self.draw_led(cx + math.cos(a*i - off)*r, cy + math.sin(a*i - off)*r, rad, outline="#000", fill=c, width=2)
 
         #Drawing square
         spc = (r - 25)/4
@@ -119,11 +119,11 @@ class ClockView(tk.Canvas):
                         c = "#ff0"
                 else:
                     c = "#fff"
-                self.create_circle(cx - (1.5 * spc + 3 * rad) + (2 * rad + spc) * i, cy - (1.5 * spc + 3 * rad) + (2 * rad + spc) * j, rad, outline="#000", fill=c, width=2)
+                self.draw_led(cx - (1.5 * spc + 3 * rad) + (2 * rad + spc) * i, cy - (1.5 * spc + 3 * rad) + (2 * rad + spc) * j, rad, outline="#000", fill=c, width=2)
 
         
-    def create_circle(self, x, y, r, **kwargs):
-        return self.create_oval(x-r, y-r, x+r, y+r, **kwargs)
+    def draw_led(self, x, y, r, **kwargs):
+        return self.create_rectangle(x - r, y - r, x + r, y + r, **kwargs)
         
     
     def resize(self, e):
