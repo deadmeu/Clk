@@ -51,7 +51,7 @@ int main(void)
 }
 
 /*
-Using timer 0, we're going to output PWM on OC1A to play sound.
+Using timer 1, we're going to output PWM on OC1A to play sound.
 We're using toggle on output compare with no prescaling.
 */
 void setup_sound(void) {
