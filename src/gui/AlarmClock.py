@@ -90,7 +90,7 @@ class ClockView(tk.Canvas):
                     c = "#ff0"
             else:
                 c = "#fff"
-            self.draw_led(cx + math.cos(a*i - off)*r, cy + math.sin(a*i - off)*r, rad, outline="#000", fill=c, width=2)
+            self.draw_led(cx + math.cos(a*i - off)*r, cy + math.sin(a*i - off)*r, rad, (a*i - off), outline="#000", fill=c, width=2)
 
         #Drawing square
         spc = (r - 25)/4
@@ -119,11 +119,27 @@ class ClockView(tk.Canvas):
                         c = "#ff0"
                 else:
                     c = "#fff"
-                self.draw_led(cx - (1.5 * spc + 3 * rad) + (2 * rad + spc) * i, cy - (1.5 * spc + 3 * rad) + (2 * rad + spc) * j, rad, outline="#000", fill=c, width=2)
+                self.draw_led(cx - (1.5 * spc + 3 * rad) + (2 * rad + spc) * i, cy - (1.5 * spc + 3 * rad) + (2 * rad + spc) * j, rad, 0, outline="#000", fill=c, width=2)
 
         
-    def draw_led(self, x, y, r, **kwargs):
-        return self.create_rectangle(x - r, y - r, x + r, y + r, **kwargs)
+    def draw_led(self, x, y, r, a, **kwargs):
+
+        a += math.pi/4
+        
+        x0 = x + math.cos(a) * r
+        y0 = y + math.sin(a) * r
+
+        x1 = x + math.cos(a + (math.pi/2)) * r
+        y1 = y + math.sin(a + (math.pi/2)) * r
+
+        x2 = x + math.cos(a + (math.pi)) * r
+        y2 = y + math.sin(a + (math.pi)) * r
+
+        x3 = x + math.cos(a + (3 * math.pi/2)) * r
+        y3 = y + math.sin(a + (3 * math.pi/2)) * r       
+
+        
+        return self.create_polygon(x0, y0, x1, y1, x2, y2, x3, y3, **kwargs)
         
     
     def resize(self, e):
