@@ -34,14 +34,14 @@ void reset_clock(void);
 /* The program's main function. */
 int main(void) {
     initialise_hardware();
-    splash_screen();
-    splash_off();
+    //splash_screen();
+    //splash_off();
 
     while(1) {
         initialise_clock();
         run_clock();
-        update_clock();
-        reset_clock();
+        //update_clock();
+        //reset_clock();
     }
 }
 
@@ -109,17 +109,18 @@ void run_clock(void) {
             stop_alarm_sound();
         }
 
+        // Toggle the hour marker
+        if (get_clock_ticks() - last_display_time >= DISPLAY_HOUR_MARKER_DELAY) {
+            toggle_hour_marker();
+            call_ring_redraw();
+        }
+
         // Handle new frame draw
         if ((redraw_ring_needed() || redraw_grid_needed()) 
                 && (get_clock_ticks() - last_display_time >= DISPLAY_UPDATE_DELAY)) {
-            // Check if the hour marker needs to be drawn
-            if (get_clock_ticks() - last_display_time >= DISPLAY_HOUR_MARKER_DELAY) {
-                toggle_hour_marker();
-                call_ring_redraw();
-            }
             // Time for a new 'frame' of the clock to be drawn & displayed
             update_display();
-            // Update the opacity for the ring and grid
+            // // Update the opacity for the ring and grid
             apply_opacity();
             // Frame has been drawn - reset the redraw flags
             reset_redraw_flags();

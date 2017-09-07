@@ -10,14 +10,16 @@
 #include "ledarray.h"
 #include "pixel_colour.h"
 
-#define RING_LEDS   4
+#define RING_LEDS   12
 #define GRID_LEDS   16
 #define MAX_TIME    86399L              // 23:59:59 converted to seconds. L for long (32 bit) type
 
-#define HOURS        time / 3600
-#define MINUTES     (time - 3600 * HOURS) / 60
-#define SECONDS     (time - 3600 * HOURS) - 60 * MINUTES
+#define HOURS       (time / 3600)
+#define MINUTES     ((time - 3600 * HOURS) / 60)
+#define SECONDS     ((time - 3600 * HOURS) - 60 * MINUTES)
 #define FOURS       MINUTES % 5
+
+#define HOUR_MARKER_COLOUR  GREEN
 
 static void init_leds(void);
 
@@ -76,7 +78,7 @@ void init_clock(void) {
     weather_set_flag = 0;
     alarm_set_flag = 1;
     
-    opacity_amount = 100;
+    opacity_amount = 30;
 }
 
 void splash_off(void) {
@@ -94,14 +96,6 @@ void increment_seconds(void) {
     if (time == alarm_time) {
         alarm_flag = 1;
     }
-    // if (SECONDS == 59) {
-    //     // 59 seconds have already passed, now entering the 60th second so
-    //     // reset the counter and increment the minutes counter by one.
-    //     seconds = 0;
-    //     increment_minutes();
-    // } else {
-    //     seconds++;
-    // }
 }
 
 // TODO: probably put this in a weather.c file?
@@ -231,7 +225,7 @@ void update_animation_frame(void) {
 void update_display(void) {
     // Update entire ring
     if (draw_ring_flag) {
-        for (uint8_t i = 0; RING_LEDS; i++) { 
+        for (uint8_t i = 0; i < RING_LEDS; i++) { 
             if (i * (60 / RING_LEDS) <= MINUTES) {
                 update_pixel(&rgb_ring[i], RED);
             }
@@ -240,7 +234,7 @@ void update_display(void) {
 
     // Add hour marker to grid if necessary
     if (hour_marker_flag) {
-        update_pixel(&rgb_ring[HOURS % RING_LEDS], GREEN);
+        update_pixel(&rgb_ring[HOURS % RING_LEDS], HOUR_MARKER_COLOUR);
     }
 
     // Update grid

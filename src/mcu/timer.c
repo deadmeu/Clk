@@ -36,7 +36,7 @@ void init_timer0(void) {
     TCCR0A = (1 << WGM01);
 
     // Set CS02, CS01, CS00 bits for 64 prescaler
-    TCCR0B = (0 << CS02) | (1 << CS01) | (1 << CS00);
+    TCCR0B = (1 << CS01) | (1 << CS00);
 
     // Enable interrupt on output compare match
     TIMSK0 |= (1 << OCIE0A);
