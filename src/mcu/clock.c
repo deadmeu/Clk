@@ -23,7 +23,9 @@
 
 #define HOUR_MARKER_COLOUR  GREEN
 #define ANTE_MERIDIEM       0
+#define RING_PIN            0
 #define POST_MERIDIEM       1
+#define GRID_PIN            1
 
 static void init_leds(void);
 
@@ -79,11 +81,11 @@ void init_clock(void) {
     call_ring_redraw();
     call_grid_redraw();
 
-    set_meridiem_colours(ANTE_MERIDIEM, RED);
+    set_meridiem_colours(ANTE_MERIDIEM, PURPLE);
     set_meridiem_colours(POST_MERIDIEM, BLUE);
   
-    time = 43190L;       // 18:42:34
-    alarm_time = 60L;    // 1 minute past midnight
+    time = MAX_TIME-10;       // 18:42:34
+    alarm_time = 0;    // 1 minute past midnight
     splash_flag = 1;
     hour_marker_flag = 1;
     weather_set_flag = 0;
@@ -221,7 +223,8 @@ void set_time(uint32_t new_time) {
 }
 
 void show_display(void) {
-    enable_leds(led_ring, RING_LEDS);
+    enable_leds(led_ring, RING_LEDS, RING_PIN);
+    enable_leds(led_grid, GRID_LEDS, GRID_PIN);
 }
 
 void toggle_hour_marker(void) {
@@ -274,7 +277,7 @@ void update_display(void) {
     if (hour_marker_flag) {
         update_pixel(&rgb_ring[HOURS % RING_LEDS], HOUR_MARKER_COLOUR);
     }
-
+	// TODO change grid coour to meridiem
     // Update grid
     if (draw_grid_flag) {
         if (animation_is_playing()) {      // display the animation

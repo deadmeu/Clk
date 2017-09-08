@@ -32,24 +32,6 @@ Here are the note frequencies
 #define B6 1975.53
 #define C7 2093.00
 
-void play_note(int note);
-void delay_note(int duration);
-void setup_sound(void);
-void play_scale(void);
-void play_octaves(void);
-void play_big_ben(void);
-void play_alarm(void);
-void silence(int duration);
-
-int main(void)
-{
-	setup_sound();
-    /* Replace with your application code */
-    while (1) {
-		play_alarm();
-    }
-}
-
 /*
 Using timer 1, we're going to output PWM on OC1A to play sound.
 We're using toggle on output compare with no prescaling.

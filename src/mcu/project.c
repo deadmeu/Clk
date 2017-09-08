@@ -13,6 +13,7 @@
 #include "ledarray.h"
 #include "splash.h"
 #include "timer.h"
+#include "sound.h"
 
 #ifndef F_CPU
 #define F_CPU 8000000UL
@@ -23,7 +24,7 @@
 #define DISPLAY_HOUR_MARKER_DELAY   500     // 500 ms 
 #define DISPLAY_ANIMATION_TIME      4000    // 4 seconds
 #define ANIMATION_FRAME_TIME        500     // 500 ms
-#define PLAY_ALARM_TIME             10000   // 10 seconds
+#define PLAY_ALARM_TIME             3000   // 10 seconds
 
 void initialise_hardware(void);
 void initialise_clock(void);
@@ -50,6 +51,9 @@ void initialise_hardware(void) {
     // Setup the main timer, providing an interrupt every millisecond
     init_timer0();
 
+    //Setup sound
+    setup_sound();
+
     // Turn on global interrupts
     sei();
 }
@@ -75,6 +79,7 @@ void run_clock(void) {
             // One second has passed since the last clock tick, so increment the clock time by 1 second
             increment_seconds();
             call_ring_redraw();
+			call_grid_redraw();
             last_clock_tick_time = get_clock_ticks();
         }
 
@@ -99,14 +104,16 @@ void run_clock(void) {
 
         // Handle alarm
         if (alarm_is_set() && reached_alarm_time() && !alarm_is_playing()) {
-            play_alarm_sound();
+            // play_alarm_sound();
+            play_alarm();
             start_alarm_time = get_clock_ticks();
             reset_alarm_flag();
         }
 
         // If the alarm is playing, turn it off after it's played for long enough
         if (alarm_is_playing() && (get_clock_ticks() - start_alarm_time >= PLAY_ALARM_TIME)) {
-            stop_alarm_sound();
+            // stop_alarm_sound();
+            //silence(50000);
         }
 
         // Toggle the hour marker
