@@ -35,6 +35,13 @@ hour = 0
 minute = 0
 am_pm = "PM"
 weather = ""
+auto = True
+
+alarm = False
+al_h = 0
+al_m = 0
+al_am_pm = "PM"
+
 
 class ClockView(tk.Canvas):
     """Inherits from tkinter Canvas class
@@ -90,7 +97,7 @@ class ClockView(tk.Canvas):
                     c = "#ff0"
             else:
                 c = "#fff"
-            self.create_circle(cx + math.cos(a*i - off)*r, cy + math.sin(a*i - off)*r, rad, outline="#000", fill=c, width=2)
+            self.draw_led(cx + math.cos(a*i - off)*r, cy + math.sin(a*i - off)*r, rad, (a*i - off), outline="#000", fill=c, width=2)
 
         #Drawing square
         spc = (r - 25)/4
@@ -119,11 +126,27 @@ class ClockView(tk.Canvas):
                         c = "#ff0"
                 else:
                     c = "#fff"
-                self.create_circle(cx - (1.5 * spc + 3 * rad) + (2 * rad + spc) * i, cy - (1.5 * spc + 3 * rad) + (2 * rad + spc) * j, rad, outline="#000", fill=c, width=2)
+                self.draw_led(cx - (1.5 * spc + 3 * rad) + (2 * rad + spc) * i, cy - (1.5 * spc + 3 * rad) + (2 * rad + spc) * j, rad, 0, outline="#000", fill=c, width=2)
 
         
-    def create_circle(self, x, y, r, **kwargs):
-        return self.create_oval(x-r, y-r, x+r, y+r, **kwargs)
+    def draw_led(self, x, y, r, a, **kwargs):
+
+        a += math.pi/4
+        
+        x0 = x + math.cos(a) * r
+        y0 = y + math.sin(a) * r
+
+        x1 = x + math.cos(a + (math.pi/2)) * r
+        y1 = y + math.sin(a + (math.pi/2)) * r
+
+        x2 = x + math.cos(a + (math.pi)) * r
+        y2 = y + math.sin(a + (math.pi)) * r
+
+        x3 = x + math.cos(a + (3 * math.pi/2)) * r
+        y3 = y + math.sin(a + (3 * math.pi/2)) * r       
+
+        
+        return self.create_polygon(x0, y0, x1, y1, x2, y2, x3, y3, **kwargs)
         
     
     def resize(self, e):
@@ -270,9 +293,75 @@ class SelectionFrame(tk.Frame):
 
         #Weather display
         self._weather = ttk.Label(self, text = weather, width = 20, justify = LEFT)
-        self._request_weather = ttk.Button(self, text = "Get Weather", command = self.update_weather);
+        self._request_weather = ttk.Button(self, text = "Get Weather", command = self.update_weather)        
+        self._auto_weather = ttk.Button(self, text = "Auto-Retrieve Weather: ON", command = self.toggle_auto)
         self._weather.grid(row = 4, column = 0, columnspan = 5, pady = 5)
         self._request_weather.grid(row = 5, column = 0, columnspan = 5, sticky = 'ew', pady = 10)
+        self._auto_weather.grid(row = 6, column = 0, columnspan = 5, sticky = 'ew', pady = 10)
+
+        #Alarm setting
+        self._alarm = ttk.Label(self, text = "Alarm:")
+        self._al_label = ttk.Label(self, text = " : ")
+
+        self._al_hr = StringVar(self, value = str(al_h))
+        self._al_mn = StringVar(self, value = str(al_m))
+        
+        self._al_hour = ttk.Entry(self, width = 2, textvariable = self._al_hr, state = 'disabled')
+        self._al_min =  ttk.Entry(self, width = 2, textvariable = self._al_mn, state = 'disabled')
+        self._al_set = ttk.Button(self, text = "Set", command = self.set_alarm, state = 'disabled')
+
+        self._al_am_pm = StringVar(self, value = al_am_pm)
+        self._al_am_pm_option = ttk.OptionMenu(self, self._al_am_pm, *self._choices)
+        self._al_am_pm_option.config(state = 'disabled')
+        self._al_am_pm_option.config(width = 3)
+        self._alarm_switch = ttk.Button(self, text = "Alarm: OFF", command = self.toggle_alarm)
+
+        self._alarm.grid(row = 7, column = 0, pady = 10)
+        self._al_set.grid(row = 8, column = 0, sticky = 'ew', pady = 10)
+        self._al_hour.grid(row = 8, column = 1)
+        self._al_label.grid(row = 8, column = 2)
+        self._al_min.grid(row = 8, column = 3)
+        self._al_am_pm_option.grid(row = 8, column = 4, sticky = 'ew')
+        self._alarm_switch.grid(row = 9, column = 0, columnspan = 5, sticky = 'ew', pady = 10)
+
+    def toggle_auto(self):
+        """Toggles whether weather retrieval is automatic or not
+
+    
+        toggle_auto() -> None (Changes settings)
+        """
+        global auto
+        auto = not auto
+        print(auto)
+        if(auto):
+            self._auto_weather.config(text = "Auto-Retrieve Weather: ON")
+        else:
+            self._auto_weather.config(text = "Auto-Retrieve Weather: OFF")
+
+    def toggle_alarm(self):
+        """Toggles whether weather retrieval is automatic or not
+
+    
+        toggle_auto() -> None (Changes settings)
+        """
+        global alarm
+        alarm = not alarm
+        print(alarm)
+        if(alarm):
+            self._alarm_switch.config(text = "Alarm: ON")
+
+            self._al_hour.config(state = 'enabled')
+            self._al_min.config(state = 'enabled')
+            self._al_set.config(state = 'enabled')
+            self._al_am_pm_option.config(state = 'enabled')
+        else:
+            self._alarm_switch.config(text = "Alarm: OFF")
+
+            self._al_hour.config(state = 'disabled')
+            self._al_min.config(state = 'disabled')
+            self._al_set.config(state = 'disabled')
+            self._al_am_pm_option.config(state = 'disabled')
+    
 
     def reset_input(self):
         """Resets the value in the input
@@ -323,13 +412,51 @@ class SelectionFrame(tk.Frame):
     def set_time(self):
         """Gets values from the inputs in the menu
 
-        get_time() -> None (Update time and display)
+        set_time() -> None (Update time and display)
         """
         time = [self._hour.get(), self._min.get(), self._am_pm.get()]
         
         global hour
         global minute
         global am_pm
+        ap = time[2]
+
+        if(is_int(time[0]) and is_int(time[1])):
+            h = int(time[0])
+            m = int(time[1])
+            if((h < 13 and h >= 0) and (m < 60 and m >= 0)):
+                hour = h
+                minute = m
+                am_pm = ap
+                if(hour == 0):
+                    hour = 12
+                    h = 12
+                self._parent._clock.draw_clock()
+                self.reset_input()
+                messagebox.showinfo("Time Set", "Time set to " + str(h) + ":" + str(m) + " " + ap)
+                print("Time set to " + str(h) + ":" + str(m) + " " + ap)
+            else:
+                messagebox.showerror("Invalid Input", "Invalid input: " + str(h) + ":" + str(m) + " " + ap + "\n Please ensure you enter numbers\n"
+                                     "Between 1 and 12 for the hour and\n Between 0 and 59 for the minute")
+                print("Invalid input: " + str(h) + ":" + str(m) + " " + ap)
+                self.reset_input()
+        else:
+                messagebox.showerror("Invalid Input", "Invalid input: " + str(time[0]) + ":" + str(time[1]) + " " + ap + "\n Please ensure you enter numbers\n"
+                                     "Between 1 and 12 for the hour and\nBetween 0 and 59 for the minute")
+                print("Invalid input: " + str(time[0]) + ":" + str(time[1]) + " " + ap)
+                self.reset_input()
+
+
+    def set_alarm(self):
+        """Gets values from the inputs in the menu
+
+        set_alarm() -> None (Update time and display)
+        """
+        time = [self._al_hour.get(), self._al_min.get(), self._al_am_pm.get()]
+        
+        global al_h
+        global al_m
+        global al_am_pm
         ap = time[2]
 
         if(is_int(time[0]) and is_int(time[1])):
@@ -424,6 +551,7 @@ def main():
     global hour
     global minute
     global am_pm
+    global auto
     weather = get_weather()
     root = tk.Tk()
     app = ClockApp(root)
@@ -449,7 +577,8 @@ def main():
                     s_set = False
             if(s == 0 and not s_set):
                 s_set = True
-                app._select.update_weather()
+                if(auto):
+                    app._select.update_weather()
                 minute += 1
                 if(minute == 60):
                     minute = 0

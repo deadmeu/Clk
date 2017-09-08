@@ -25,5 +25,6 @@
 #define TEAL        0  , 128, 128
 #define LIME        150, 255, 0  
 #define SKY_BLUE    0  , 100, 255
+#define SUN_YELLOW  200, 255, 25 
 
 #endif

@@ -15,9 +15,9 @@
 static volatile uint32_t clock_ticks;
 
 // Setup timer0 to fire an interrupt every millisecond.
-// Clock is divided by 64, and counter is set to 248.
+// Clock is divided by 64, and counter is set to 124.
 // Starting the counter from 0 yields:
-//      16,000,000 / (64 * 249) = 1000 Hz
+//      8,000,000 / (64 * 125) = 1000 Hz
 //      Therefore, an interrupt every 1 ms @ 16 MHz
 void init_timer0(void) {
     // Disable interrupts
@@ -29,14 +29,14 @@ void init_timer0(void) {
     // Clear the counter value
     TCNT0 = 0;
 
-    // Set the output compare value to be 248
-    OCR0A = 248;
+    // Set the output compare value to be 124
+    OCR0A = 124;
 
     // Turn on Clear On Compare match (CTC) mode
     TCCR0A = (1 << WGM01);
 
     // Set CS02, CS01, CS00 bits for 64 prescaler
-    TCCR0B = (0 << CS02) | (1 << CS01) | (1 << CS00);
+    TCCR0B = (1 << CS01) | (1 << CS00);
 
     // Enable interrupt on output compare match
     TIMSK0 |= (1 << OCIE0A);

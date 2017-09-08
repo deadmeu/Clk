@@ -9,6 +9,8 @@
 
 void init_clock(void);
 void apply_opacity(void);
+void set_meridiem_colours(uint8_t meridiem, uint8_t r, uint8_t g, uint8_t b);
+void update_meridiem(void);
 void play_weather_animation(void);
 void stop_weather_animation(void);
 void play_alarm_sound(void);
