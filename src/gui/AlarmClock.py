@@ -36,11 +36,64 @@ minute = 0
 am_pm = "PM"
 weather = ""
 auto = True
+draw_wthr = False
+frame = 0
 
 alarm = False
 al_h = 0
 al_m = 0
 al_am_pm = "PM"
+
+sun = ["#9EEDFF", "#9EEDFF", "#9EEDFF", "#9EEDFF",
+       "#9EEDFF", "#FFD900", "#FFD900", "#9EEDFF",
+       "#9EEDFF", "#FFD900", "#FFD900", "#9EEDFF",
+       "#9EEDFF", "#9EEDFF", "#9EEDFF", "#9EEDFF",
+       
+       "#FFD900", "#9EEDFF", "#9EEDFF", "#FFD900",
+       "#9EEDFF", "#FFD900", "#FFD900", "#9EEDFF",
+       "#9EEDFF", "#FFD900", "#FFD900", "#9EEDFF",
+       "#FFD900", "#9EEDFF", "#9EEDFF", "#FFD900"]
+
+cloud = ["#9EEDFF", "#9EEDFF", "#9EEDFF", "#9EEDFF",
+       "#9EEDFF", "#FFFFFF", "#FFFFFF", "#9EEDFF",
+       "#FFFFFF", "#FFFFFF", "#FFFFFF", "#FFFFFF",
+       "#9EEDFF", "#9EEDFF", "#9EEDFF", "#9EEDFF",
+       
+       "#9EEDFF", "#9EEDFF", "#9EEDFF", "#9EEDFF",
+       "#9EEDFF", "#FFFFFF", "#FFFFFF", "#9EEDFF",
+       "#FFFFFF", "#FFFFFF", "#FFFFFF", "#FFFFFF",
+       "#9EEDFF", "#9EEDFF", "#9EEDFF", "#9EEDFF"]
+
+rain = ["#9EEDFF", "#82827F", "#82827F", "#9EEDFF",
+       "#82827F", "#82827F", "#82827F", "#82827F",
+       "#0033FF", "#9EEDFF", "#0033FF", "#9EEDFF",
+       "#9EEDFF", "#0033FF", "#9EEDFF", "#0033FF",
+       
+       "#9EEDFF", "#82827F", "#82827F", "#9EEDFF",
+       "#82827F", "#82827F", "#82827F", "#82827F",
+       "#9EEDFF", "#0033FF", "#9EEDFF", "#0033FF",
+       "#0033FF", "#9EEDFF", "#0033FF", "#9EEDFF"]
+
+storm = ["#6074C4", "#82827F", "#82827F", "#6074C4",
+       "#82827F", "#82827F", "#82827F", "#82827F",
+       "#6074C4", "#6074C4", "#6074C4", "#6074C4",
+       "#6074C4", "#6074C4", "#6074C4", "#6074C4",
+       
+       "#6074C4", "#82827F", "#82827F", "#6074C4",
+       "#82827F", "#82827F", "#82827F", "#82827F",
+       "#6074C4", "#FFD900", "#6074C4", "#6074C4",
+       "#6074C4", "#6074C4", "#FFD900", "#6074C4"]
+
+wind = ["#9EEDFF", "#9EEDFF", "#9EEDFF", "#9EEDFF",
+       "#6074C4", "#6074C4", "#9EEDFF", "#9EEDFF",
+       "#9EEDFF", "#9EEDFF", "#9EEDFF", "#9EEDFF",
+       "#9EEDFF", "#9EEDFF", "#6074C4", "#6074C4",
+       
+       "#9EEDFF", "#9EEDFF", "#9EEDFF", "#9EEDFF",
+       "#9EEDFF", "#9EEDFF", "#6074C4", "#6074C4",
+       "#9EEDFF", "#9EEDFF", "#9EEDFF", "#9EEDFF",
+       "#6074C4", "#6074C4", "#9EEDFF", "#9EEDFF"]
+       
 
 
 class ClockView(tk.Canvas):
@@ -82,7 +135,7 @@ class ClockView(tk.Canvas):
 
         a = math.pi/6
         off = math.pi/2
-        rad = 10
+        rad = 15
         r = (min(self._x, self._y) - 50)/2
         self._r = r
         c = "#fff"
@@ -104,29 +157,119 @@ class ClockView(tk.Canvas):
         rem = minute % 5
         for i in range(4):
             for j in range(4):
-                if(i == 0 and j == 0 and rem > 0):
-                    if(am_pm == "AM"):
-                        c = "#0f0"
-                    else:
-                        c = "#ff0"
-                elif(i == 3 and j == 0 and rem > 1):
-                    if(am_pm == "AM"):
-                        c = "#0f0"
-                    else:
-                        c = "#ff0"
-                elif(i == 0 and j == 3 and rem > 2):
-                    if(am_pm == "AM"):
-                        c = "#0f0"
-                    else:
-                        c = "#ff0"
-                elif(i == 3 and j == 3 and rem > 3):
-                    if(am_pm == "AM"):
-                        c = "#0f0"
-                    else:
-                        c = "#ff0"
+                if(draw_wthr):
+                    if(weather == "Sunny"):
+                        f = (frame%2) + 1
+                        if(f == 2):
+                            x = 16
+                        else:
+                            x = 0
+                        c = sun[(i + j * 4) + x]
+                    elif(weather == "Cloudy"):
+                        f = (frame%2) + 1
+                        if(f == 2):
+                            x = 16
+                        else:
+                            x = 0
+                        c = cloud[(i + j * 4) + x]
+                    elif(weather == "Rain"):
+                        f = (frame%2) + 1
+                        if(f == 2):
+                            x = 16
+                        else:
+                            x = 0
+                        c = rain[(i + j * 4) + x]
+                    elif(weather == "Storm"):
+                        f = (frame%2) + 1
+                        if(f == 2):
+                            x = 16
+                        else:
+                            x = 0
+                        c = storm[(i + j * 4) + x]
+                    elif(weather == "Windy"):
+                        f = (frame%2) + 1
+                        if(f == 2):
+                            x = 16
+                        else:
+                            x = 0
+                        c = wind[(i + j * 4) + x]
+                    elif(weather == "Sunny and Windy"):
+                        f = (frame%2) + 1
+                        if(f == 2):
+                            x = 16
+                        else:
+                            x = 0
+                        if(frame < 4):
+                            c = sun[(i + j * 4) + x]
+                        else:
+                            c = wind[(i + j * 4) + x]
+                    elif(weather == "Cloudy and Windy"):
+                        f = (frame%2) + 1
+                        if(f == 2):
+                            x = 16
+                        else:
+                            x = 0
+                        if(frame < 4):
+                            c = cloud[(i + j * 4) + x]
+                        else:
+                            c = wind[(i + j * 4) + x]
+                    elif(weather == "Cloudy and Rain"):
+                        f = (frame%2) + 1
+                        if(f == 2):
+                            x = 16
+                        else:
+                            x = 0
+                        if(frame < 4):
+                            c = cloud[(i + j * 4) + x]
+                        else:
+                            c = rain[(i + j * 4) + x]
+                    elif(weather == "Rain and Windy"):
+                        f = (frame%2) + 1
+                        if(f == 2):
+                            x = 16
+                        else:
+                            x = 0
+                        if(frame < 4):
+                            c = rain[(i + j * 4) + x]
+                        else:
+                            c = wind[(i + j * 4) + x]
+                    elif(weather == "Storm and Windy"):
+                        f = (frame%2) + 1
+                        if(f == 2):
+                            x = 16
+                        else:
+                            x = 0
+                        if(frame < 4):
+                            c = storm[(i + j * 4) + x]
+                        else:
+                            c = wind[(i + j * 4) + x]
+                    
                 else:
-                    c = "#fff"
-                self.draw_led(cx - (1.5 * spc + 3 * rad) + (2 * rad + spc) * i, cy - (1.5 * spc + 3 * rad) + (2 * rad + spc) * j, rad, 0, outline="#000", fill=c, width=2)
+                    if(i == 0 and j == 0 and rem > 0):
+                        if(am_pm == "AM"):
+                            c = "#00ff00"
+                        else:
+                            c = "#ffff00"
+                    elif(i == 3 and j == 0 and rem > 1):
+                        if(am_pm == "AM"):
+                            c = "#00ff00"
+                        else:
+                            c = "#ffff00"
+                    elif(i == 0 and j == 3 and rem > 2):
+                        if(am_pm == "AM"):
+                            c = "#00ff00"
+                        else:
+                            c = "#ffff00"
+                    elif(i == 3 and j == 3 and rem > 3):
+                        if(am_pm == "AM"):
+                            c = "#00ff00"
+                        else:
+                            c = "#ffff00"
+                    else:
+                        c = "#ffffff"
+
+                        
+                self.draw_led(cx - (1.5 * spc + 3 * rad) + (2 * rad + spc) * i, cy - (1.5 * spc + 3 * rad) + (2 * rad + spc) * j, rad, 0, outline="#000000", fill=c, width=2)
 
         
     def draw_led(self, x, y, r, a, **kwargs):
@@ -147,6 +290,7 @@ class ClockView(tk.Canvas):
 
         
         return self.create_polygon(x0, y0, x1, y1, x2, y2, x3, y3, **kwargs)
+
         
     
     def resize(self, e):
@@ -335,6 +479,7 @@ class SelectionFrame(tk.Frame):
         print(auto)
         if(auto):
             self._auto_weather.config(text = "Auto-Retrieve Weather: ON")
+            update_weather
         else:
             self._auto_weather.config(text = "Auto-Retrieve Weather: OFF")
 
@@ -552,6 +697,8 @@ def main():
     global minute
     global am_pm
     global auto
+    global draw_wthr
+    global frame
     weather = get_weather()
     root = tk.Tk()
     app = ClockApp(root)
@@ -571,6 +718,8 @@ def main():
             break
         if(cur - old > 500):
             hour_disp = not hour_disp
+            if(draw_wthr):
+                frame += 1
             if(hour_disp):
                 s = datetime.datetime.now().time().second
                 if(s != 0):
@@ -591,6 +740,11 @@ def main():
                 if(hour == 13):
                     hour = 1
                 app._select.reset_input()
+            if(s < 4):
+                draw_wthr = True
+            elif(draw_wthr == True):
+                draw_wthr = False
+                frame = 0
             app._clock.draw_clock()
             old = cur
 
