@@ -135,7 +135,7 @@ class ClockView(tk.Canvas):
 
         a = math.pi/6
         off = math.pi/2
-        rad = 15
+        rad = (min(self._x, self._y) - 10)/40
         r = (min(self._x, self._y) - 50)/2
         self._r = r
         c = "#fff"
