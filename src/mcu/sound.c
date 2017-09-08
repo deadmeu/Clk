@@ -92,11 +92,11 @@ void play_scale(void) {
 	int i;
 	for (i = 0; i < sizeof(notes) / sizeof(notes[0]); i++){
 		play_note(notes[i]);
-		_delay_ms(2000);
+		_delay_ms(200);
 	}
 	for (i = sizeof(notes) / sizeof(notes[0]) - 1; i > 0; i--){
 		play_note(notes[i]);
-		_delay_ms(2000);
+		_delay_ms(200);
 	}
 }
 
@@ -105,7 +105,7 @@ void play_octaves(void) {
 	int i;
 	for (i = 0; i < sizeof(notes) / sizeof(notes[0]); i++){
 		play_note(notes[i]);
-		_delay_ms(2000);
+		_delay_ms(500);
 	}
 }
 
@@ -113,46 +113,47 @@ void play_big_ben(void) {
 /*
 Play a note for its corresponding duration
 */
-	int notesAndBreaks[] = {E5,4000, 
-			C5,4000, 
-			D5,4000,
-			G5,12000,
-			G5,4000,
-			D5,4000,
-			E5,4000,
-			C5,12000,
-			E5,4000,
-			D5,4000,
-			C5,4000,
-			G5,12000,
-			G5,4000,
-			D5,4000,
-			E5,4000,
-			C5,12000};
+	int notesAndBreaks[] = {E5,400, 
+			C5,400, 
+			D5,400,
+			G5,1200,
+			G5,400,
+			D5,400,
+			E5,400,
+			C5,1200,
+			E5,400,
+			D5,400,
+			C5,400,
+			G5,1200,
+			G5,400,
+			D5,400,
+			E5,400,
+			C5,1200};
 	int i;
-	for (i = 0; i < sizeof(notesAndBreaks) / sizeof(notesAndBreaks[0]); i+=2) {
+	for (i = 0; i < sizeof(notesAndBreaks) / sizeof(notesAndBreaks[0]); 
+			i += 2) {
 		play_note(notesAndBreaks[i]);
 		delay_note(notesAndBreaks[i+1]);
 	}
 }
 
 void play_alarm(void) {
-	int notesAndBreaks[] = {C5,1000,
-	E5,1000,
-	G5,2000,
-	E5,1000,
-	G5,1000,
-	C6,6000,
-	C5,1000,
-	E5,1000,
-	G5,2000,
-	E5,1000,
-	G5,1000,
-	C6,8000};
+	int notesAndBreaks[] = {C5,100,
+	E5,100,
+	G5,200,
+	E5,100,
+	G5,100,
+	C6,600,
+	C5,100,
+	E5,100,
+	G5,200,
+	E5,100,
+	G5,100,
+	C6,800};
 	int i;
 	for (i = 0; i < sizeof(notesAndBreaks) / sizeof(notesAndBreaks[0]); i+=2) {
 		play_note(notesAndBreaks[i]);
 		delay_note(notesAndBreaks[i+1]);
 	}
-	silence(8000);
+	silence(800);
 }
