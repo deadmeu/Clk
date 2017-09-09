@@ -18,7 +18,7 @@
  
  bitstream data;
 
- /* Examines each element of the bitstreams buffers in the receive buffer, then fills the respective
+ /* Examines each element of the bitstream buffers (stored in the receive buffer), then fills the respective
     element in the checked buffer with the mode value of each element of the bitstream buffers. */
 void check_receive_buffer(void) {
     uint8_t ones;
@@ -31,16 +31,17 @@ void check_receive_buffer(void) {
     }
 }
 
-/* Assigns pointers to each element in data to each element of the data pointer array. */
+/* Assigns pointers from each element in the data struct to each element of the data pointer array. */
 void initialise_data_pointers(void) {
     p_data[0] = &data.new_time;
     p_data[1] = &data.alarm_time;
 }
 
-/* Copies each block in the checked buffer into the data struct. */
+/* Copies each data block of the checked buffer into the data struct. */
 void initialise_data_struct(void) {
     uint16_t byte_offset = 0;
     for (uint8_t i = 0; i < STRUCT_ELEMENTS; i++) {
-        memcpy(p_data[i], checked_buffer + byte_offset, byte_offset += sizeof(p_data[i]));
+        memcpy(p_data[i], checked_buffer + byte_offset, sizeof(p_data[i]));
+        byte_offset += sizeof(p_data[i]);
     }
 }
