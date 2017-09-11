@@ -27,4 +27,4 @@
 #define SKY_BLUE    0  , 100, 255
 #define SUN_YELLOW  200, 255, 25 
 
-#endif
+#endif /* PIXEL_COLOUR_H_ */

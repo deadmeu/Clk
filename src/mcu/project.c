@@ -14,6 +14,7 @@
 #include "splash.h"
 #include "timer.h"
 #include "sound.h"
+#include "irprototype.h"
 
 #ifndef F_CPU
 #define F_CPU 8000000UL

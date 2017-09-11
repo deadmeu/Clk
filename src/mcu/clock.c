@@ -103,9 +103,10 @@ void splash_off(void) {
 
 // TODO: should interrupts be disabled before incrementing this stuff?
 void increment_seconds(void) {
-    if (time++ == MAX_TIME) {
-        set_time(0L);
-    }
+    // if (time++ == MAX_TIME) {
+    //     set_time(0L);
+    // }
+    time = (time + 1) % (MAX_TIME + 1);
     if (MINUTES % 60 == 0) {
         new_minute_flag = 1;
     }

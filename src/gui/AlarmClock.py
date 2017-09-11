@@ -39,6 +39,8 @@ auto = True
 draw_wthr = False
 frame = 0
 
+drag = False
+
 alarm = False
 al_h = 0
 al_m = 0
@@ -85,14 +87,14 @@ storm = ["#6074C4", "#82827F", "#82827F", "#6074C4",
        "#6074C4", "#6074C4", "#FFD900", "#6074C4"]
 
 wind = ["#9EEDFF", "#9EEDFF", "#9EEDFF", "#9EEDFF",
-       "#6074C4", "#6074C4", "#9EEDFF", "#9EEDFF",
+       "#8AD3E3", "#8AD3E3", "#9EEDFF", "#9EEDFF",
        "#9EEDFF", "#9EEDFF", "#9EEDFF", "#9EEDFF",
-       "#9EEDFF", "#9EEDFF", "#6074C4", "#6074C4",
+       "#9EEDFF", "#9EEDFF", "#8AD3E3", "#8AD3E3",
        
        "#9EEDFF", "#9EEDFF", "#9EEDFF", "#9EEDFF",
-       "#9EEDFF", "#9EEDFF", "#6074C4", "#6074C4",
+       "#9EEDFF", "#9EEDFF", "#8AD3E3", "#8AD3E3",
        "#9EEDFF", "#9EEDFF", "#9EEDFF", "#9EEDFF",
-       "#6074C4", "#6074C4", "#9EEDFF", "#9EEDFF"]
+       "#8AD3E3", "#8AD3E3", "#9EEDFF", "#9EEDFF"]
        
 
 
@@ -110,6 +112,7 @@ class ClockView(tk.Canvas):
         self.bind('<Configure>', self.resize)
         self.bind('<B1-Motion>', self.click_drag)
         self.bind('<Button-1>', self.down)
+        self.bind('<ButtonRelease-1>', self.up)
         
         #variables for click and drag time setting
         self._in_range = False
@@ -129,6 +132,8 @@ class ClockView(tk.Canvas):
         self._x = self.winfo_width()
         self._y = self.winfo_height()
 
+        global drag
+
         #Drawing ring
         cx = self._x/2
         cy = self._y/2
@@ -141,7 +146,7 @@ class ClockView(tk.Canvas):
         c = "#fff"
         for i in range(12):
             h = hour % 12
-            if(i == h and hour_disp):
+            if(i == h and (hour_disp or drag)):
                 c = "#f0f"
             elif(i <= minute / 5):
                 if(am_pm == "AM"):
@@ -273,7 +278,11 @@ class ClockView(tk.Canvas):
 
         
     def draw_led(self, x, y, r, a, **kwargs):
+        """Creates a square at position (x, y) with a side distace from centre to corner of r
+        and a rotation of a radians. **kwargs holds details about fill colour, line size and colour etc
 
+        draw_led(self, x, y, r, a, **kwargs) -> None (Draws square on canvas)
+        """
         a += math.pi/4
         
         x0 = x + math.cos(a) * r
@@ -303,6 +312,14 @@ class ClockView(tk.Canvas):
         except:
             pass
 
+    def up(self, event):
+        """When the interface is no longer being dragged on, reset the drag variable
+
+        upevent) -> None
+        """
+        global drag
+        drag = False
+    
     def down(self, event):
         """Checks to see if the mouse pointer (when initially pressed) is
         in the correct radius and whether it is changing the hour or minute
@@ -310,6 +327,7 @@ class ClockView(tk.Canvas):
         down(event) -> None (sets flags describing if it's in range and whether
         to change the minute or hour)
         """
+        global drag
         self._x = self.winfo_width()
         self._y = self.winfo_height()
         cx = self._x/2
@@ -335,6 +353,7 @@ class ClockView(tk.Canvas):
 
         if(a < h_a + 0.1 and a > h_a - 0.1):
             self._set_hour = True
+            drag = True
         else:
             self._set_hour = False
     
@@ -578,7 +597,6 @@ class SelectionFrame(tk.Frame):
                     h = 12
                 self._parent._clock.draw_clock()
                 self.reset_input()
-                messagebox.showinfo("Time Set", "Time set to " + str(h) + ":" + str(m) + " " + ap)
                 print("Time set to " + str(h) + ":" + str(m) + " " + ap)
             else:
                 messagebox.showerror("Invalid Input", "Invalid input: " + str(h) + ":" + str(m) + " " + ap + "\n Please ensure you enter numbers\n"
