@@ -15,7 +15,10 @@ typedef struct bitstream {
 } bitstream;
 
 void check_receive_buffer(void);
-void initialise_data_pointers(void);
-void initialise_data_struct(void);
+void clear_receive_buffer(void);
+void convert_endianness(uint8_t *dest, uint8_t *src, uint8_t size);
+void init_data_pointers(void);
+void init_data_size_array(void);
+void init_data_struct(void);
 
 #endif /* IRPROTOTYPE_H_*/

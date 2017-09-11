@@ -21,11 +21,11 @@
 #endif
 #include <util/delay.h>
 
-#define DISPLAY_UPDATE_DELAY        100     // 100 ms
-#define DISPLAY_HOUR_MARKER_DELAY   500     // 500 ms 
+#define DISPLAY_UPDATE_DELAY         100    // 100 ms
+#define DISPLAY_HOUR_MARKER_DELAY    500    // 500 ms 
 #define DISPLAY_ANIMATION_TIME      4000    // 4 seconds
-#define ANIMATION_FRAME_TIME        500     // 500 ms
-#define PLAY_ALARM_TIME             3000   // 10 seconds
+#define ANIMATION_FRAME_TIME         500    // 500 ms
+#define PLAY_ALARM_TIME             3000	// 10 seconds
 
 void initialise_hardware(void);
 void initialise_clock(void);
@@ -39,7 +39,7 @@ int main(void) {
     //splash_screen();
     //splash_off();
 
-    while(1) {
+    while (1) {
         initialise_clock();
         run_clock();
         //update_clock();
@@ -47,7 +47,7 @@ int main(void) {
     }
 }
 
-/* Initialises the ATmega328P built-in timer0. */
+/* Initialises the hardware used (timers, ports, etc.) */
 void initialise_hardware(void) {
     // Setup the main timer, providing an interrupt every millisecond
     init_timer0();
@@ -74,7 +74,7 @@ void run_clock(void) {
 
     last_clock_tick_time = last_display_time = start_animation_time = start_alarm_time = get_clock_ticks();
 
-    while(1) {
+    while (1) {
         // Handle new second
         if (get_clock_ticks() - last_clock_tick_time >= 1000) {
             // One second has passed since the last clock tick, so increment the clock time by 1 second
