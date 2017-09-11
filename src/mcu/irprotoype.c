@@ -5,16 +5,17 @@
  */
 
  #include <stdint.h>
+ #include <string.h>
 
  #include "irprototype.h"
 
- #define BITSTREAM_SIZE     1024
+ #define BITSTREAM_SIZE     8
  #define BITSTREAMS_SENT    5
- #define STRUCT_ELEMENTS    2
+ #define DATA_ELEMENTS      2
 
  uint32_t receive_buffer[BITSTREAMS_SENT][BITSTREAM_SIZE];
  uint8_t checked_buffer[BITSTREAM_SIZE];
- uintptr_t *p_data[STRUCT_ELEMENTS];
+ void *p_data[DATA_ELEMENTS];
  
  bitstream data;
 
@@ -32,15 +33,15 @@ void check_receive_buffer(void) {
 }
 
 /* Assigns pointers from each element in the data struct to each element of the data pointer array. */
-void initialise_data_pointers(void) {
+void init_data_pointers(void) {
     p_data[0] = &data.new_time;
     p_data[1] = &data.alarm_time;
 }
 
 /* Copies each data block of the checked buffer into the data struct. */
-void initialise_data_struct(void) {
+void init_data_struct(void) {
     uint16_t byte_offset = 0;
-    for (uint8_t i = 0; i < STRUCT_ELEMENTS; i++) {
+    for (uint8_t i = 0; i < DATA_ELEMENTS; i++) {
         memcpy(p_data[i], checked_buffer + byte_offset, sizeof(p_data[i]));
         byte_offset += sizeof(p_data[i]);
     }
