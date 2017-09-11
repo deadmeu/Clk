@@ -70,5 +70,5 @@ uint32_t get_clock_ticks(void) {
 // Interrupt handler, which fires every millisecond
 ISR(TIMER0_COMPA_vect) {
     // Increment the clock tick count
-    clock_ticks+=600;
+    clock_ticks++;
 }

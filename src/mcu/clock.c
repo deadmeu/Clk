@@ -44,8 +44,8 @@ uint8_t opacity_grid[GRID_LEDS];
                                             // [0]   [3] ~Index numbers~
                                             // {1 0 0 2}
                                             // {0 0 0 0} Grid is arranged in a 4x4 layout with minute markers
-uint8_t grid_minute_states[4] = {0,  3,     // {0 0 0 0} in each corner.
-                                12, 15};    // {3 0 0 4}
+uint8_t grid_minute_states[4] = {12,  13,     // {0 0 0 0} in each corner.
+                                14, 15};    // {3 0 0 4}
                                             // [12] [15] ~Index numbers~
 
 // Meridiem colours
@@ -81,7 +81,7 @@ void init_clock(void) {
     call_ring_redraw();
     call_grid_redraw();
 
-    set_meridiem_colours(ANTE_MERIDIEM, PURPLE);
+    set_meridiem_colours(ANTE_MERIDIEM, RED);
     set_meridiem_colours(POST_MERIDIEM, BLUE);
   
     time = MAX_TIME-10;       // 18:42:34
@@ -286,7 +286,7 @@ void update_display(void) {
             // Display the fours
             if (MINUTES % 5) {          // between 1-4 minutes past a 5 minute marker
                 for (uint8_t i = 0; i < FOURS; i++) {
-                    update_pixel(&rgb_grid[grid_minute_states[i]], RED);
+                    update_pixel(&rgb_grid[grid_minute_states[i]], meridiem_colours[meridiem_flag][0], meridiem_colours[meridiem_flag][1], meridiem_colours[meridiem_flag][2]);
                 }
             } else {
                 led_array_clear(rgb_grid, GRID_LEDS);
