@@ -346,7 +346,6 @@ class ClockView(tk.Canvas):
 
         h = (hour % 12) + 3
         h_a = (math.pi/6 * h) % (2 * math.pi)
-        print(str(h_a) + ":" + str(a))
 
         if(r < self._r + 10 and r > self._r - 10):
             self._in_range = True
@@ -394,7 +393,6 @@ class ClockView(tk.Canvas):
                 minute = self.minute_from_ang(a)
                 self._parent._select.reset_input()
                 self.draw_clock
-            #print(str(x) + ":" + str(y))
         
     def hour_from_ang(self, angle):
         """Gets the hour based on the angle on the clock face
@@ -507,7 +505,6 @@ class SelectionFrame(tk.Frame):
         """
         global auto
         auto = not auto
-        print(auto)
         if(auto):
             self._auto_weather.config(text = "Auto-Retrieve Weather: ON")
             update_weather
@@ -550,8 +547,6 @@ class SelectionFrame(tk.Frame):
             self._min.config(textvariable = self._mn)
             self._am_pm.set(am_pm);
 
-            #print(str(hour) + ":" +  str(minute) + ":" + am_pm)
-
     def update_weather(self):
         """Uses the get weather function and updates the gui to display current weather
 
@@ -559,7 +554,6 @@ class SelectionFrame(tk.Frame):
         """
         global weather
         weather = get_weather();
-        print(weather);
         self._weather.config(text = weather)
 
     def get_time(self):
@@ -608,16 +602,13 @@ class SelectionFrame(tk.Frame):
                     h = 12
                 self._parent._clock.draw_clock()
                 self.reset_input()
-                print("Time set to " + str(h) + ":" + str(m) + " " + ap)
             else:
                 messagebox.showerror("Invalid Input", "Invalid input: " + str(h) + ":" + str(m) + " " + ap + "\n Please ensure you enter numbers\n"
                                      "Between 1 and 12 for the hour and\n Between 0 and 59 for the minute")
-                print("Invalid input: " + str(h) + ":" + str(m) + " " + ap)
                 self.reset_input()
         else:
                 messagebox.showerror("Invalid Input", "Invalid input: " + str(time[0]) + ":" + str(time[1]) + " " + ap + "\n Please ensure you enter numbers\n"
                                      "Between 1 and 12 for the hour and\nBetween 0 and 59 for the minute")
-                print("Invalid input: " + str(time[0]) + ":" + str(time[1]) + " " + ap)
                 self.reset_input()
 
 
@@ -645,16 +636,13 @@ class SelectionFrame(tk.Frame):
                     h = 12
                 self._parent._clock.draw_clock()
                 self.reset_input()
-                print("Time set to " + str(h) + ":" + str(m) + " " + ap)
             else:
                 messagebox.showerror("Invalid Input", "Invalid input: " + str(h) + ":" + str(m) + " " + ap + "\n Please ensure you enter numbers\n"
                                      "Between 1 and 12 for the hour and\n Between 0 and 59 for the minute")
-                print("Invalid input: " + str(h) + ":" + str(m) + " " + ap)
                 self.reset_input()
         else:
                 messagebox.showerror("Invalid Input", "Invalid input: " + str(time[0]) + ":" + str(time[1]) + " " + ap + "\n Please ensure you enter numbers\n"
                                      "Between 1 and 12 for the hour and\nBetween 0 and 59 for the minute")
-                print("Invalid input: " + str(time[0]) + ":" + str(time[1]) + " " + ap)
                 self.reset_input()
 
 
