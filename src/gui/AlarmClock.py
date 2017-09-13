@@ -107,7 +107,7 @@ class ClockView(tk.Canvas):
 
         Constructor: ClockView(tk.Tk(), ClockApp())
         """
-        super().__init__(master,bg="white",relief=tk.SUNKEN)
+        super().__init__(master, bg="white", relief=tk.SUNKEN)
         self._parent = parent
         self.bind('<Configure>', self.resize)
         self.bind('<B1-Motion>', self.click_drag)
@@ -138,6 +138,8 @@ class ClockView(tk.Canvas):
         cx = self._x/2
         cy = self._y/2
 
+        lw = 1
+
         a = math.pi/6
         off = math.pi/2
         rad = 15
@@ -155,7 +157,7 @@ class ClockView(tk.Canvas):
                     c = "#ff0"
             else:
                 c = "#fff"
-            self.draw_led(cx + math.cos(a*i - off)*r, cy + math.sin(a*i - off)*r, rad, (a*i - off), outline="#000", fill=c, width=2)
+            self.draw_led(cx + math.cos(a*i - off)*r, cy + math.sin(a*i - off)*r, rad, (a*i - off), outline="#000", fill=c, width=lw)
 
         #Drawing square
         spc = (r - 25)/4
@@ -274,7 +276,7 @@ class ClockView(tk.Canvas):
                         c = "#ffffff"
 
                         
-                self.draw_led(cx - (1.5 * spc + 3 * rad) + (2 * rad + spc) * i, cy - (1.5 * spc + 3 * rad) + (2 * rad + spc) * j, rad, 0, outline="#000000", fill=c, width=2)
+                self.draw_led(cx - (1.5 * spc + 3 * rad) + (2 * rad + spc) * i, cy - (1.5 * spc + 3 * rad) + (2 * rad + spc) * j, rad, 0, outline="#000000", fill=c, width=lw)
 
         
     def draw_led(self, x, y, r, a, **kwargs):
@@ -487,6 +489,16 @@ class SelectionFrame(tk.Frame):
         self._al_am_pm_option.grid(row = 8, column = 4, sticky = 'ew')
         self._alarm_switch.grid(row = 9, column = 0, columnspan = 5, sticky = 'ew', pady = 10)
 
+        self._send = ttk.Button(self, text = "Send to Clock", command = self.send)
+        self._send.grid(row = 10, column = 0, rowspan = 2, columnspan = 5, sticky = 'ewns', pady = 10)
+
+    def send(self):
+        """Sends packet serial -> FTDI -> IR -> Clock
+
+        send() -> None (Sends data to usb port to send time, alarm time, etc to clock)
+        """
+        print("send data")
+
     def toggle_auto(self):
         """Toggles whether weather retrieval is automatic or not
 
@@ -503,14 +515,13 @@ class SelectionFrame(tk.Frame):
             self._auto_weather.config(text = "Auto-Retrieve Weather: OFF")
 
     def toggle_alarm(self):
-        """Toggles whether weather retrieval is automatic or not
+        """Toggles whether the alarm is on or off
 
     
-        toggle_auto() -> None (Changes settings)
+        toggle_alarm() -> None (Changes settings)
         """
         global alarm
         alarm = not alarm
-        print(alarm)
         if(alarm):
             self._alarm_switch.config(text = "Alarm: ON")
 
@@ -634,7 +645,6 @@ class SelectionFrame(tk.Frame):
                     h = 12
                 self._parent._clock.draw_clock()
                 self.reset_input()
-                messagebox.showinfo("Time Set", "Time set to " + str(h) + ":" + str(m) + " " + ap)
                 print("Time set to " + str(h) + ":" + str(m) + " " + ap)
             else:
                 messagebox.showerror("Invalid Input", "Invalid input: " + str(h) + ":" + str(m) + " " + ap + "\n Please ensure you enter numbers\n"
@@ -690,15 +700,17 @@ def get_weather():
     getWeather() -> array describing weather (e.g. ["windy", "storm"])
     
     """
-    request = urllib.request.urlopen("http://engg2800-weather.uqcloud.net/weather.json", data=None)
-    output = request.read()
-    
-    data = str(output)[2:-1] #Strip the quotes it comes in to allow for JSON parsing
-    weather_list = json.loads(data)
-    weather = weather_list['weather']#['main']
-    request.close;
-
-    return(weather)
+    try:
+        request = urllib.request.urlopen("http://engg2800-weather.uqcloud.net/weather.json", data=None)
+        output = request.read()
+        
+        data = str(output)[2:-1] #Strip the quotes it comes in to allow for JSON parsing
+        weather_list = json.loads(data)
+        weather = weather_list['weather']#['main']
+        request.close;
+        return(weather)
+    except:
+        print("No Connection")
 
 def is_int(x):
     """Determine if input into time fields are numbers"""
@@ -732,6 +744,7 @@ def main():
         try:
             root.update_idletasks()
             root.update()
+            app._clock.draw_clock()
         except:
             break
         if(cur - old > 500):
@@ -763,7 +776,6 @@ def main():
             elif(draw_wthr == True):
                 draw_wthr = False
                 frame = 0
-            app._clock.draw_clock()
             old = cur
 
 if __name__ == '__main__':
