@@ -550,7 +550,7 @@ class SelectionFrame(tk.Frame):
             self._min.config(textvariable = self._mn)
             self._am_pm.set(am_pm);
 
-            print(str(hour) + ":" +  str(minute) + ":" + am_pm)
+            #print(str(hour) + ":" +  str(minute) + ":" + am_pm)
 
     def update_weather(self):
         """Uses the get weather function and updates the gui to display current weather
@@ -672,7 +672,6 @@ class ClockApp(object):
         Constructor: ClockApp(tk.Tk())
         """
         self._master = master
-        master.title("Clk")
         master.minsize(500, 375)
 
         self._select = SelectionFrame(master, self)
@@ -739,6 +738,7 @@ def main():
     s = datetime.datetime.now().time().second
     app._select.get_time()
     s_set = False
+    x = 0
     while 1:
         cur = millis()
         try:
@@ -747,6 +747,8 @@ def main():
         except:
             break
         if(cur - old > 500):
+            root.title("Clk | " + str(x/(0.5)) + " fps")
+            x = 0
             hour_disp = not hour_disp
             if(draw_wthr):
                 frame += 1
@@ -777,6 +779,7 @@ def main():
                 frame = 0
             old = cur
         if(cur - f > (500/30)):
+            x += 1
             f = cur
             app._clock.draw_clock()
 
