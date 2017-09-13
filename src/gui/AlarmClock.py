@@ -142,7 +142,7 @@ class ClockView(tk.Canvas):
 
         a = math.pi/6
         off = math.pi/2
-        rad = 15
+        rad = (min(self._x, self._y) - 50)/32
         r = (min(self._x, self._y) - 50)/2
         self._r = r
         c = "#fff"
@@ -505,6 +505,7 @@ class SelectionFrame(tk.Frame):
         """
         global auto
         auto = not auto
+        print(auto)
         if(auto):
             self._auto_weather.config(text = "Auto-Retrieve Weather: ON")
             update_weather
