@@ -107,7 +107,7 @@ class ClockView(tk.Canvas):
 
         Constructor: ClockView(tk.Tk(), ClockApp())
         """
-        super().__init__(master, bg="white", relief=tk.SUNKEN)
+        super().__init__(master, bg="#555", relief=tk.SUNKEN)
         self._parent = parent
         self.bind('<Configure>', self.resize)
         self.bind('<B1-Motion>', self.click_drag)
