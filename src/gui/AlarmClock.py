@@ -735,16 +735,15 @@ def main():
     root.geometry("640x480")
 
     old = millis()
+    f = millis()
     s = datetime.datetime.now().time().second
     app._select.get_time()
     s_set = False
-    
     while 1:
         cur = millis()
         try:
             root.update_idletasks()
             root.update()
-            app._clock.draw_clock()
         except:
             break
         if(cur - old > 500):
@@ -777,6 +776,9 @@ def main():
                 draw_wthr = False
                 frame = 0
             old = cur
+        if(cur - f > (500/30)):
+            f = cur
+            app._clock.draw_clock()
 
 if __name__ == '__main__':
     main()
