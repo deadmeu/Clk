@@ -23,7 +23,9 @@
 
 #define HOUR_MARKER_COLOUR  GREEN
 #define ANTE_MERIDIEM       0
+#define RING_PIN            0
 #define POST_MERIDIEM       1
+#define GRID_PIN            1
 
 static void init_leds(void);
 
@@ -42,8 +44,8 @@ uint8_t opacity_grid[GRID_LEDS];
                                             // [0]   [3] ~Index numbers~
                                             // {1 0 0 2}
                                             // {0 0 0 0} Grid is arranged in a 4x4 layout with minute markers
-uint8_t grid_minute_states[4] = {0,  3,     // {0 0 0 0} in each corner.
-                                12, 15};    // {3 0 0 4}
+uint8_t grid_minute_states[4] = {12,  13,     // {0 0 0 0} in each corner.
+                                14, 15};    // {3 0 0 4}
                                             // [12] [15] ~Index numbers~
 
 // Meridiem colours
@@ -82,8 +84,8 @@ void init_clock(void) {
     set_meridiem_colours(ANTE_MERIDIEM, RED);
     set_meridiem_colours(POST_MERIDIEM, BLUE);
   
-    time = 43190L;       // 18:42:34
-    alarm_time = 60L;    // 1 minute past midnight
+    time = MAX_TIME-10;       // 18:42:34
+    alarm_time = 0;    // 1 minute past midnight
     splash_flag = 1;
     hour_marker_flag = 1;
     weather_set_flag = 0;
@@ -101,9 +103,10 @@ void splash_off(void) {
 
 // TODO: should interrupts be disabled before incrementing this stuff?
 void increment_seconds(void) {
-    if (time++ == MAX_TIME) {
-        set_time(0L);
-    }
+    // if (time++ == MAX_TIME) {
+    //     set_time(0L);
+    // }
+    time = (time + 1) % (MAX_TIME + 1);
     if (MINUTES % 60 == 0) {
         new_minute_flag = 1;
     }
@@ -221,7 +224,8 @@ void set_time(uint32_t new_time) {
 }
 
 void show_display(void) {
-    enable_leds(led_ring, RING_LEDS);
+    enable_leds(led_ring, RING_LEDS, RING_PIN);
+    enable_leds(led_grid, GRID_LEDS, GRID_PIN);
 }
 
 void toggle_hour_marker(void) {
@@ -274,7 +278,7 @@ void update_display(void) {
     if (hour_marker_flag) {
         update_pixel(&rgb_ring[HOURS % RING_LEDS], HOUR_MARKER_COLOUR);
     }
-
+	// TODO change grid coour to meridiem
     // Update grid
     if (draw_grid_flag) {
         if (animation_is_playing()) {      // display the animation
@@ -283,7 +287,7 @@ void update_display(void) {
             // Display the fours
             if (MINUTES % 5) {          // between 1-4 minutes past a 5 minute marker
                 for (uint8_t i = 0; i < FOURS; i++) {
-                    update_pixel(&rgb_grid[grid_minute_states[i]], RED);
+                    update_pixel(&rgb_grid[grid_minute_states[i]], meridiem_colours[meridiem_flag][0], meridiem_colours[meridiem_flag][1], meridiem_colours[meridiem_flag][2]);
                 }
             } else {
                 led_array_clear(rgb_grid, GRID_LEDS);

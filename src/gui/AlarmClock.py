@@ -36,11 +36,66 @@ minute = 0
 am_pm = "PM"
 weather = ""
 auto = True
+draw_wthr = False
+frame = 0
+
+drag = False
 
 alarm = False
 al_h = 0
 al_m = 0
 al_am_pm = "PM"
+
+sun = ["#9EEDFF", "#9EEDFF", "#9EEDFF", "#9EEDFF",
+       "#9EEDFF", "#FFD900", "#FFD900", "#9EEDFF",
+       "#9EEDFF", "#FFD900", "#FFD900", "#9EEDFF",
+       "#9EEDFF", "#9EEDFF", "#9EEDFF", "#9EEDFF",
+       
+       "#FFD900", "#9EEDFF", "#9EEDFF", "#FFD900",
+       "#9EEDFF", "#FFD900", "#FFD900", "#9EEDFF",
+       "#9EEDFF", "#FFD900", "#FFD900", "#9EEDFF",
+       "#FFD900", "#9EEDFF", "#9EEDFF", "#FFD900"]
+
+cloud = ["#9EEDFF", "#9EEDFF", "#9EEDFF", "#9EEDFF",
+       "#9EEDFF", "#FFFFFF", "#FFFFFF", "#9EEDFF",
+       "#FFFFFF", "#FFFFFF", "#FFFFFF", "#FFFFFF",
+       "#9EEDFF", "#9EEDFF", "#9EEDFF", "#9EEDFF",
+       
+       "#9EEDFF", "#9EEDFF", "#9EEDFF", "#9EEDFF",
+       "#9EEDFF", "#FFFFFF", "#FFFFFF", "#9EEDFF",
+       "#FFFFFF", "#FFFFFF", "#FFFFFF", "#FFFFFF",
+       "#9EEDFF", "#9EEDFF", "#9EEDFF", "#9EEDFF"]
+
+rain = ["#9EEDFF", "#82827F", "#82827F", "#9EEDFF",
+       "#82827F", "#82827F", "#82827F", "#82827F",
+       "#0033FF", "#9EEDFF", "#0033FF", "#9EEDFF",
+       "#9EEDFF", "#0033FF", "#9EEDFF", "#0033FF",
+       
+       "#9EEDFF", "#82827F", "#82827F", "#9EEDFF",
+       "#82827F", "#82827F", "#82827F", "#82827F",
+       "#9EEDFF", "#0033FF", "#9EEDFF", "#0033FF",
+       "#0033FF", "#9EEDFF", "#0033FF", "#9EEDFF"]
+
+storm = ["#6074C4", "#82827F", "#82827F", "#6074C4",
+       "#82827F", "#82827F", "#82827F", "#82827F",
+       "#6074C4", "#6074C4", "#6074C4", "#6074C4",
+       "#6074C4", "#6074C4", "#6074C4", "#6074C4",
+       
+       "#6074C4", "#82827F", "#82827F", "#6074C4",
+       "#82827F", "#82827F", "#82827F", "#82827F",
+       "#6074C4", "#FFD900", "#6074C4", "#6074C4",
+       "#6074C4", "#6074C4", "#FFD900", "#6074C4"]
+
+wind = ["#9EEDFF", "#9EEDFF", "#9EEDFF", "#9EEDFF",
+       "#8AD3E3", "#8AD3E3", "#9EEDFF", "#9EEDFF",
+       "#9EEDFF", "#9EEDFF", "#9EEDFF", "#9EEDFF",
+       "#9EEDFF", "#9EEDFF", "#8AD3E3", "#8AD3E3",
+       
+       "#9EEDFF", "#9EEDFF", "#9EEDFF", "#9EEDFF",
+       "#9EEDFF", "#9EEDFF", "#8AD3E3", "#8AD3E3",
+       "#9EEDFF", "#9EEDFF", "#9EEDFF", "#9EEDFF",
+       "#8AD3E3", "#8AD3E3", "#9EEDFF", "#9EEDFF"]
+       
 
 
 class ClockView(tk.Canvas):
@@ -52,11 +107,12 @@ class ClockView(tk.Canvas):
 
         Constructor: ClockView(tk.Tk(), ClockApp())
         """
-        super().__init__(master,bg="white",relief=tk.SUNKEN)
+        super().__init__(master, bg="#555", relief=tk.SUNKEN)
         self._parent = parent
         self.bind('<Configure>', self.resize)
         self.bind('<B1-Motion>', self.click_drag)
         self.bind('<Button-1>', self.down)
+        self.bind('<ButtonRelease-1>', self.up)
         
         #variables for click and drag time setting
         self._in_range = False
@@ -76,19 +132,23 @@ class ClockView(tk.Canvas):
         self._x = self.winfo_width()
         self._y = self.winfo_height()
 
+        global drag
+
         #Drawing ring
         cx = self._x/2
         cy = self._y/2
 
+        lw = 1
+
         a = math.pi/6
         off = math.pi/2
-        rad = 10
+        rad = (min(self._x, self._y) - 50)/32
         r = (min(self._x, self._y) - 50)/2
         self._r = r
         c = "#fff"
         for i in range(12):
             h = hour % 12
-            if(i == h and hour_disp):
+            if(i == h and (hour_disp or drag)):
                 c = "#f0f"
             elif(i <= minute / 5):
                 if(am_pm == "AM"):
@@ -97,40 +157,134 @@ class ClockView(tk.Canvas):
                     c = "#ff0"
             else:
                 c = "#fff"
-            self.draw_led(cx + math.cos(a*i - off)*r, cy + math.sin(a*i - off)*r, rad, (a*i - off), outline="#000", fill=c, width=2)
+            self.draw_led(cx + math.cos(a*i - off)*r, cy + math.sin(a*i - off)*r, rad, (a*i - off), outline="#000", fill=c, width=lw)
 
         #Drawing square
         spc = (r - 25)/4
         rem = minute % 5
         for i in range(4):
             for j in range(4):
-                if(i == 0 and j == 0 and rem > 0):
-                    if(am_pm == "AM"):
-                        c = "#0f0"
-                    else:
-                        c = "#ff0"
-                elif(i == 3 and j == 0 and rem > 1):
-                    if(am_pm == "AM"):
-                        c = "#0f0"
-                    else:
-                        c = "#ff0"
-                elif(i == 0 and j == 3 and rem > 2):
-                    if(am_pm == "AM"):
-                        c = "#0f0"
-                    else:
-                        c = "#ff0"
-                elif(i == 3 and j == 3 and rem > 3):
-                    if(am_pm == "AM"):
-                        c = "#0f0"
-                    else:
-                        c = "#ff0"
+                if(draw_wthr):
+                    if(weather == "Sunny"):
+                        f = (frame%2) + 1
+                        if(f == 2):
+                            x = 16
+                        else:
+                            x = 0
+                        c = sun[(i + j * 4) + x]
+                    elif(weather == "Cloudy"):
+                        f = (frame%2) + 1
+                        if(f == 2):
+                            x = 16
+                        else:
+                            x = 0
+                        c = cloud[(i + j * 4) + x]
+                    elif(weather == "Rain"):
+                        f = (frame%2) + 1
+                        if(f == 2):
+                            x = 16
+                        else:
+                            x = 0
+                        c = rain[(i + j * 4) + x]
+                    elif(weather == "Storm"):
+                        f = (frame%2) + 1
+                        if(f == 2):
+                            x = 16
+                        else:
+                            x = 0
+                        c = storm[(i + j * 4) + x]
+                    elif(weather == "Windy"):
+                        f = (frame%2) + 1
+                        if(f == 2):
+                            x = 16
+                        else:
+                            x = 0
+                        c = wind[(i + j * 4) + x]
+                    elif(weather == "Sunny and Windy"):
+                        f = (frame%2) + 1
+                        if(f == 2):
+                            x = 16
+                        else:
+                            x = 0
+                        if(frame < 4):
+                            c = sun[(i + j * 4) + x]
+                        else:
+                            c = wind[(i + j * 4) + x]
+                    elif(weather == "Cloudy and Windy"):
+                        f = (frame%2) + 1
+                        if(f == 2):
+                            x = 16
+                        else:
+                            x = 0
+                        if(frame < 4):
+                            c = cloud[(i + j * 4) + x]
+                        else:
+                            c = wind[(i + j * 4) + x]
+                    elif(weather == "Cloudy and Rain"):
+                        f = (frame%2) + 1
+                        if(f == 2):
+                            x = 16
+                        else:
+                            x = 0
+                        if(frame < 4):
+                            c = cloud[(i + j * 4) + x]
+                        else:
+                            c = rain[(i + j * 4) + x]
+                    elif(weather == "Rain and Windy"):
+                        f = (frame%2) + 1
+                        if(f == 2):
+                            x = 16
+                        else:
+                            x = 0
+                        if(frame < 4):
+                            c = rain[(i + j * 4) + x]
+                        else:
+                            c = wind[(i + j * 4) + x]
+                    elif(weather == "Storm and Windy"):
+                        f = (frame%2) + 1
+                        if(f == 2):
+                            x = 16
+                        else:
+                            x = 0
+                        if(frame < 4):
+                            c = storm[(i + j * 4) + x]
+                        else:
+                            c = wind[(i + j * 4) + x]
+                    
                 else:
-                    c = "#fff"
-                self.draw_led(cx - (1.5 * spc + 3 * rad) + (2 * rad + spc) * i, cy - (1.5 * spc + 3 * rad) + (2 * rad + spc) * j, rad, 0, outline="#000", fill=c, width=2)
+                    if(i == 0 and j == 0 and rem > 0):
+                        if(am_pm == "AM"):
+                            c = "#00ff00"
+                        else:
+                            c = "#ffff00"
+                    elif(i == 3 and j == 0 and rem > 1):
+                        if(am_pm == "AM"):
+                            c = "#00ff00"
+                        else:
+                            c = "#ffff00"
+                    elif(i == 0 and j == 3 and rem > 2):
+                        if(am_pm == "AM"):
+                            c = "#00ff00"
+                        else:
+                            c = "#ffff00"
+                    elif(i == 3 and j == 3 and rem > 3):
+                        if(am_pm == "AM"):
+                            c = "#00ff00"
+                        else:
+                            c = "#ffff00"
+                    else:
+                        c = "#ffffff"
+
+                        
+                self.draw_led(cx - (1.5 * spc + 3 * rad) + (2 * rad + spc) * i, cy - (1.5 * spc + 3 * rad) + (2 * rad + spc) * j, rad, 0, outline="#000000", fill=c, width=lw)
 
         
     def draw_led(self, x, y, r, a, **kwargs):
+        """Creates a square at position (x, y) with a side distace from centre to corner of r
+        and a rotation of a radians. **kwargs holds details about fill colour, line size and colour etc
 
+        draw_led(self, x, y, r, a, **kwargs) -> None (Draws square on canvas)
+        """
         a += math.pi/4
         
         x0 = x + math.cos(a) * r
@@ -147,6 +301,7 @@ class ClockView(tk.Canvas):
 
         
         return self.create_polygon(x0, y0, x1, y1, x2, y2, x3, y3, **kwargs)
+
         
     
     def resize(self, e):
@@ -159,6 +314,14 @@ class ClockView(tk.Canvas):
         except:
             pass
 
+    def up(self, event):
+        """When the interface is no longer being dragged on, reset the drag variable
+
+        upevent) -> None
+        """
+        global drag
+        drag = False
+    
     def down(self, event):
         """Checks to see if the mouse pointer (when initially pressed) is
         in the correct radius and whether it is changing the hour or minute
@@ -166,6 +329,7 @@ class ClockView(tk.Canvas):
         down(event) -> None (sets flags describing if it's in range and whether
         to change the minute or hour)
         """
+        global drag
         self._x = self.winfo_width()
         self._y = self.winfo_height()
         cx = self._x/2
@@ -182,7 +346,6 @@ class ClockView(tk.Canvas):
 
         h = (hour % 12) + 3
         h_a = (math.pi/6 * h) % (2 * math.pi)
-        print(str(h_a) + ":" + str(a))
 
         if(r < self._r + 10 and r > self._r - 10):
             self._in_range = True
@@ -191,6 +354,7 @@ class ClockView(tk.Canvas):
 
         if(a < h_a + 0.1 and a > h_a - 0.1):
             self._set_hour = True
+            drag = True
         else:
             self._set_hour = False
     
@@ -229,7 +393,6 @@ class ClockView(tk.Canvas):
                 minute = self.minute_from_ang(a)
                 self._parent._select.reset_input()
                 self.draw_clock
-            #print(str(x) + ":" + str(y))
         
     def hour_from_ang(self, angle):
         """Gets the hour based on the angle on the clock face
@@ -324,6 +487,16 @@ class SelectionFrame(tk.Frame):
         self._al_am_pm_option.grid(row = 8, column = 4, sticky = 'ew')
         self._alarm_switch.grid(row = 9, column = 0, columnspan = 5, sticky = 'ew', pady = 10)
 
+        self._send = ttk.Button(self, text = "Send to Clock", command = self.send)
+        self._send.grid(row = 10, column = 0, rowspan = 2, columnspan = 5, sticky = 'ewns', pady = 10)
+
+    def send(self):
+        """Sends packet serial -> FTDI -> IR -> Clock
+
+        send() -> None (Sends data to usb port to send time, alarm time, etc to clock)
+        """
+        print("send data")
+
     def toggle_auto(self):
         """Toggles whether weather retrieval is automatic or not
 
@@ -335,18 +508,18 @@ class SelectionFrame(tk.Frame):
         print(auto)
         if(auto):
             self._auto_weather.config(text = "Auto-Retrieve Weather: ON")
+            update_weather
         else:
             self._auto_weather.config(text = "Auto-Retrieve Weather: OFF")
 
     def toggle_alarm(self):
-        """Toggles whether weather retrieval is automatic or not
+        """Toggles whether the alarm is on or off
 
     
-        toggle_auto() -> None (Changes settings)
+        toggle_alarm() -> None (Changes settings)
         """
         global alarm
         alarm = not alarm
-        print(alarm)
         if(alarm):
             self._alarm_switch.config(text = "Alarm: ON")
 
@@ -375,8 +548,6 @@ class SelectionFrame(tk.Frame):
             self._min.config(textvariable = self._mn)
             self._am_pm.set(am_pm);
 
-            print(str(hour) + ":" +  str(minute) + ":" + am_pm)
-
     def update_weather(self):
         """Uses the get weather function and updates the gui to display current weather
 
@@ -384,7 +555,6 @@ class SelectionFrame(tk.Frame):
         """
         global weather
         weather = get_weather();
-        print(weather);
         self._weather.config(text = weather)
 
     def get_time(self):
@@ -433,17 +603,13 @@ class SelectionFrame(tk.Frame):
                     h = 12
                 self._parent._clock.draw_clock()
                 self.reset_input()
-                messagebox.showinfo("Time Set", "Time set to " + str(h) + ":" + str(m) + " " + ap)
-                print("Time set to " + str(h) + ":" + str(m) + " " + ap)
             else:
                 messagebox.showerror("Invalid Input", "Invalid input: " + str(h) + ":" + str(m) + " " + ap + "\n Please ensure you enter numbers\n"
                                      "Between 1 and 12 for the hour and\n Between 0 and 59 for the minute")
-                print("Invalid input: " + str(h) + ":" + str(m) + " " + ap)
                 self.reset_input()
         else:
                 messagebox.showerror("Invalid Input", "Invalid input: " + str(time[0]) + ":" + str(time[1]) + " " + ap + "\n Please ensure you enter numbers\n"
                                      "Between 1 and 12 for the hour and\nBetween 0 and 59 for the minute")
-                print("Invalid input: " + str(time[0]) + ":" + str(time[1]) + " " + ap)
                 self.reset_input()
 
 
@@ -471,17 +637,13 @@ class SelectionFrame(tk.Frame):
                     h = 12
                 self._parent._clock.draw_clock()
                 self.reset_input()
-                messagebox.showinfo("Time Set", "Time set to " + str(h) + ":" + str(m) + " " + ap)
-                print("Time set to " + str(h) + ":" + str(m) + " " + ap)
             else:
                 messagebox.showerror("Invalid Input", "Invalid input: " + str(h) + ":" + str(m) + " " + ap + "\n Please ensure you enter numbers\n"
                                      "Between 1 and 12 for the hour and\n Between 0 and 59 for the minute")
-                print("Invalid input: " + str(h) + ":" + str(m) + " " + ap)
                 self.reset_input()
         else:
                 messagebox.showerror("Invalid Input", "Invalid input: " + str(time[0]) + ":" + str(time[1]) + " " + ap + "\n Please ensure you enter numbers\n"
                                      "Between 1 and 12 for the hour and\nBetween 0 and 59 for the minute")
-                print("Invalid input: " + str(time[0]) + ":" + str(time[1]) + " " + ap)
                 self.reset_input()
 
 
@@ -499,7 +661,6 @@ class ClockApp(object):
         Constructor: ClockApp(tk.Tk())
         """
         self._master = master
-        master.title("Clk")
         master.minsize(500, 375)
 
         self._select = SelectionFrame(master, self)
@@ -527,15 +688,17 @@ def get_weather():
     getWeather() -> array describing weather (e.g. ["windy", "storm"])
     
     """
-    request = urllib.request.urlopen("http://engg2800-weather.uqcloud.net/weather.json", data=None)
-    output = request.read()
-    
-    data = str(output)[2:-1] #Strip the quotes it comes in to allow for JSON parsing
-    weather_list = json.loads(data)
-    weather = weather_list['weather']#['main']
-    request.close;
-
-    return(weather)
+    try:
+        request = urllib.request.urlopen("http://engg2800-weather.uqcloud.net/weather.json", data=None)
+        output = request.read()
+        
+        data = str(output)[2:-1] #Strip the quotes it comes in to allow for JSON parsing
+        weather_list = json.loads(data)
+        weather = weather_list['weather']#['main']
+        request.close;
+        return(weather)
+    except:
+        print("No Connection")
 
 def is_int(x):
     """Determine if input into time fields are numbers"""
@@ -552,16 +715,19 @@ def main():
     global minute
     global am_pm
     global auto
+    global draw_wthr
+    global frame
     weather = get_weather()
     root = tk.Tk()
     app = ClockApp(root)
     root.geometry("640x480")
 
     old = millis()
+    f = millis()
     s = datetime.datetime.now().time().second
     app._select.get_time()
     s_set = False
-    
+    x = 0
     while 1:
         cur = millis()
         try:
@@ -570,7 +736,11 @@ def main():
         except:
             break
         if(cur - old > 500):
+            root.title("Clk | " + str(x/(0.5)) + " fps")
+            x = 0
             hour_disp = not hour_disp
+            if(draw_wthr):
+                frame += 1
             if(hour_disp):
                 s = datetime.datetime.now().time().second
                 if(s != 0):
@@ -591,8 +761,16 @@ def main():
                 if(hour == 13):
                     hour = 1
                 app._select.reset_input()
-            app._clock.draw_clock()
+            if(s < 4):
+                draw_wthr = True
+            elif(draw_wthr == True):
+                draw_wthr = False
+                frame = 0
             old = cur
+        if(cur - f > (500/30)):
+            x += 1
+            f = cur
+            app._clock.draw_clock()
 
 if __name__ == '__main__':
     main()

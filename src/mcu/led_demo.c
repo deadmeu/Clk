@@ -7,6 +7,7 @@
 * the WS2812 string connected to PB4.
 */
 
+#define F_CPU 8000000UL
 #include <util/delay.h>
 #include <avr/io.h>
 #include <avr/interrupt.h>

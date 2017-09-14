@@ -9,8 +9,21 @@
 #include "light_ws2812.h"
 #include "pixel_colour.h"
 
-void enable_leds(struct cRGB *led_array, uint8_t size) {
-    ws2812_setleds(led_array, size);
+#define RING_PIN        0
+#define GRID_PIN        1
+
+#define RING_PINMASK    _BV(RING_PIN)
+#define GRID_PINMASK    _BV(GRID_PIN)
+
+void enable_leds(struct cRGB *led_array, uint8_t size, uint8_t pin_type) {
+    // ws2812_setleds(led_array, size);
+    if (pin_type == RING_PIN) {
+        ws2812_setleds_pin(led_array, size, RING_PINMASK);
+    } else if (pin_type == GRID_PIN) {
+        ws2812_setleds_pin(led_array, size, GRID_PINMASK);
+    } else {
+        ws2812_setleds(led_array, size);
+    }
 }
 
 void update_pixel(struct cRGB *pixel, uint8_t r, uint8_t g, uint8_t b) {
