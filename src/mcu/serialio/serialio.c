@@ -96,10 +96,13 @@ uint8_t USART_get_char(void) {
     return c;
 }
 
+/*
+ * Clear the USART data register.
+ */
 void USART_flush(void) {
-    uint8_t dummy;
+    uint8_t theVoid;
     while (UCSR0A & (1 << RXC0)) {
-        dummy = UDR0;
+        theVoid = UDR0;
     }
 }
 
@@ -108,17 +111,17 @@ void USART_flush(void) {
  */
 ISR(USART_RX_vect) {
     uint8_t data = UDR0;
-    if (USART_rxHead != USART_RX_BUFFER_SIZE - 1) {
+    USART_rxBuffer[USART_rxHead] = data;
+    if (USART_rxHead == USART_RX_BUFFER_SIZE - 1) {
     /*
-     * Update the global buffer with the new character.
-     */
-        USART_rxBuffer[USART_rxHead] = data;
-        USART_rxHead++;
-    } else {
-    /*
-     * If the buffer is full, we wrap around and rewrite it.
+     * If the buffer is full, wrap around and rewrite it.
      * The current data will be lost.
      */
         USART_rxHead = 0;
+    } else {
+    /*
+     * Update the global buffer with the new character.
+     */
+        USART_rxHead++;
     }
 }
