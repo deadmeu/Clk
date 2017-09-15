@@ -32,6 +32,26 @@ Here are the note frequencies
 #define B6 1975.53
 #define C7 2093.00
 
+void play_note(int note);
+void delay_note(int duration);
+void setup_sound(void);
+void sound_on(void);
+void sound_off(void);
+void play_scale(void);
+void play_octaves(void);
+void play_big_ben(void);
+void play_alarm(void);
+void silence(int duration);
+
+int main(void)
+{
+	setup_sound();
+    play_alarm();
+    /* Replace with your application code */
+    while (1) {
+    }
+}
+
 /*
 Using timer 1, we're going to output PWM on OC1A to play sound.
 We're using toggle on output compare with no prescaling.
@@ -46,13 +66,22 @@ void setup_sound(void) {
 	TCNT1 = 0;
 }
 
+void sound_on(void) {
+	DDRB |= 1 << PORTB1;
+}
+
+void sound_off(void) {
+    DDRB &= ~(1 << PORTB1);
+}
+
 /*
 The formula for outputting a frequency is
 OCR1A = (f_clk / f_out * 2 * prescale) - 1.
 */
 void play_note(int note) {
 /*
-A value of 2000000 seems to give clear sounding notes, chosen by trial and error.
+A value of 2000000 seems to give clear sounding notes, chosen by trial and 
+error.
 */
 	OCR1A = (2000000 / note * 2) - 1;
 }
@@ -64,12 +93,13 @@ void delay_note(int duration) {
 }
 
 void silence(int duration) {
-	DDRB &= ~(1 << PORTB1);
+    sound_off();
 	delay_note(duration);
-	DDRB |= 1 << PORTB1;
+    sound_on();
 }
 
 void play_scale(void) {
+    sound_on();
 	int notes[] = {C5,D5,E5,F5,G5,A5,B5,C6,D6,E6,F6,G6,A6,B6,C7};
 	int i;
 	for (i = 0; i < sizeof(notes) / sizeof(notes[0]); i++){
@@ -80,22 +110,27 @@ void play_scale(void) {
 		play_note(notes[i]);
 		_delay_ms(200);
 	}
+    sound_off();
 }
 
 void play_octaves(void) {
+    sound_on();
 	int notes[] = {C5,C6,D5,D6,E5,E6,F5,F6,G5,G6,A5,A6,B5,B6,C6,C7};
 	int i;
 	for (i = 0; i < sizeof(notes) / sizeof(notes[0]); i++){
 		play_note(notes[i]);
-		_delay_ms(500);
+		_delay_ms(200);
 	}
+    sound_off();
 }
 
 void play_big_ben(void) {
 /*
 Play a note for its corresponding duration
 */
-	int notesAndBreaks[] = {E5,400, 
+    sound_on();
+	int notesAndBreaks[] = {
+			E5,400, 
 			C5,400, 
 			D5,400,
 			G5,1200,
@@ -110,32 +145,38 @@ Play a note for its corresponding duration
 			G5,400,
 			D5,400,
 			E5,400,
-			C5,1200};
+			C5,1200
+			};
 	int i;
 	for (i = 0; i < sizeof(notesAndBreaks) / sizeof(notesAndBreaks[0]); 
 			i += 2) {
 		play_note(notesAndBreaks[i]);
 		delay_note(notesAndBreaks[i+1]);
 	}
+    sound_off();
 }
 
 void play_alarm(void) {
-	int notesAndBreaks[] = {C5,100,
-	E5,100,
-	G5,200,
-	E5,100,
-	G5,100,
-	C6,600,
+    sound_on();
+	int notesAndBreaks[] = {
 	C5,100,
 	E5,100,
 	G5,200,
 	E5,100,
 	G5,100,
-	C6,800};
+	C6,600,
+    //break
+	C5,100,
+	E5,100,
+	G5,200,
+	E5,100,
+	G5,100,
+	C6,800
+	};
 	int i;
 	for (i = 0; i < sizeof(notesAndBreaks) / sizeof(notesAndBreaks[0]); i+=2) {
 		play_note(notesAndBreaks[i]);
 		delay_note(notesAndBreaks[i+1]);
 	}
-	silence(800);
+    sound_off();
 }
