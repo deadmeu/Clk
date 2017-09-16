@@ -14,7 +14,6 @@
 #include "splash.h"
 #include "timer.h"
 #include "sound.h"
-#include "irprototype.h"
 
 #ifndef F_CPU
 #define F_CPU 8000000UL
@@ -52,8 +51,8 @@ void initialise_hardware(void) {
     // Setup the main timer, providing an interrupt every millisecond
     init_timer0();
 
-    //Setup sound
-    setup_sound();
+    //Setup timer1, used for sound
+    init_timer1();
 
     // Turn on global interrupts
     sei();
@@ -62,6 +61,7 @@ void initialise_hardware(void) {
 /* Initialises the clock flags, timers, counters, and other variables. */
 void initialise_clock(void) {
     init_clock();
+    setup_sound();
 }
 
 /* Handles the main clock program (displaying time, animations, alarm, etc.) */
@@ -105,16 +105,15 @@ void run_clock(void) {
 
         // Handle alarm
         if (alarm_is_set() && reached_alarm_time() && !alarm_is_playing()) {
-            // play_alarm_sound();
-            play_alarm();
+            play_alarm_sound();
+            // play_alarm();
             start_alarm_time = get_clock_ticks();
             reset_alarm_flag();
         }
 
         // If the alarm is playing, turn it off after it's played for long enough
         if (alarm_is_playing() && (get_clock_ticks() - start_alarm_time >= PLAY_ALARM_TIME)) {
-            // stop_alarm_sound();
-            //silence(50000);
+            stop_alarm_sound();
         }
 
         // Toggle the hour marker
@@ -135,6 +134,11 @@ void run_clock(void) {
 
             last_display_time = get_clock_ticks();
         }
+
+        // Update the current sound state
+        update_sound();
+
+        // Enable the LED chains
         show_display();
     }
 }

@@ -18,7 +18,7 @@
 void enable_leds(struct cRGB *led_array, uint8_t size, uint8_t pin_type) {
     // ws2812_setleds(led_array, size);
     if (pin_type == RING_PIN) {
-        ws2812_setleds_pin(led_array, size, RING_PINMASK);
+        ws2812_setleds_pin(led_array, size, RING_PINMASK); // maybe do _BV(pin_type) ?
     } else if (pin_type == GRID_PIN) {
         ws2812_setleds_pin(led_array, size, GRID_PINMASK);
     } else {

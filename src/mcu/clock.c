@@ -57,17 +57,17 @@ uint32_t alarm_time;
 uint8_t opacity_amount;
 
 // Flags
-uint8_t splash_flag;
-uint8_t animation_flag;
-uint8_t alarm_flag;
-uint8_t hour_marker_flag;
-uint8_t new_minute_flag;
-uint8_t alarm_playing_flag;
-uint8_t weather_set_flag;
-uint8_t alarm_set_flag;
-uint8_t draw_ring_flag;
-uint8_t draw_grid_flag;
-uint8_t meridiem_flag;
+static uint8_t splash_flag;
+static uint8_t animation_flag;
+static uint8_t alarm_flag;
+static uint8_t hour_marker_flag;
+static uint8_t new_minute_flag;
+static uint8_t alarm_playing_flag;
+static uint8_t weather_set_flag;
+static uint8_t alarm_set_flag;
+static uint8_t draw_ring_flag;
+static uint8_t draw_grid_flag;
+static uint8_t meridiem_flag;
 
 void init_clock(void) {
     init_leds();
@@ -84,7 +84,7 @@ void init_clock(void) {
     set_meridiem_colours(ANTE_MERIDIEM, RED);
     set_meridiem_colours(POST_MERIDIEM, BLUE);
   
-    time = MAX_TIME-10;       // 18:42:34
+    time = MAX_TIME-4;       // 
     alarm_time = 0;    // 1 minute past midnight
     splash_flag = 1;
     hour_marker_flag = 1;
@@ -215,12 +215,26 @@ void reset_alarm_flag(void) {
 }
 
 // sets the clock seconds, minutes, and hours counters to the supplied time in seconds.
-void set_time(uint32_t new_time) {
+uint8_t set_time(uint32_t new_time) {
     if (!(new_time >= 0L && new_time <= MAX_TIME)) {    // new_time (in seconds) isn't between
                                                         // 00:00:00 and 23:59:59 inclusive.
-        return;
+        return 0;
     }
     time = new_time;
+    return 1;
+}
+
+uint8_t set_alarm_time(uint32_t new_time) {
+    if (!(new_time >= 0L && new_time <= MAX_TIME)) {    // new_time (in seconds) isn't between
+                                                        // 00:00:00 and 23:59:59 inclusive.
+        return 0;
+    }
+    alarm_time = new_time;
+    return 1;
+}
+
+uint8_t set_weather(uint8_t weather1_type, uint8_t weather2_type) {
+    return 0;
 }
 
 void show_display(void) {

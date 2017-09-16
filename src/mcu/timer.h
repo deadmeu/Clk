@@ -8,6 +8,7 @@
 #define TIMER_H_
 
 void init_timer0(void);
+void init_timer1(void);
 uint32_t get_clock_ticks(void);
 
 #endif

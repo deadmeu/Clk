@@ -15,7 +15,6 @@ void play_weather_animation(void);
 void stop_weather_animation(void);
 void play_alarm_sound(void);
 void stop_alarm_sound(void);
-void set_time(uint32_t time);
 void show_display(void);
 void toggle_hour_marker(void);
 void splash_off(void);
@@ -30,6 +29,9 @@ void call_ring_redraw(void);
 void call_grid_redraw(void);
 void update_animation_frame(void);
 
+uint8_t set_time(uint32_t time);
+uint8_t set_alarm_time(uint32_t new_time);
+uint8_t set_weather(uint8_t weather1_type, uint8_t weather2_type);
 uint8_t alarm_is_set(void);
 uint8_t weather_is_set(void);
 uint8_t animation_is_playing(void);
