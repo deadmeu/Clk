@@ -6,6 +6,7 @@
 
 #include <avr/io.h>
 #include <avr/interrupt.h>
+#include <stdint.h> 
 
 #include "clock.h"
 #include "ir.h"
@@ -23,6 +24,7 @@
 #define DISPLAY_UPDATE_DELAY         100    // 100 ms
 #define DISPLAY_HOUR_MARKER_DELAY    500    // 500 ms 
 #define DISPLAY_ANIMATION_TIME      4000    // 4 seconds
+#define OPACITY_UPDATE_DELAY        2000    // 2 seconds
 #define ANIMATION_FRAME_TIME         500    // 500 ms
 #define PLAY_ALARM_TIME             3000	// 10 seconds
 
@@ -69,10 +71,11 @@ void run_clock(void) {
     // TODO only look at redrawing each pixel that is changed?
     uint32_t last_clock_tick_time;
     uint32_t last_display_time;
+    uint32_t last_opacity_update_time;
     uint32_t start_animation_time;
     uint32_t start_alarm_time;
 
-    last_clock_tick_time = last_display_time = start_animation_time = start_alarm_time = get_clock_ticks();
+    last_clock_tick_time = last_display_time = last_opacity_update_time = start_animation_time = start_alarm_time = get_clock_ticks();
 
     while (1) {
         // Handle new second
@@ -114,6 +117,12 @@ void run_clock(void) {
         // If the alarm is playing, turn it off after it's played for long enough
         if (alarm_is_playing() && (get_clock_ticks() - start_alarm_time >= PLAY_ALARM_TIME)) {
             stop_alarm_sound();
+        }
+
+        // Handle brightness updating
+        if (get_clock_ticks() - last_opacity_update_time >= OPACITY_UPDATE_DELAY) {
+            update_opacity();
+            last_opacity_update_time = get_clock_ticks();
         }
 
         // Toggle the hour marker

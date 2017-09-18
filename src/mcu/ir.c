@@ -4,30 +4,30 @@
  * Written by Alex Subaric.
  */
 
- #include <stdint.h>
- #include <string.h>
+#include <string.h>
+#include <stdint.h>
 
- #include "ir.h"
- #include "clock.h"
+#include "ir.h"
+#include "clock.h"
 
- /* Constants */
- #define BYTESTREAMS_SENT   3
- // #define DATA_ELEMENTS      8
- #define DATA_ELEMENTS      2
- #define CHAR_BIT           8       // taken from <limits.h>
- // #define BYTESTREAM_SIZE    ((2 * sizeof(uint32_t)) + (6 * sizeof(uint8_t)))
- #define BYTESTREAM_SIZE    (2 * sizeof(uint32_t))
+/* Constants */
+#define BYTESTREAMS_SENT   3
+// #define DATA_ELEMENTS      8
+#define DATA_ELEMENTS      2
+#define CHAR_BIT           8       // taken from <limits.h>
+// #define BYTESTREAM_SIZE    ((2 * sizeof(uint32_t)) + (6 * sizeof(uint8_t)))
+#define BYTESTREAM_SIZE    (2 * sizeof(uint32_t))
 
- /* Arrays */
- uint8_t receive_buffer[BYTESTREAMS_SENT][BYTESTREAM_SIZE];
- uint8_t checked_buffer[BYTESTREAM_SIZE];
- uint8_t data_size_array[DATA_ELEMENTS];
- void *p_data[DATA_ELEMENTS];
- 
- /* Received bytestream struct */
- bytestream data;
+/* Arrays */
+uint8_t receive_buffer[BYTESTREAMS_SENT][BYTESTREAM_SIZE];
+uint8_t checked_buffer[BYTESTREAM_SIZE];
+uint8_t data_size_array[DATA_ELEMENTS];
+void *p_data[DATA_ELEMENTS];
 
- /* Assigns pointers from each element in the data struct to each element of the data pointer array. */
+/* Received bytestream struct */
+bytestream data;
+
+/* Assigns pointers from each element in the data struct to each element of the data pointer array. */
 void init_data_pointers(void) {
     p_data[0] = &data.new_time;
     p_data[1] = &data.alarm_time;

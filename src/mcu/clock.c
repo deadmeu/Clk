@@ -8,6 +8,7 @@
 
 #include "clock.h"
 #include "ledarray.h"
+#include "ldr.h"
 #include "pixel_colour.h"
 
 #define RING_LEDS           12
@@ -272,6 +273,10 @@ void apply_opacity(void) {
 
 void update_animation_frame(void) {
     // TODO animation logic
+}
+
+void update_opacity(void) {
+    opacity_amount = get_ldr_opacity();
 }
 
 void update_display(void) {

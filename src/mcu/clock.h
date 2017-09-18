@@ -21,6 +21,7 @@ void splash_off(void);
 void increment_seconds(void);
 void reset_minute_flag(void);
 void reset_alarm_flag(void);
+void update_opacity(void);
 void update_display(void);
 void reset_redraw_flags(void);
 void reset_ring_redraw(void);

@@ -12,6 +12,7 @@
 #define RING_PIN        0
 #define GRID_PIN        1
 
+// TODO Change this so it's just _BV(pin_type) see line 22's comment.
 #define RING_PINMASK    _BV(RING_PIN)
 #define GRID_PINMASK    _BV(GRID_PIN)
 
