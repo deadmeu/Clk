@@ -17,14 +17,13 @@
 void USART_init(uint32_t ubrr);
 
 /*
- * Empties the USART data register.
- * Not sure when we might need this.
- */
-void USART_flush(void);
-
-/*
  * Return the next character in the serial buffer.
  */
 uint8_t USART_get_char(void);
+
+/*
+ * Send a character from the output buffer to the serial stream.
+ */
+void USART_put_char(uint8_t data);
 
 #endif

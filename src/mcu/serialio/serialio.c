@@ -11,18 +11,14 @@
 #define BAUD 9600
 #define UBRR (F_CPU/16/BAUD) - 1
 
-#define USART_RX_BUFFER_SIZE 256
-
-/*****************************************************************************
- * Data structure/s and marker/s for serial communication.
- ****************************************************************************/
-
-static uint8_t USART_rxBuffer[USART_RX_BUFFER_SIZE];
-static uint8_t USART_rxHead;
-static uint8_t USART_readHead;
-
 int main(void) {
     USART_init(UBRR);
+    while (1) {
+    /*
+     * Do a loop back.
+     */
+        USART_put_char(USART_get_char());
+    }
     return 0;
 }
 
@@ -36,29 +32,12 @@ void USART_init(uint32_t ubrr) {
     /*
      * Enable TX and RX and enable interrupt on receive.
      */
-    UCSR0B = (1 << RXEN0) | (1 << TXEN0) | (1 << RXCIE0);
+    UCSR0B = (1 << RXEN0) | (1 << TXEN0);
 
     /*
      * Set frame format: 8 data, 2 stop bits, even parity.
      */
-    UCSR0C = (1 << USBS0) | (3 << UCSZ00) | (2 < UPM00);
-
-    /*
-     * Place the buffer marker and read marker at the start.
-     */
-    USART_rxHead = 0;
-    USART_readHead = 0;
-
-    /*
-     * This is here in case we want to routinely reset the clock in the 
-     * future.
-     */
-    USART_flush();
-
-    /*
-     * Initialize the serial buffer.
-     */
-    memset(USART_rxBuffer, 0, USART_RX_BUFFER_SIZE);
+    UCSR0C = (1 << USBS0) | (3 << UCSZ00);
 }
 
 /*
@@ -73,55 +52,14 @@ uint8_t USART_get_char(void) {
      * Wait for data to be received.
      */
     }
-    uint8_t interruptsWereOn = bit_is_set(SREG, SREG_I);
-    cli();
-    uint8_t c = USART_rxBuffer[USART_readHead];
-
-    if (USART_readHead == USART_RX_BUFFER_SIZE - 1) {
-    /*
-     * If the read head reaches the end of the buffer, wrap around to the
-     * start.
-     */
-        USART_readHead = 0;
-    } else {
-        USART_readHead++;
-    }
-
-    if (interruptsWereOn) {
-    /*
-     * Return the interrupt flag to the previous state.
-     */
-        sei();
-    }
-    return c;
+    return UDR0;
 }
 
-/*
- * Clear the USART data register.
- */
-void USART_flush(void) {
-    uint8_t theVoid;
-    while (UCSR0A & (1 << RXC0)) {
-        theVoid = UDR0;
-    }
-}
-
-/*
- * Interrupt handler for serial data receive complete.
- */
-ISR(USART_RX_vect) {
-    uint8_t data = UDR0;
-    USART_rxBuffer[USART_rxHead] = data;
-    if (USART_rxHead == USART_RX_BUFFER_SIZE - 1) {
+void USART_put_char(uint8_t data) {
+    while (!(UCSR0A & (1 << UDRE0))) {
     /*
-     * If the buffer is full, wrap around and rewrite it.
-     * The current data will be lost.
+     * Wait for the data register to empty.
      */
-        USART_rxHead = 0;
-    } else {
-    /*
-     * Update the global buffer with the new character.
-     */
-        USART_rxHead++;
     }
+    UDR0 = data;
 }
