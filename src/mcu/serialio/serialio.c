@@ -22,6 +22,10 @@ int main(void) {
     return 0;
 }
 
+/*****************************************************************************
+ * Functions to enable serial communication.
+ ****************************************************************************/
+
 void USART_init(uint32_t ubrr) {
     /*
      * Set the baud rate.
@@ -35,17 +39,11 @@ void USART_init(uint32_t ubrr) {
     UCSR0B = (1 << RXEN0) | (1 << TXEN0);
 
     /*
-     * Set frame format: 8 data, 2 stop bits, even parity.
+     * Set frame format: 8 data, 2 stop bits.
      */
     UCSR0C = (1 << USBS0) | (3 << UCSZ00);
 }
 
-/*
- * We're reading characters sequentially from our input buffer.
- * We just have to hope we're not writing faster than we're reading,
- * or that the input buffer is large enough to hold the data long enough
- * to be read through.
- */
 uint8_t USART_get_char(void) {
     while (!(UCSR0A & (1 << RXC0))) {
     /*
