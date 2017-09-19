@@ -12,13 +12,14 @@
 #define RING_PIN        0
 #define GRID_PIN        1
 
+// TODO Change this so it's just _BV(pin_type) see line 22's comment.
 #define RING_PINMASK    _BV(RING_PIN)
 #define GRID_PINMASK    _BV(GRID_PIN)
 
 void enable_leds(struct cRGB *led_array, uint8_t size, uint8_t pin_type) {
     // ws2812_setleds(led_array, size);
     if (pin_type == RING_PIN) {
-        ws2812_setleds_pin(led_array, size, RING_PINMASK);
+        ws2812_setleds_pin(led_array, size, RING_PINMASK); // maybe do _BV(pin_type) ?
     } else if (pin_type == GRID_PIN) {
         ws2812_setleds_pin(led_array, size, GRID_PINMASK);
     } else {

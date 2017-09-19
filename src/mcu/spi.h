@@ -1,5 +1,7 @@
 /*
- * Modified by Alex Subaric from work made by Peter Sutton.
+ * spi.h
+ *
+ * Written by Alex Subaric.
  */ 
  
 #ifndef SPI_H_

@@ -6,6 +6,7 @@
 
 #include <avr/io.h>
 #include <avr/interrupt.h>
+#include <stdint.h> 
 
 #include "clock.h"
 #include "ir.h"
@@ -14,7 +15,6 @@
 #include "splash.h"
 #include "timer.h"
 #include "sound.h"
-#include "irprototype.h"
 
 #ifndef F_CPU
 #define F_CPU 8000000UL
@@ -24,6 +24,7 @@
 #define DISPLAY_UPDATE_DELAY         100    // 100 ms
 #define DISPLAY_HOUR_MARKER_DELAY    500    // 500 ms 
 #define DISPLAY_ANIMATION_TIME      4000    // 4 seconds
+#define OPACITY_UPDATE_DELAY        2    // 2 seconds
 #define ANIMATION_FRAME_TIME         500    // 500 ms
 #define PLAY_ALARM_TIME             3000	// 10 seconds
 
@@ -52,8 +53,11 @@ void initialise_hardware(void) {
     // Setup the main timer, providing an interrupt every millisecond
     init_timer0();
 
-    //Setup sound
-    setup_sound();
+    //Setup timer1, used for sound
+    init_timer1();
+
+    // Setup ADC for brightness checking from the LDR
+    init_ldr();
 
     // Turn on global interrupts
     sei();
@@ -62,6 +66,7 @@ void initialise_hardware(void) {
 /* Initialises the clock flags, timers, counters, and other variables. */
 void initialise_clock(void) {
     init_clock();
+    setup_sound();
 }
 
 /* Handles the main clock program (displaying time, animations, alarm, etc.) */
@@ -69,10 +74,11 @@ void run_clock(void) {
     // TODO only look at redrawing each pixel that is changed?
     uint32_t last_clock_tick_time;
     uint32_t last_display_time;
+    uint32_t last_opacity_update_time;
     uint32_t start_animation_time;
     uint32_t start_alarm_time;
 
-    last_clock_tick_time = last_display_time = start_animation_time = start_alarm_time = get_clock_ticks();
+    last_clock_tick_time = last_display_time = last_opacity_update_time = start_animation_time = start_alarm_time = get_clock_ticks();
 
     while (1) {
         // Handle new second
@@ -105,16 +111,21 @@ void run_clock(void) {
 
         // Handle alarm
         if (alarm_is_set() && reached_alarm_time() && !alarm_is_playing()) {
-            // play_alarm_sound();
-            play_alarm();
+            play_alarm_sound();
+            // play_alarm();
             start_alarm_time = get_clock_ticks();
             reset_alarm_flag();
         }
 
         // If the alarm is playing, turn it off after it's played for long enough
         if (alarm_is_playing() && (get_clock_ticks() - start_alarm_time >= PLAY_ALARM_TIME)) {
-            // stop_alarm_sound();
-            //silence(50000);
+            stop_alarm_sound();
+        }
+
+        // Handle brightness updating
+        if (get_clock_ticks() - last_opacity_update_time >= OPACITY_UPDATE_DELAY) {
+            update_opacity();
+            last_opacity_update_time = get_clock_ticks();
         }
 
         // Toggle the hour marker
@@ -135,6 +146,11 @@ void run_clock(void) {
 
             last_display_time = get_clock_ticks();
         }
+
+        // Update the current sound state
+        update_sound();
+
+        // Enable the LED chains
         show_display();
     }
 }

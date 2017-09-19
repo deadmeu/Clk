@@ -1,5 +1,7 @@
 /*
- * Modified by Alex Subaric from work made by Peter Sutton.
+ * spi.c
+ *
+ * Written by Alex Subaric.
  */ 
 
 #include <avr/io.h>

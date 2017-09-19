@@ -1,8 +1,7 @@
 /*
  * timer.c
  *
- * Written by Alex Subaric, adapted from work by Peter Sutton, and
- * from http://www.8bit-era.cz/arduino-timer-interrupts-calculator.html.
+ * Written by Alex Subaric and Huy Nguyen.
  */
 
 #include <avr/io.h>
@@ -44,6 +43,26 @@ void init_timer0(void) {
     // Ensure the interrupt flag is cleared by setting it to 1
     TIFR0 &= (1 << OCF0A);
 
+    // Reenable interrupts
+    sei();
+}
+
+/*
+Using timer 1, we're going to output PWM on OC1A to play sound.
+We're using toggle on output compare with no prescaling.
+*/
+void init_timer1(void) {
+    // Disable interrupts
+    cli();
+
+    /*
+	Using OC1A, so B1 needs to be output.
+	*/
+	// DDRB   |= (1 << PORTB1);
+	TCCR1A |= (1 << COM1A0);
+	TCCR1B |= (1 << CS10) | (1 << WGM12);
+    TCNT1   = (0x00);
+    
     // Reenable interrupts
     sei();
 }

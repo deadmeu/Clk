@@ -25,6 +25,7 @@
 #define TEAL        0  , 128, 128
 #define LIME        150, 255, 0  
 #define SKY_BLUE    0  , 100, 255
-#define SUN_YELLOW  200, 255, 25 
+#define SUN_YELLOW  200, 220, 25 
+#define TOXIC_GREEN 180, 255, 0
 
 #endif /* PIXEL_COLOUR_H_ */
