@@ -24,7 +24,7 @@
 #define DISPLAY_UPDATE_DELAY         100    // 100 ms
 #define DISPLAY_HOUR_MARKER_DELAY    500    // 500 ms 
 #define DISPLAY_ANIMATION_TIME      4000    // 4 seconds
-#define OPACITY_UPDATE_DELAY        2000    // 2 seconds
+#define OPACITY_UPDATE_DELAY        2    // 2 seconds
 #define ANIMATION_FRAME_TIME         500    // 500 ms
 #define PLAY_ALARM_TIME             3000	// 10 seconds
 
@@ -55,6 +55,9 @@ void initialise_hardware(void) {
 
     //Setup timer1, used for sound
     init_timer1();
+
+    // Setup ADC for brightness checking from the LDR
+    init_ldr();
 
     // Turn on global interrupts
     sei();

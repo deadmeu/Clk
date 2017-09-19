@@ -85,7 +85,7 @@ void init_clock(void) {
     set_meridiem_colours(ANTE_MERIDIEM, RED);
     set_meridiem_colours(POST_MERIDIEM, BLUE);
   
-    time = MAX_TIME-4;       // 
+    time = MAX_TIME-3;       // 
     alarm_time = 0;    // 1 minute past midnight
     splash_flag = 1;
     hour_marker_flag = 1;
@@ -146,7 +146,7 @@ void stop_weather_animation(void) {
 }
 
 void play_alarm_sound(void) {
-    alarm_flag = 1;
+    alarm_playing_flag = 1;
 }
 
 void stop_alarm_sound(void) {
