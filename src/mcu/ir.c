@@ -11,15 +11,27 @@
 #include "clock.h"
 
 /* Constants */
-#define BYTESTREAMS_SENT   3
+#define BYTESTREAMS_RECV   3
 // #define DATA_ELEMENTS      8
 #define DATA_ELEMENTS      2
 #define CHAR_BIT           8       // taken from <limits.h>
 // #define BYTESTREAM_SIZE    ((2 * sizeof(uint32_t)) + (6 * sizeof(uint8_t)))
 #define BYTESTREAM_SIZE    (2 * sizeof(uint32_t))
 
+/*
+The reading of data will be interrupt based.
+Everytime an interrupt is triggered, the input character will be placed into 
+the next available position in the input buffer. 
+The sizeMarker will increment until BYTESTREAM_SIZE - 1. 
+When the full bytestream has been received, recvMarker will be incremented 
+until BYTESTREAMS_RECV - 1.
+ */
+
+static uint8_t sizeMarker = 0;
+static uint8_t recvMarker = 0;
+
 /* Arrays */
-uint8_t receive_buffer[BYTESTREAMS_SENT][BYTESTREAM_SIZE];
+uint8_t receive_buffer[BYTESTREAMS_RECV][BYTESTREAM_SIZE];
 uint8_t checked_buffer[BYTESTREAM_SIZE];
 uint8_t data_size_array[DATA_ELEMENTS];
 void *p_data[DATA_ELEMENTS];
