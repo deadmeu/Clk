@@ -13,12 +13,6 @@
 
 int main(void) {
     USART_init(UBRR);
-    while (1) {
-    /*
-     * Do a loop back.
-     */
-        USART_put_char(USART_get_char());
-    }
     return 0;
 }
 
