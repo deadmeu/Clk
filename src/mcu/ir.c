@@ -65,7 +65,7 @@ void init_data_size_array(void) {
 
 /* Clears the receive buffer to prevent dereferencing of garbage. */
 void clear_receive_buffer(void) {
-    for (uint8_t i = 0; i < BYTESTREAMS_SENT; i++) {
+    for (uint8_t i = 0; i < BYTESTREAMS_RECV; i++) {
         for (uint8_t j = 0; j < BYTESTREAM_SIZE; j++) {
             receive_buffer[i][j] = 0;
         }
@@ -80,10 +80,10 @@ void check_receive_buffer(void) {
         checked_buffer[byte] = 0x00;
         for (uint8_t bit = 0; bit < CHAR_BIT; bit++) {
             ones = 0;
-            for (uint8_t i = 0; i < BYTESTREAMS_SENT; i++) {
+            for (uint8_t i = 0; i < BYTESTREAMS_RECV; i++) {
                 ones += (receive_buffer[i][byte] >> bit) & 0x01;   // examine right-most bit (0th bit) after shifting
             }
-            checked_buffer[byte] |= ((ones > (BYTESTREAMS_SENT / 2)) << bit);
+            checked_buffer[byte] |= ((ones > (BYTESTREAMS_RECV / 2)) << bit);
         }
     }
 }
