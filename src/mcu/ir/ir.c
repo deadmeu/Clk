@@ -5,15 +5,6 @@
  * Modified by Huy Nguyen.
  */
 
-/*
- * The reading of data will be interrupt based.
- * Everytime an interrupt is triggered, the input character will be placed 
- * into the next available position in the input buffer. 
- * The sizeMarker will increment until BYTESTREAM_SIZE - 1. 
- * When the full bytestream has been received, recvMarker will be incremented 
- * until BYTESTREAMS_RECV - 1.
- */
-
 #include "ir.h" 
 #include "clock.h" 
 
@@ -33,10 +24,11 @@
  ****************************************************************************/
 
 /*
- * Markers
+ * Markers to correctly place characters read from the serial stream
+ * into the buffers.
  */
-volatile static uint8_t sizeMarker = 0;
-volatile static uint8_t recvMarker = 0;
+volatile static uint8_t sizeMarker;
+volatile static uint8_t recvMarker;
 
 /*
  * Buffers.
@@ -68,6 +60,9 @@ void init_data_pointers(void) {
     //p_data[5] = &data.ante_meridiem_colour
     //p_data[6] = &data.post_meridiem_colour
     //p_data[7] = &data.hour_marker_colour
+    
+    sizeMarker = 0;
+    recvMarker = 0;
 }
 
 /* 
@@ -139,6 +134,44 @@ void populate_data_struct(void) {
 void convert_endianness(uint8_t *dest, uint8_t *src, uint8_t size) {
     for (uint8_t i = 0; i < size; i ++) {
         dest[i] = src[(size - i) - 1];
+    }
+}
+
+void add_char_to_buffer(uint8_t c) {
+    receiveBuffer[recvMarker][sizeMarker] = c;
+    increment_size_marker();
+}
+
+/*
+ * The reading of data will be interrupt based.
+ * Everytime an interrupt is triggered, the input character will be placed 
+ * into the next available position in the input buffer. 
+ * The sizeMarker will increment until BYTESTREAM_SIZE - 1. 
+ * When the full bytestream has been received, recvMarker will be incremented 
+ * until BYTESTREAMS_RECV - 1.
+ */
+
+void increment_size_marker(void) {
+    sizeMarker++;
+    if (sizeMarker == BYTESTREAM_SIZE) {
+    /*
+     * Wrap around to the start and update the recv marker to note that
+     * we've received a whole bytestream once.
+     */
+        increment_recv_marker();
+        sizeMarker = 0;
+    }
+}
+
+void increment_recv_marker(void) {
+    recvMarker++;
+    if (recvMarker == BYTESTREAMS_RECV) {
+    /*
+     * Wrap around.
+     * Maybe we should set a flag to note that we've finished reading
+     * all the repeeated bytestreams.
+     */
+        recvMarker = 0;
     }
 }
 

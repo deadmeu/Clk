@@ -1,4 +1,5 @@
 #include "serialio.h"
+#include "ir.h"
 
 /*****************************************************************************
  * Constants for use in serial communication.
@@ -54,4 +55,9 @@ void USART_put_char(uint8_t data) {
      */
     }
     UDR0 = data;
+}
+
+ISR(USART_RX_vect) {
+    uint8_t c = UDR0;
+    add_char_to_buffer(c);
 }

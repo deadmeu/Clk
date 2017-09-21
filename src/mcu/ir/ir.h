@@ -37,6 +37,10 @@ void check_receive_buffer(void);
 void populate_data_struct(void);
 void convert_endianness(uint8_t *dest, uint8_t *src, uint8_t size);
 
+void add_char_to_buffer(uint8_t c);
+void increment_size_marker(void);
+void increment_recv_marker(void);
+
 /*****************************************************************************
  * Functions for extracting data from the buffer and updating the clock's
  * state.
