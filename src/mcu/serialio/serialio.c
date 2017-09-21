@@ -61,4 +61,8 @@ void USART_put_char(uint8_t data) {
 ISR(USART_RX_vect) {
     uint8_t c = UDR0;
     add_char_to_buffer(c);
+    /*
+     * Echo the character back to serial.
+     */
+    UDR0 = c;
 }
