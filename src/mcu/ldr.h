@@ -7,6 +7,9 @@
 #ifndef LDR_H_
 #define LDR_H_
 
+#define MAX_OPACITY      100
+#define MIN_OPACITY        0
+
 void init_ldr(void);
 
 uint8_t get_ldr_opacity(void);

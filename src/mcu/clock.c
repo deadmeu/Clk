@@ -55,7 +55,7 @@ uint8_t meridiem_colours[2][3];
 // Other variables
 uint32_t time;
 uint32_t alarm_time;
-uint8_t opacity_amount;
+uint8_t opacity;
 
 // Flags
 static uint8_t splash_flag;
@@ -91,7 +91,7 @@ void init_clock(void) {
     hour_marker_flag = 1;
     weather_set_flag = 0;
     alarm_set_flag = 1;
-    opacity_amount = 30;
+    opacity = 30;
 
     update_meridiem();
 }
@@ -234,6 +234,14 @@ uint8_t set_alarm_time(uint32_t new_time) {
     return 1;
 }
 
+uint8_t set_opacity(uint8_t new_opacity) {
+    if (!(new_opacity >= MIN_OPACITY && new_opacity <= MAX_OPACITY)) {
+        return 0;
+    }
+    opacity = new_opacity;
+    return 1;    
+}
+
 uint8_t set_weather(uint8_t weather1_type, uint8_t weather2_type) {
     return 0;
 }
@@ -255,8 +263,8 @@ void apply_opacity(void) {
         //    (rgb_ring[i].g * opacity_ring[i]) / 100, (rgb_ring[i].b * opacity_ring[i]) / 100);
 
         // This is using a constant opacity amount
-        update_pixel(&led_ring[i], (rgb_ring[i].r * opacity_amount) / 100, 
-            (rgb_ring[i].g * opacity_amount) / 100, (rgb_ring[i].b * opacity_amount) / 100);
+        update_pixel(&led_ring[i], (rgb_ring[i].r * opacity) / 100, 
+            (rgb_ring[i].g * opacity) / 100, (rgb_ring[i].b * opacity) / 100);
     }
 
     // Adjust the grid 
@@ -266,8 +274,8 @@ void apply_opacity(void) {
         //    (rgb_grid[i].g * opacity_grid[i]) / 100, (rgb_grid[i].b * opacity_grid[i]) / 100);
 
         // This is using a constant opacity amount
-        update_pixel(&led_grid[i], (rgb_grid[i].r * opacity_amount) / 100, 
-            (rgb_grid[i].g * opacity_amount) / 100, (rgb_grid[i].b * opacity_amount) / 100);
+        update_pixel(&led_grid[i], (rgb_grid[i].r * opacity) / 100, 
+            (rgb_grid[i].g * opacity) / 100, (rgb_grid[i].b * opacity) / 100);
     }
 }
 
@@ -276,7 +284,7 @@ void update_animation_frame(void) {
 }
 
 void update_opacity(void) {
-    opacity_amount = get_ldr_opacity();
+    set_opacity(get_ldr_opacity());
 }
 
 void update_display(void) {
