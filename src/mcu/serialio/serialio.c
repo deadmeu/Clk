@@ -30,8 +30,9 @@ void USART_init(uint32_t ubrr) {
 
     /*
      * Enable TX and RX and enable interrupt on receive.
+     * Enable interrupt on serial read.
      */
-    UCSR0B = (1 << RXEN0) | (1 << TXEN0);
+    UCSR0B = (1 << RXEN0) | (1 << TXEN0) | (1 << RCIE0);
 
     /*
      * Set frame format: 8 data, 2 stop bits.
