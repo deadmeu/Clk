@@ -32,6 +32,7 @@ void update_animation_frame(void);
 
 uint8_t set_time(uint32_t time);
 uint8_t set_alarm_time(uint32_t new_time);
+uint8_t set_opacity(uint8_t new_opacity);
 uint8_t set_weather(uint8_t weather1_type, uint8_t weather2_type);
 uint8_t alarm_is_set(void);
 uint8_t weather_is_set(void);
