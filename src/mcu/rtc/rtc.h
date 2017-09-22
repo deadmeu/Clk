@@ -55,4 +55,11 @@
 #define TIME_12 1
 #define TIME_24 0
 
+/*****************************************************************************
+ * Functions to utilise the i2c bus.
+ ****************************************************************************/
+void set_rtc_seconds(void);
+void set_rtc_minutes(void);
+void set_rtc_hours(void);
+
 #endif /* RTC_H_ */
