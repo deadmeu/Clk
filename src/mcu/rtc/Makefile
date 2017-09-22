@@ -20,7 +20,7 @@
 DEVICE     = atmega328p
 CLOCK      = 8000000L
 PROGRAMMER = 
-OBJECTS    = serialio.o
+OBJECTS    = rtc.o
 FUSES      = -U lfuse:w:0xe2:m -U hfuse:w:0xd9:m -U efuse:w:0xff:m
 
 # ATMega8 fuse bits used above (fuse bits for other devices are different!):
@@ -52,7 +52,7 @@ AVRDUDE = avrdude $(PROGRAMMER) -p $(DEVICE)
 COMPILE = avr-gcc -Wall -Os -DF_CPU=$(CLOCK) -mmcu=$(DEVICE)
 
 # symbolic targets:
-all:	main.hex
+all:	rtc.hex
 
 .c.o:
 	$(COMPILE) -c $< -o $@
@@ -68,7 +68,7 @@ all:	main.hex
 	$(COMPILE) -S $< -o $@
 
 flash:	all
-	$(AVRDUDE) -U flash:w:main.hex:i
+	$(AVRDUDE) -U flash:w:rtc.hex:i
 
 fuse:
 	$(AVRDUDE) $(FUSES)
@@ -78,25 +78,25 @@ install: flash fuse
 
 # if you use a bootloader, change the command below appropriately:
 load: all
-	bootloadHID main.hex
+	bootloadHID rtc.hex
 
 clean:
-	rm -f main.hex main.elf $(OBJECTS)
+	rm -f rtc.hex rtc.elf $(OBJECTS)
 
 # file targets:
-main.elf: $(OBJECTS)
-	$(COMPILE) -o main.elf $(OBJECTS)
+rtc.elf: $(OBJECTS)
+	$(COMPILE) -o rtc.elf $(OBJECTS)
 
-main.hex: main.elf
-	rm -f main.hex
-	avr-objcopy -j .text -j .data -O ihex main.elf main.hex
-	avr-size --format=avr --mcu=$(DEVICE) main.elf
+rtc.hex: rtc.elf
+	rm -f rtc.hex
+	avr-objcopy -j .text -j .data -O ihex rtc.elf rtc.hex
+	avr-size --format=avr --mcu=$(DEVICE) rtc.elf
 # If you have an EEPROM section, you must also create a hex file for the
 # EEPROM and add it to the "flash" target.
 
 # Targets for code debugging and analysis:
-disasm:	main.elf
-	avr-objdump -d main.elf
+disasm:	rtc.elf
+	avr-objdump -d rtc.elf
 
 cpp:
-	$(COMPILE) -E main.c
+	$(COMPILE) -E rtc.c
