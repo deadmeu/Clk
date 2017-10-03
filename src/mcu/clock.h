@@ -7,9 +7,13 @@
 #ifndef CLOCK_H_
 #define CLOCK_H_
 
+#include "pixel_colour.h"
+
+typedef enum { ANTE, POST } merid_t;
+
 void init_clock(void);
 void apply_opacity(void);
-void set_meridiem_colours(uint8_t meridiem, uint8_t r, uint8_t g, uint8_t b);
+void set_meridiem_colours(merid_t merid, pcol_t col);
 void update_meridiem(void);
 void play_weather_animation(void);
 void stop_weather_animation(void);
