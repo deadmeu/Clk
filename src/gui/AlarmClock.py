@@ -19,6 +19,8 @@ from tkinter import *
 from tkinter import messagebox
 from tkinter import ttk
 
+import serial
+
 import math
 import datetime
 import time
@@ -668,6 +670,16 @@ class ClockApp(object):
 
         self._clock = ClockView(master, self)
         self._clock.pack(side=tk.RIGHT,expand=1,fill=tk.BOTH)
+
+def sendToClock(args):
+    """
+    Uses the pyserial library to send data to the clock via FTDI chip
+    over IR
+
+    sendToClock(str[] args) -> None (Data sent to the clock)
+    """
+    ser = serial.Serial('COM9', 9600, serial.EIGHTBITS, serial.PARITY_NONE, serial.STOPBITS_ONE)
+    ser.write("Hello World")
 
 
 def getTime():
