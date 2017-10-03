@@ -41,6 +41,7 @@ serial/serialposix.py
 serial/serialutil.py
 serial/serialwin32.py
 serial/win32.py
+serial/tools/miniterm.py
 serial/threaded/__init__.py
 serial/tools/__init__.py
 serial/tools/hexlify_codec.py
