@@ -1,4 +1,5 @@
 #include "serialio.h"
+#include "light_ws2812.h"
 
 /*****************************************************************************
  * Constants for use in serial communication.
@@ -10,12 +11,32 @@
 
 #define BAUD 9600
 #define UBRR (F_CPU/16/BAUD) - 1
+#define GRID_LEDS 16
+
+struct cRGB led_grid[GRID_LEDS];
 
 int main(void) {
-    USART_init(UBRR);
+    //USART_init(UBRR);
     while(1) {
+        update_leds(10);
+        enable_leds(led_grid, GRID_LEDS, 5);
     }
     return 0;
+}
+
+void update_leds(uint8_t val) {
+    for (uint8_t i = 0; i < GRID_LEDS; i++) {
+        if (isNthBitSet(val, i)) {
+            led_grid[i].r = 255; led_grid.g = 0; led_grid.b = 0;
+        } else {
+            led_grid[i].r = 0; led_grid.g = 0; led_grid.b = 0;            
+        }
+    }
+}
+
+int isNthBitSet (unsigned char c, int n) {
+    static unsigned char mask[] = {128, 64, 32, 16, 8, 4, 2, 1};
+    return ((c & mask[n]) != 0);
 }
 
 /*****************************************************************************
@@ -62,7 +83,5 @@ void USART_put_char(uint8_t data) {
 }
 
 ISR(USART_RX_vect) {
-    uint8_t c = UDR0;
-    c += 48;
-    UDR0 = c;
+    val = UDR0;
 }
