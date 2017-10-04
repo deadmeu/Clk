@@ -1,7 +1,13 @@
 import serial
+import time
 
 #(device, baud, bytesize, parity checking, stopbits
-ser = serial.Serial(None, 9600, serial.EIGHTBITS, serial.PARITY_NONE, serial.STOPBITS_ONE)
+ser = serial.Serial('COM5', 9600, serial.EIGHTBITS, serial.PARITY_NONE, serial.STOPBITS_ONE)
+v1 = bytearray((2863311530).to_bytes(4, 'big', signed=False))
+v2 = bytearray([170, 171])
 
-values = bytearray([4, 9, 62, 144, 56, 30, 147, 3, 210, 89, 111, 78, 184, 151, 17, 129])
-ser.write(values)
+while(1):
+    
+    ser.write(v1)
+    print("sent")
+    time.sleep(0.1)

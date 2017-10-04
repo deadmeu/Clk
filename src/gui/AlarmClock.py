@@ -41,12 +41,17 @@ auto = True
 draw_wthr = False
 frame = 0
 
+port = 'COM5'
+serial_ports = []
+
 drag = False
 
 alarm = False
 al_h = 0
 al_m = 0
 al_am_pm = "PM"
+
+w_types = ["Sunny", "Cloudy", "Rain", "Windy", "Storm"]
 
 sun = ["#9EEDFF", "#9EEDFF", "#9EEDFF", "#9EEDFF",
        "#9EEDFF", "#FFD900", "#FFD900", "#9EEDFF",
@@ -89,14 +94,14 @@ storm = ["#6074C4", "#82827F", "#82827F", "#6074C4",
        "#6074C4", "#6074C4", "#FFD900", "#6074C4"]
 
 wind = ["#9EEDFF", "#9EEDFF", "#9EEDFF", "#9EEDFF",
-       "#8AD3E3", "#8AD3E3", "#9EEDFF", "#9EEDFF",
+       "#6A9DA8", "#6A9DA8", "#9EEDFF", "#9EEDFF",
        "#9EEDFF", "#9EEDFF", "#9EEDFF", "#9EEDFF",
-       "#9EEDFF", "#9EEDFF", "#8AD3E3", "#8AD3E3",
+       "#9EEDFF", "#9EEDFF", "#6A9DA8", "#6A9DA8",
        
        "#9EEDFF", "#9EEDFF", "#9EEDFF", "#9EEDFF",
-       "#9EEDFF", "#9EEDFF", "#8AD3E3", "#8AD3E3",
+       "#9EEDFF", "#9EEDFF", "#6A9DA8", "#6A9DA8",
        "#9EEDFF", "#9EEDFF", "#9EEDFF", "#9EEDFF",
-       "#8AD3E3", "#8AD3E3", "#9EEDFF", "#9EEDFF"]
+       "#6A9DA8", "#6A9DA8", "#9EEDFF", "#9EEDFF"]
        
 
 
@@ -556,7 +561,10 @@ class SelectionFrame(tk.Frame):
         update_weather() -> None (Updates the gui)
         """
         global weather
+        global draw_wthr
         weather = get_weather();
+        sendToClock(weather)
+        draw_wthr = True;
         self._weather.config(text = weather)
 
     def get_time(self):
@@ -662,6 +670,7 @@ class ClockApp(object):
 
         Constructor: ClockApp(tk.Tk())
         """
+        global serial_ports
         self._master = master
         master.minsize(500, 375)
 
@@ -671,6 +680,51 @@ class ClockApp(object):
         self._clock = ClockView(master, self)
         self._clock.pack(side=tk.RIGHT,expand=1,fill=tk.BOTH)
 
+        menubar = tk.Menu(master)
+        master.config(menu = menubar)
+        portMenu = tk.Menu(menubar)
+        menubar.add_cascade(label="Ports", menu = portMenu)
+        for p in serial_ports:
+            print(p)
+            portMenu.add_command(label = p)
+
+        portMenu.add_command(label = "Update")
+
+        def port(self):
+            print("port")
+
+        def update(self):
+            getPorts()
+        
+
+
+def getPorts():
+    """
+    Detects all serial ports on the computer and creates a list that the user can select from
+
+    getPorts() -> None(updates list)
+    """
+    global serial_ports
+    if sys.platform.startswith('win'):
+        ports = ['COM%s' % (i + 1) for i in range(256)]
+    elif sys.platform.startswith('linux') or sys.platform.startswith('cygwin'):
+        # this excludes your current terminal "/dev/tty"
+        ports = glob.glob('/dev/tty[A-Za-z]*')
+    elif sys.platform.startswith('darwin'):
+        ports = glob.glob('/dev/tty.*')
+    else:
+        raise EnvironmentError('Unsupported platform')
+
+    result = []
+    for port in ports:
+        try:
+            s = serial.Serial(port)
+            s.close()
+            result.append(port)
+        except (OSError, serial.SerialException):
+            pass
+    serial_ports = result
+
 def sendToClock(args):
     """
     Uses the pyserial library to send data to the clock via FTDI chip
@@ -678,9 +732,26 @@ def sendToClock(args):
 
     sendToClock(str[] args) -> None (Data sent to the clock)
     """
-    ser = serial.Serial('COM9', 9600, serial.EIGHTBITS, serial.PARITY_NONE, serial.STOPBITS_ONE)
-    ser.write("Hello World")
-
+    s = "Windy and Rain"
+    args = s
+    start = 0
+    end = 0
+    i = 1
+    for w in w_types:
+        if(args.startswith(w)):
+            start = i
+        if(args.endswith(w)):
+            end = i
+        i += 1
+    
+    ser = serial.Serial(port, 9600, serial.EIGHTBITS, serial.PARITY_NONE, serial.STOPBITS_ONE)
+    print(weather + " is -> " + str(start) + " : " + str(end))
+    val = bytearray([start, end])
+    print(str(val[0]) + " : " + str(val[1]))
+    while(1):
+        ser.write(val)
+        print("sent")
+        #print(str(chr(int.from_bytes(ser.read(size = 1), byteorder='little'))))
 
 def getTime():
     """
@@ -729,7 +800,11 @@ def main():
     global auto
     global draw_wthr
     global frame
+    global serial_ports
     weather = get_weather()
+    sendToClock(weather)
+    getPorts()
+    print(serial_ports)
     root = tk.Tk()
     app = ClockApp(root)
     root.geometry("640x480")
@@ -775,7 +850,7 @@ def main():
                 app._select.reset_input()
             if(s < 4):
                 draw_wthr = True
-            elif(draw_wthr == True):
+            if(draw_wthr == True and frame > 7):
                 draw_wthr = False
                 frame = 0
             old = cur
