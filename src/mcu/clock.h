@@ -44,7 +44,12 @@ uint8_t animation_is_playing(void);
 uint8_t alarm_is_playing(void);
 uint8_t reached_new_minute(void);
 uint8_t reached_alarm_time(void);
+uint8_t get_clock_seconds(void);
+uint8_t get_clock_minutes(void);
+uint8_t get_clock_hours(void);
 uint8_t redraw_ring_needed(void);
 uint8_t redraw_grid_needed(void);
+
+uint32_t get_time(void);
 
 #endif /* CLOCK_H_ */

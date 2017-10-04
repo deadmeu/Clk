@@ -190,6 +190,22 @@ uint8_t reached_alarm_time(void) {
     return alarm_flag;
 }
 
+uint8_t get_clock_seconds(void) {
+    return SECONDS;
+}
+
+uint8_t get_clock_minutes(void) {
+    return MINUTES;
+}
+
+uint8_t get_clock_hours(void) {
+    return HOURS;
+}
+
+uint32_t get_time(void) {
+    return time;
+}
+
 void reset_ring_redraw(void) {
     draw_ring_flag = 0;
 }
