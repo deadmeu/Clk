@@ -1,5 +1,4 @@
 #include "serialio.h"
-#include "ir.h"
 
 /*****************************************************************************
  * Constants for use in serial communication.
@@ -14,6 +13,8 @@
 
 int main(void) {
     USART_init(UBRR);
+    while(1) {
+    }
     return 0;
 }
 
@@ -32,12 +33,14 @@ void USART_init(uint32_t ubrr) {
      * Enable TX and RX and enable interrupt on receive.
      * Enable interrupt on serial read.
      */
-    UCSR0B = (1 << RXEN0) | (1 << TXEN0) | (1 << RCIE0);
+    UCSR0B = (1 << RXEN0) | (1 << TXEN0) | (1 << RXCIE0);
 
     /*
      * Set frame format: 8 data, 2 stop bits.
      */
-    UCSR0C = (1 << USBS0) | (3 << UCSZ00);
+    UCSR0C = (1 << USBS0) | (1 << UCSZ00) | (1 << UCSZ01);
+    
+    sei();
 }
 
 uint8_t USART_get_char(void) {
@@ -60,9 +63,6 @@ void USART_put_char(uint8_t data) {
 
 ISR(USART_RX_vect) {
     uint8_t c = UDR0;
-    add_char_to_buffer(c);
-    /*
-     * Echo the character back to serial.
-     */
+    c += 48;
     UDR0 = c;
 }

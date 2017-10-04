@@ -13,37 +13,23 @@
  * The seconds register, RTCSEC.
  */
 #define RTCSEC 0x00
-#define SECONE0 0
-#define SECONE1 1
-#define SECONE2 2
-#define SECONE3 3
-#define SECTEN0 4
-#define SECTEN1 5
-#define SECTEN2 6
+#define SECONE 0
+#define SECTEN 4
 #define ST 7
 
 /*
  * The minutes register, RTCMIN.
  */
 #define RTCMIN 0x01
-#define MINONE0 0
-#define MINONE1 1
-#define MINONE2 2
-#define MINONE3 3
-#define MINTEN0 4
-#define MINTEN1 5
-#define MINTEN2 6
+#define MINONE 0
+#define MINTEN 4
 
 /*
  * The hours register, RTCHOUR.
  */
 #define RTCHOUR 0x02
-#define HRONE0 0
-#define HRONE1 1
-#define HRONE2 2
-#define HRONE3 3
-#define HRTEN0 4
-#define HRTEN1 5
+#define HRONE 0
+#define HRTEN 4
 #define AM_PM 5
 #define TIME_12_24 6
 
@@ -58,8 +44,12 @@
 /*****************************************************************************
  * Functions to utilise the i2c bus.
  ****************************************************************************/
-void set_rtc_seconds(void);
-void set_rtc_minutes(void);
-void set_rtc_hours(void);
+void set_rtc_seconds(int seconds);
+void set_rtc_minutes(int minutes);
+void set_rtc_hours(int hours);
+
+int read_rtc_seconds(void);
+int read_rtc_minutes(void);
+int read_rtc_hours(void);
 
 #endif /* RTC_H_ */
