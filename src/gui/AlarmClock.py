@@ -41,7 +41,7 @@ auto = True
 draw_wthr = False
 frame = 0
 
-port = 'COM5'
+port = 'COM1'
 serial_ports = []
 
 drag = False
@@ -680,21 +680,38 @@ class ClockApp(object):
         self._clock = ClockView(master, self)
         self._clock.pack(side=tk.RIGHT,expand=1,fill=tk.BOTH)
 
-        menubar = tk.Menu(master)
-        master.config(menu = menubar)
-        portMenu = tk.Menu(menubar)
-        menubar.add_cascade(label="Ports", menu = portMenu)
+        self.menubar = tk.Menu(master)
+        self._master.config(menu = self.menubar)
+
+        self.ports = tk.Menu(self.menubar)
+        self.portlist = tk.Menu(self.ports)
+        
+        self.menubar.add_cascade(label="File", menu = self.ports)
+        self.ports.add_cascade(label = "Choose port", menu = self.portlist)
+
+        
         for p in serial_ports:
             print(p)
-            portMenu.add_command(label = p)
+            self.portlist.add_command(label = p, command = lambda:self.set_port(p))
+        self.portlist.add_command(label = "Update", command = self.update)
+        
 
-        portMenu.add_command(label = "Update")
+    def set_port(self, port_name):
+        print("port set to: " + port_name)
+        global port
+        port = port_name
 
-        def port(self):
-            print("port")
+    def update(self):
+        print("updated port list")
+        getPorts()
+        self.portlist = tk.Menu(self.ports)
 
-        def update(self):
-            getPorts()
+        for p in serial_ports:
+            print(p)
+            self.portlist.add_command(label = p, command = lambda:self.set_port(p))
+        
+        self.portlist.add_command(label = "Update", command = self.update)
+        
         
 
 
@@ -748,10 +765,9 @@ def sendToClock(args):
     print(weather + " is -> " + str(start) + " : " + str(end))
     val = bytearray([start, end])
     print(str(val[0]) + " : " + str(val[1]))
-    while(1):
-        ser.write(val)
-        print("sent")
-        #print(str(chr(int.from_bytes(ser.read(size = 1), byteorder='little'))))
+    
+    ser.write(val)
+    print("sent")
 
 def getTime():
     """
@@ -802,7 +818,7 @@ def main():
     global frame
     global serial_ports
     weather = get_weather()
-    sendToClock(weather)
+    #sendToClock(weather)
     getPorts()
     print(serial_ports)
     root = tk.Tk()
