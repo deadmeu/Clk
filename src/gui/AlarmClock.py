@@ -680,11 +680,11 @@ class ClockApp(object):
         self._clock = ClockView(master, self)
         self._clock.pack(side=tk.RIGHT,expand=1,fill=tk.BOTH)
 
-        self.menubar = tk.Menu(master)
+        self.menubar = Menu(master)
         self._master.config(menu = self.menubar)
 
-        self.ports = tk.Menu(self.menubar)
-        self.portlist = tk.Menu(self.ports)
+        self.ports = Menu(self.menubar)
+        self.portlist = Menu(self.ports)
         
         self.menubar.add_cascade(label="File", menu = self.ports)
         self.ports.add_cascade(label = "Choose port", menu = self.portlist)
@@ -704,7 +704,7 @@ class ClockApp(object):
     def update(self):
         print("updated port list")
         getPorts()
-        self.portlist = tk.Menu(self.ports)
+        self.portlist = Menu(self.ports)
 
         for p in serial_ports:
             print(p)
