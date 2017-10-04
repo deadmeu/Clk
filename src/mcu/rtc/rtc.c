@@ -175,13 +175,22 @@ int read_rtc_seconds(void) {
      */
     i2c_start_wait(DEV7940 + I2C_WRITE);
     /*
-     * Set the seconds registers as the read target.
+     * Set the seconds register as the read target.
      */
     i2c_write(RTCSEC);
 
+    /*
+     * Set the RTC address to read mode.
+     */
     i2c_rep_start(DEV7940 + I2C_READ);
+    /*
+     * Read a byte from the seconds register.
+     */
     uint8_t ret = i2c_readNak();
 
+    /*
+     * Release the i2c bus.
+     */
     i2c_stop();
 }
 
@@ -193,11 +202,23 @@ int read_rtc_minutes(void) {
      * Set the RTC address to write mode.
      */
     i2c_start_wait(DEV7940 + I2C_WRITE);
+    /*
+     * Set the minutes register as the read target.
+     */
     i2c_write(RTCMIN);
 
+    /*
+     * Set the RTC address to read mode.
+     */
     i2c_rep_start(DEV7940 + I2C_READ);
+    /*
+     * Read a byte from the minutes register.
+     */
     uint8_t ret = i2c_readNak();
 
+    /*
+     * Release the i2c bus.
+     */
     i2c_stop();
 }
 
@@ -209,8 +230,14 @@ int read_rtc_hours(void) {
      * Set the RTC address to write mode.
      */
     i2c_start_wait(DEV7940 + I2C_WRITE);
+    /*
+     * Set the hours register as the read target.
+     */
     i2c_write(RTCHOUR);
 
+    /*
+     * Set the RTC address to read mode.
+     */
     i2c_rep_start(DEV7940 + I2C_READ);
     uint8_t ret = i2c_readNak();
 

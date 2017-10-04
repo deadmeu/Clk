@@ -20,7 +20,7 @@
 DEVICE     = atmega328p
 CLOCK      = 8000000L
 PROGRAMMER = 
-OBJECTS    = serialio.o
+OBJECTS    = serialio.o light_ws2812.o
 FUSES      = -U lfuse:w:0xe2:m -U hfuse:w:0xd9:m -U efuse:w:0xff:m
 
 # ATMega8 fuse bits used above (fuse bits for other devices are different!):
@@ -49,7 +49,7 @@ FUSES      = -U lfuse:w:0xe2:m -U hfuse:w:0xd9:m -U efuse:w:0xff:m
 # Tune the lines below only if you know what you are doing:
 
 AVRDUDE = avrdude $(PROGRAMMER) -p $(DEVICE)
-COMPILE = avr-gcc -Wall -Os -DF_CPU=$(CLOCK) -mmcu=$(DEVICE)
+COMPILE = avr-gcc -std=gnu99 -Wall -Os -DF_CPU=$(CLOCK) -mmcu=$(DEVICE)
 
 # symbolic targets:
 all:	serialio.hex

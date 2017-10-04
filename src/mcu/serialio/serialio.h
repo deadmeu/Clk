@@ -26,4 +26,8 @@ uint8_t USART_get_char(void);
  */
 void USART_put_char(uint8_t data);
 
+void update_leds(uint8_t val);
+
+int isNthBitSet(unsigned char c, int n);
+
 #endif

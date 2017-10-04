@@ -19,7 +19,7 @@ int main(void) {
     //USART_init(UBRR);
     while(1) {
         update_leds(10);
-        enable_leds(led_grid, GRID_LEDS, 5);
+        ws2812_setleds_pin(led_grid, GRID_LEDS, _BV(5));
     }
     return 0;
 }
@@ -27,9 +27,9 @@ int main(void) {
 void update_leds(uint8_t val) {
     for (uint8_t i = 0; i < GRID_LEDS; i++) {
         if (isNthBitSet(val, i)) {
-            led_grid[i].r = 255; led_grid.g = 0; led_grid.b = 0;
+            led_grid[i].r = 255; led_grid[i].g = 0; led_grid[i].b = 0;
         } else {
-            led_grid[i].r = 0; led_grid.g = 0; led_grid.b = 0;            
+            led_grid[i].r = 0; led_grid[i].g = 0; led_grid[i].b = 0;            
         }
     }
 }
@@ -83,5 +83,4 @@ void USART_put_char(uint8_t data) {
 }
 
 ISR(USART_RX_vect) {
-    val = UDR0;
 }
