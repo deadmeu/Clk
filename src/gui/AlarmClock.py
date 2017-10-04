@@ -20,6 +20,7 @@ from tkinter import messagebox
 from tkinter import ttk
 
 import serial
+import serial.tools.list_ports
 
 import math
 import datetime
@@ -712,8 +713,6 @@ class ClockApp(object):
         
         self.portlist.add_command(label = "Update", command = self.update)
         
-        
-
 
 def getPorts():
     """
@@ -722,25 +721,13 @@ def getPorts():
     getPorts() -> None(updates list)
     """
     global serial_ports
-    if sys.platform.startswith('win'):
-        ports = ['COM%s' % (i + 1) for i in range(256)]
-    elif sys.platform.startswith('linux') or sys.platform.startswith('cygwin'):
-        # this excludes your current terminal "/dev/tty"
-        ports = glob.glob('/dev/tty[A-Za-z]*')
-    elif sys.platform.startswith('darwin'):
-        ports = glob.glob('/dev/tty.*')
-    else:
-        raise EnvironmentError('Unsupported platform')
+    list = serial.tools.list_ports.comports()
+    connected = []
+    for element in list:
+        connected.append(element.device)
+    print("Connected COM ports: " + str(connected))
 
-    result = []
-    for port in ports:
-        try:
-            s = serial.Serial(port)
-            s.close()
-            result.append(port)
-        except (OSError, serial.SerialException):
-            pass
-    serial_ports = result
+    serial_ports = connected
 
 def sendToClock(args):
     """
