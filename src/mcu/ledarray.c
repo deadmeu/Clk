@@ -9,26 +9,33 @@
 #include "light_ws2812.h"
 #include "pixel_colour.h"
 
-#define RING_PIN        0
-#define GRID_PIN        1
+// #define RING_PIN        0
+// #define GRID_PIN        1
 
 // TODO Change this so it's just _BV(pin_type) see line 22's comment.
-#define RING_PINMASK    _BV(RING_PIN)
-#define GRID_PINMASK    _BV(GRID_PIN)
+// #define RING_PINMASK    _BV(RING_PIN)
+// #define GRID_PINMASK    _BV(GRID_PIN)
 
-void enable_leds(struct cRGB *led_array, uint8_t size, uint8_t pin_type) {
+void enable_leds(struct cRGB *led_array, uint8_t size, pindef_t pin_type) {
     // ws2812_setleds(led_array, size);
-    if (pin_type == RING_PIN) {
-        ws2812_setleds_pin(led_array, size, RING_PINMASK); // maybe do _BV(pin_type) ?
-    } else if (pin_type == GRID_PIN) {
-        ws2812_setleds_pin(led_array, size, GRID_PINMASK);
-    } else {
-        ws2812_setleds(led_array, size);
-    }
+    // if (pin_type == RING) {
+    //     ws2812_setleds_pin(led_array, size, RING_PINMASK); // maybe do _BV(pin_type) ?
+    // } else if (pin_type == GRID) {
+    //     ws2812_setleds_pin(led_array, size, GRID_PINMASK);
+    // } else {
+    //     ws2812_setleds(led_array, size);
+    // }
+    ws2812_setleds_pin(led_array, size, _BV(pin_type));
 }
 
-void update_pixel(struct cRGB *pixel, uint8_t r, uint8_t g, uint8_t b) {
-    // r, g, b values must be between 0 and 255
+void update_pixel_col(struct cRGB *pixel, pcol_t col) {
+    pixel->r = (col >> 16) & ((1 << 9)-1);
+    pixel->g = (col >> 8)  & ((1 << 9)-1);
+    pixel->b = col         & ((1 << 9)-1);
+}
+
+void update_pixel_rgb(struct cRGB *pixel, uint8_t r, uint8_t g, uint8_t b) {
+    //r, g, b values must be between 0 and 255
     if (!(r >= 0 && g >= 0 && b >= 0 && r <= 255 && g <= 255 && b <= 255)) {
         return;
     }
@@ -52,4 +59,5 @@ void opacity_array_clear(uint8_t *opacity_array, uint8_t size) {
     for (uint8_t i = 0; i < size; i++) {
         opacity_array[i] = 100;
     }
+    // memset(opacity_array, 100, size * sizeof(opacity_array));
 }

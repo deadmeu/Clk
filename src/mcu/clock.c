@@ -7,14 +7,15 @@
 #include <stdint.h>
 
 #include "clock.h"
+#include "light_ws2812.h"
 #include "ledarray.h"
 #include "ldr.h"
 #include "pixel_colour.h"
 
 #define RING_LEDS           12
 #define GRID_LEDS           16
-#define MAX_TIME            86399L              // 23:59:59 converted to seconds. L for long (32 bit) type
-#define MID_DAY_TIME        43200L              // 12:00:00 (midday) converted to seconds 
+#define MAX_TIME            86399L    // 23:59:59 converted to seconds.
+#define MID_DAY_TIME        43200L    // 12:00:00 (midday) converted to seconds
 
 #define HOURS               (time / 3600)
 #define MINUTES             ((time - 3600 * HOURS) / 60)
@@ -23,10 +24,10 @@
 #define NEW_CYCLE_TIME      (time == 0L || time == MID_DAY_TIME)
 
 #define HOUR_MARKER_COLOUR  GREEN
-#define ANTE_MERIDIEM       0
-#define RING_PIN            0
-#define POST_MERIDIEM       1
-#define GRID_PIN            1
+//#define ANTE_MERIDIEM       0
+// #define RING_PIN            0
+//#define POST_MERIDIEM       1
+// #define GRID_PIN            1
 
 static void init_leds(void);
 
@@ -43,20 +44,21 @@ uint8_t opacity_ring[RING_LEDS];
 uint8_t opacity_grid[GRID_LEDS];
 
                                             // [0]   [3] ~Index numbers~
-                                            // {1 0 0 2}
-                                            // {0 0 0 0} Grid is arranged in a 4x4 layout with minute markers
-uint8_t grid_minute_states[4] = {12,  13,     // {0 0 0 0} in each corner.
-                                14, 15};    // {3 0 0 4}
+                                            // {1 0 0 2} Grid is arranged in a 
+                                            // {0 0 0 0} 4x4 layout with minute 
+uint8_t grid_minute_states[4] = { 0,  3,    // {0 0 0 0} markers in each corner.
+                                 12, 15};   // {3 0 0 4} 
                                             // [12] [15] ~Index numbers~
 
 // Meridiem colours
-uint8_t meridiem_colours[2][3];
+pcol_t meridiem_colours[2];
 
 // Other variables
 uint32_t time;
 uint32_t alarm_time;
-uint8_t opacity_amount;
+uint8_t opacity;
 
+// TODO maybe use a bitfield for these?
 // Flags
 static uint8_t splash_flag;
 static uint8_t animation_flag;
@@ -82,16 +84,16 @@ void init_clock(void) {
     call_ring_redraw();
     call_grid_redraw();
 
-    set_meridiem_colours(ANTE_MERIDIEM, RED);
-    set_meridiem_colours(POST_MERIDIEM, BLUE);
+    set_meridiem_colours(ANTE, RED);
+    set_meridiem_colours(POST, BLUE);
   
     time = MAX_TIME-3;       // 
-    alarm_time = 0;    // 1 minute past midnight
+    alarm_time = 0;    // 0 minute past midnight
     splash_flag = 1;
     hour_marker_flag = 1;
     weather_set_flag = 0;
     alarm_set_flag = 1;
-    opacity_amount = 30;
+    opacity = 30;
 
     update_meridiem();
 }
@@ -119,21 +121,15 @@ void increment_seconds(void) {
     }
 }
 
-void set_meridiem_colours(uint8_t meridiem, uint8_t r, uint8_t g, uint8_t b) {
-    if (!(meridiem == ANTE_MERIDIEM || meridiem == POST_MERIDIEM)) {
+void set_meridiem_colours(merid_t merid, pcol_t col) {
+    if (merid != ANTE && merid != POST) {
         return;
     }
-    if (!(r >= 0 && g >= 0 && b >= 0 && r <= 255 && g <= 255 && b <= 255)) {
-        return;
-    }
-
-    meridiem_colours[meridiem][0] = r;
-    meridiem_colours[meridiem][1] = g;
-    meridiem_colours[meridiem][2] = b;
+    meridiem_colours[merid] = col;
 }
 
 void update_meridiem(void) {
-    meridiem_flag = (time < MID_DAY_TIME) ? ANTE_MERIDIEM : POST_MERIDIEM;
+    meridiem_flag = (time < MID_DAY_TIME) ? ANTE : POST;
 }
 
 // TODO: probably put this in a weather.c file?
@@ -215,10 +211,12 @@ void reset_alarm_flag(void) {
     alarm_flag = 0;
 }
 
-// sets the clock seconds, minutes, and hours counters to the supplied time in seconds.
+// sets the clock seconds, minutes, and hours counters to the supplied time 
+// in seconds.
 uint8_t set_time(uint32_t new_time) {
-    if (!(new_time >= 0L && new_time <= MAX_TIME)) {    // new_time (in seconds) isn't between
-                                                        // 00:00:00 and 23:59:59 inclusive.
+    if (!(new_time >= 0L && new_time <= MAX_TIME)) { // new_time (in seconds) 
+                                                     // isn't between 00:00:00 
+                                                     // and 23:59:59 inclusive.
         return 0;
     }
     time = new_time;
@@ -226,14 +224,24 @@ uint8_t set_time(uint32_t new_time) {
 }
 
 uint8_t set_alarm_time(uint32_t new_time) {
-    if (!(new_time >= 0L && new_time <= MAX_TIME)) {    // new_time (in seconds) isn't between
-                                                        // 00:00:00 and 23:59:59 inclusive.
+    if (!(new_time >= 0L && new_time <= MAX_TIME)) { // new_time (in seconds) 
+                                                     // isn't between 00:00:00 
+                                                     // and 23:59:59 inclusive.
         return 0;
     }
     alarm_time = new_time;
     return 1;
 }
 
+uint8_t set_opacity(uint8_t new_opacity) {
+    if (!(new_opacity >= MIN_OPACITY && new_opacity <= MAX_OPACITY)) {
+        return 0;
+    }
+    opacity = new_opacity;
+    return 1;    
+}
+
+// TODO improve this: better variable names, maybe a new weather type?
 uint8_t set_weather(uint8_t weather1_type, uint8_t weather2_type) {
     return 0;
 }
@@ -250,33 +258,40 @@ void toggle_hour_marker(void) {
 void apply_opacity(void) {
     // Adjust the ring 
     for (uint8_t i = 0; i < RING_LEDS; i++) {
-        // Set each element of the led array to the combination of the rgb array and opacity array
+        // Set each element of the led array to the combination of the rgb array
+        // and opacity array.
         //update_pixel(&led_ring[i], (rgb_ring[i].r * opacity_ring[i]) / 100, 
         //    (rgb_ring[i].g * opacity_ring[i]) / 100, (rgb_ring[i].b * opacity_ring[i]) / 100);
 
         // This is using a constant opacity amount
-        update_pixel(&led_ring[i], (rgb_ring[i].r * opacity_amount) / 100, 
-            (rgb_ring[i].g * opacity_amount) / 100, (rgb_ring[i].b * opacity_amount) / 100);
+        update_pixel_rgb(&led_ring[i], (rgb_ring[i].r * opacity) / 100, 
+            (rgb_ring[i].g * opacity) / 100, (rgb_ring[i].b * opacity) / 100);
     }
 
     // Adjust the grid 
     for (uint8_t i = 0; i < GRID_LEDS; i++) {
-        // Set each element of the led array to the combination of the rgb array and opacity array
+        // Set each element of the led array to the combination of the rgb array
+        // and opacity array.
         //update_pixel(&led_grid[i], (rgb_grid[i].r * opacity_grid[i]) / 100, 
         //    (rgb_grid[i].g * opacity_grid[i]) / 100, (rgb_grid[i].b * opacity_grid[i]) / 100);
 
         // This is using a constant opacity amount
-        update_pixel(&led_grid[i], (rgb_grid[i].r * opacity_amount) / 100, 
-            (rgb_grid[i].g * opacity_amount) / 100, (rgb_grid[i].b * opacity_amount) / 100);
+        update_pixel_rgb(&led_grid[i], (rgb_grid[i].r * opacity) / 100, 
+            (rgb_grid[i].g * opacity) / 100, (rgb_grid[i].b * opacity) / 100);
     }
 }
+
+// pcol_t combine_rgb_opacity(struct cRGB *pixel, uint8_t opacity) {
+//     pcol_t result = col;
+//     result = ((col >> 16) & ((1 << 9)-1) * opacity)
+// }
 
 void update_animation_frame(void) {
     // TODO animation logic
 }
 
 void update_opacity(void) {
-    opacity_amount = get_ldr_opacity();
+    set_opacity(get_ldr_opacity());
 }
 
 void update_display(void) {
@@ -284,18 +299,16 @@ void update_display(void) {
     if (draw_ring_flag) {
         for (uint8_t i = 0; i < RING_LEDS; i++) { 
             if (i * (60 / RING_LEDS) <= MINUTES) {
-                update_pixel(&rgb_ring[i], meridiem_colours[meridiem_flag][0], 
-                    meridiem_colours[meridiem_flag][1], 
-                    meridiem_colours[meridiem_flag][2]);
+                update_pixel_col(&rgb_ring[i], meridiem_colours[meridiem_flag]);
             } else {
-                update_pixel(&rgb_ring[i], BLACK);
+                update_pixel_col(&rgb_ring[i], BLACK);
             }
         }
     }
 
     // Add hour marker to grid if necessary
     if (hour_marker_flag) {
-        update_pixel(&rgb_ring[HOURS % RING_LEDS], HOUR_MARKER_COLOUR);
+        update_pixel_col(&rgb_ring[HOURS % RING_LEDS], HOUR_MARKER_COLOUR);
     }
 	// TODO change grid coour to meridiem
     // Update grid
@@ -304,9 +317,10 @@ void update_display(void) {
             // TODO animation logic
         } else {                        
             // Display the fours
-            if (MINUTES % 5) {          // between 1-4 minutes past a 5 minute marker
+            if (MINUTES % 5) {    // between 1-4 minutes past a 5 minute marker
                 for (uint8_t i = 0; i < FOURS; i++) {
-                    update_pixel(&rgb_grid[grid_minute_states[i]], meridiem_colours[meridiem_flag][0], meridiem_colours[meridiem_flag][1], meridiem_colours[meridiem_flag][2]);
+                    update_pixel_col(&rgb_grid[grid_minute_states[i]], 
+                                     meridiem_colours[meridiem_flag]);
                 }
             } else {
                 led_array_clear(rgb_grid, GRID_LEDS);

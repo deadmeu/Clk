@@ -19,7 +19,7 @@
 
 DEVICE     = atmega328p
 CLOCK      = 8000000L
-PROGRAMMER = -c dragon_pp
+PROGRAMMER = 
 OBJECTS    = serialio.o
 FUSES      = -U lfuse:w:0xe2:m -U hfuse:w:0xd9:m -U efuse:w:0xff:m
 

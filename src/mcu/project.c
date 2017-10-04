@@ -9,7 +9,7 @@
 #include <stdint.h> 
 
 #include "clock.h"
-#include "ir.h"
+//#include "ir.h"
 #include "ldr.h"
 #include "ledarray.h"
 #include "splash.h"
@@ -24,7 +24,7 @@
 #define DISPLAY_UPDATE_DELAY         100    // 100 ms
 #define DISPLAY_HOUR_MARKER_DELAY    500    // 500 ms 
 #define DISPLAY_ANIMATION_TIME      4000    // 4 seconds
-#define OPACITY_UPDATE_DELAY        2    // 2 seconds
+#define OPACITY_UPDATE_DELAY        2    // 2 ms
 #define ANIMATION_FRAME_TIME         500    // 500 ms
 #define PLAY_ALARM_TIME             3000	// 10 seconds
 
@@ -74,37 +74,57 @@ void run_clock(void) {
     // TODO only look at redrawing each pixel that is changed?
     uint32_t last_clock_tick_time;
     uint32_t last_display_time;
+    uint32_t last_hour_marker_display_time;
     uint32_t last_opacity_update_time;
     uint32_t start_animation_time;
     uint32_t start_alarm_time;
 
-    last_clock_tick_time = last_display_time = last_opacity_update_time = start_animation_time = start_alarm_time = get_clock_ticks();
+    last_clock_tick_time = last_display_time = last_hour_marker_display_time 
+            = last_opacity_update_time = start_animation_time = start_alarm_time
+            = get_clock_ticks();
 
     while (1) {
         // Handle new second
         if (get_clock_ticks() - last_clock_tick_time >= 1000) {
-            // One second has passed since the last clock tick, so increment the clock time by 1 second
+            // One second has passed since the last clock tick, so increment 
+            // the clock time by 1 second.
             increment_seconds();
             call_ring_redraw();
 			call_grid_redraw();
             last_clock_tick_time = get_clock_ticks();
         }
+        
+        // Handle a remote time update from the RTC.
+        /*if (get_clock_ticks() - last_time_update_time >= 100) {
+            update_time();
+            last_time_update_time = get_clock_ticks();
+        }
+
+        if (new_second()) {
+            call_ring_redraw();
+            call_grid_redraw();
+        }
+        */
 
         // Turn on the weather animation
-        if (weather_is_set() && reached_new_minute() && !animation_is_playing()) {
+        if (weather_is_set() && reached_new_minute() 
+                             && !animation_is_playing()) {
             play_weather_animation();
             start_animation_time = get_clock_ticks();
             reset_minute_flag();
         }
 
         // Update animation frame
-        if (animation_is_playing() && (get_clock_ticks() - start_animation_time >= ANIMATION_FRAME_TIME)) {
+        if (animation_is_playing() && (get_clock_ticks() - start_animation_time 
+                                            >= ANIMATION_FRAME_TIME)) {
             update_animation_frame();
             call_grid_redraw();
         }
 
-        // If the weather animation is playing, turn it off after it's played for long enough
-        if (animation_is_playing() && (get_clock_ticks() - start_animation_time >= DISPLAY_ANIMATION_TIME)) {
+        // If the weather animation is playing, turn it off after it's played 
+        // for long enough.
+        if (animation_is_playing() && (get_clock_ticks() - start_animation_time 
+                                            >= DISPLAY_ANIMATION_TIME)) {
             stop_weather_animation();
             call_grid_redraw();
         }
@@ -117,26 +137,34 @@ void run_clock(void) {
             reset_alarm_flag();
         }
 
-        // If the alarm is playing, turn it off after it's played for long enough
-        if (alarm_is_playing() && (get_clock_ticks() - start_alarm_time >= PLAY_ALARM_TIME)) {
+        // If the alarm is playing, turn it off after it's played for 
+        // long enough.
+        if (alarm_is_playing() && (get_clock_ticks() - start_alarm_time 
+                                        >= PLAY_ALARM_TIME)) {
             stop_alarm_sound();
         }
 
         // Handle brightness updating
-        if (get_clock_ticks() - last_opacity_update_time >= OPACITY_UPDATE_DELAY) {
+        if (get_clock_ticks() - last_opacity_update_time 
+                >= OPACITY_UPDATE_DELAY) {
             update_opacity();
+            call_ring_redraw();
+            call_grid_redraw();
             last_opacity_update_time = get_clock_ticks();
         }
 
         // Toggle the hour marker
-        if (get_clock_ticks() - last_display_time >= DISPLAY_HOUR_MARKER_DELAY) {
+        if (get_clock_ticks() - last_hour_marker_display_time 
+                >= DISPLAY_HOUR_MARKER_DELAY) {
             toggle_hour_marker();
             call_ring_redraw();
+            last_hour_marker_display_time = get_clock_ticks();
         }
 
         // Handle new frame draw
         if ((redraw_ring_needed() || redraw_grid_needed()) 
-                && (get_clock_ticks() - last_display_time >= DISPLAY_UPDATE_DELAY)) {
+                && (get_clock_ticks() - last_display_time 
+                        >= DISPLAY_UPDATE_DELAY)) {
             // Time for a new 'frame' of the clock to be drawn & displayed
             update_display();
             // // Update the opacity for the ring and grid

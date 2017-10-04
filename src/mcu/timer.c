@@ -9,8 +9,8 @@
 
 #include "timer.h"
 
-// The internal clock tick count, gets incremented every millisecond. This counter
-// will overflow after 49.7 days of continuous incrementing.
+// The internal clock tick count, gets incremented every millisecond. 
+// This counter will overflow after 49.7 days of continuous incrementing.
 static volatile uint32_t clock_ticks;
 
 // Setup timer0 to fire an interrupt every millisecond.

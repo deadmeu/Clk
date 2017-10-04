@@ -13,8 +13,6 @@
 #define ADC_PIN            0    // PC0
 #define ADC_MIN          100
 #define ADC_MAX         1000
-#define MAX_OPACITY      100
-#define MIN_OPACITY        0
 
 #define ADC_RANGE       (ADC_MAX - ADC_MIN)
 #define OPACITY_RANGE   (MAX_OPACITY - MIN_OPACITY)

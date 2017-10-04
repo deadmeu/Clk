@@ -1,30 +1,7 @@
-import usb.core
-import usb.util
+import serial
 
-# find our device
-dev = usb.core.find(idVendor=0xfffe, idProduct=0x0001)
+#(device, baud, bytesize, parity checking, stopbits
+ser = serial.Serial(None, 9600, serial.EIGHTBITS, serial.PARITY_NONE, serial.STOPBITS_ONE)
 
-# was it found?
-if dev is None:
-    raise ValueError('Device not found')
-
-# set the active configuration. With no arguments, the first
-# configuration will be the active one
-dev.set_configuration()
-
-# get an endpoint instance
-cfg = dev.get_active_configuration()
-intf = cfg[(0,0)]
-
-ep = usb.util.find_descriptor(
-    intf,
-    # match the first OUT endpoint
-    custom_match = \
-    lambda e: \
-        usb.util.endpoint_direction(e.bEndpointAddress) == \
-        usb.util.ENDPOINT_OUT)
-
-assert ep is not None
-
-# write the data
-ep.write('hello')
+values = bytearray([4, 9, 62, 144, 56, 30, 147, 3, 210, 89, 111, 78, 184, 151, 17, 129])
+ser.write(values)
