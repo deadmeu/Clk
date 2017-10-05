@@ -52,7 +52,7 @@ al_h = 0
 al_m = 0
 al_am_pm = "PM"
 
-w_types = ["Sunny", "Cloudy", "Rain", "Windy", "Storm"]
+w_types = ["Sunny", "Cloudy", "Rain", "Windy", "Storm", "Sunny and Windy", "Cloudy and Windy", "Cloudy and Rain", "Rain and Windy", "Storm and Windy"]
 
 sun = ["#9EEDFF", "#9EEDFF", "#9EEDFF", "#9EEDFF",
        "#9EEDFF", "#FFD900", "#FFD900", "#9EEDFF",
@@ -516,7 +516,7 @@ class SelectionFrame(tk.Frame):
         print(auto)
         if(auto):
             self._auto_weather.config(text = "Auto-Retrieve Weather: ON")
-            update_weather
+            self.update_weather()
         else:
             self._auto_weather.config(text = "Auto-Retrieve Weather: OFF")
 
@@ -736,7 +736,7 @@ def sendToClock(args):
 
     sendToClock(str[] args) -> None (Data sent to the clock)
     """
-    s = "Windy and Rain"
+    s = "Storm and Windy"
     args = s
     start = 0
     end = 0
@@ -744,12 +744,12 @@ def sendToClock(args):
     for w in w_types:
         if(args.startswith(w)):
             start = i
-        if(args.endswith(w)):
-            end = i
+        #if(args.endswith(w)):
+            #end = i
         i += 1
     
     ser = serial.Serial(port, 9600, serial.EIGHTBITS, serial.PARITY_NONE, serial.STOPBITS_ONE)
-    print(weather + " is -> " + str(start) + " : " + str(end))
+    print(args + " is -> " + str(start) + " : " + str(end))
     val = bytearray([start, end])
     print(str(val[0]) + " : " + str(val[1]))
     
@@ -804,10 +804,12 @@ def main():
     global draw_wthr
     global frame
     global serial_ports
+    global port
     weather = get_weather()
     #sendToClock(weather)
     getPorts()
-    print(serial_ports)
+    port = serial_ports[0]
+    print(port)
     root = tk.Tk()
     app = ClockApp(root)
     root.geometry("640x480")
