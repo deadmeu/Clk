@@ -750,7 +750,7 @@ def sendToClock(args):
     sendToClock(str[] args) -> None (Data sent to the clock)
     """
     s = "Storm and Windy"
-    args = s
+    #args = s
     start = 0
     end = 0
     i = 1
