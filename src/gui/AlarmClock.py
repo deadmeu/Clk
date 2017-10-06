@@ -753,9 +753,9 @@ def sendToClock(args):
     #args = s
     start = 0
     end = 0
-    i = 1
+    i = 0
     for w in w_types:
-        if(args.startswith(w)):
+        if(args == w):
             start = i
         #if(args.endswith(w)):
             #end = i
