@@ -732,9 +732,9 @@ def getPorts():
     getPorts() -> None(updates list)
     """
     global serial_ports
-    list = serial.tools.list_ports.comports()
+    ports = serial.tools.list_ports.comports()
     connected = []
-    for element in list:
+    for element in ports:
         connected.append(element.device)
     print("Connected COM ports: " + str(connected))
 
