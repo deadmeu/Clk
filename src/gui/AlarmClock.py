@@ -504,6 +504,7 @@ class SelectionFrame(tk.Frame):
         send() -> None (Sends data to usb port to send time, alarm time, etc to clock)
         """
         print("send data")
+        sendToClock(weather)
 
     def toggle_auto(self):
         """Toggles whether weather retrieval is automatic or not
@@ -564,7 +565,6 @@ class SelectionFrame(tk.Frame):
         global weather
         global draw_wthr
         weather = get_weather();
-        sendToClock(weather)
         draw_wthr = True;
         self._weather.config(text = weather)
 
@@ -671,7 +671,6 @@ class ClockApp(object):
 
         Constructor: ClockApp(tk.Tk())
         """
-        global serial_ports
         self._master = master
         master.minsize(500, 375)
 
@@ -681,39 +680,47 @@ class ClockApp(object):
         self._clock = ClockView(master, self)
         self._clock.pack(side=tk.RIGHT,expand=1,fill=tk.BOTH)
 
-        self.menubar = Menu(master, tearoff=False)
-        self._master.config(menu = self.menubar)
-
-        self.ports = Menu(self.menubar, tearoff=False)
-        self.portlist = Menu(self.ports, tearoff=False)
         
-        self.menubar.add_cascade(label="File", menu = self.ports)
-        self.ports.add_cascade(label = "Choose port", menu = self.portlist)
 
+        self.port_menu()
         
-        for p in serial_ports:
-            print(p)
+        """for p in serial_ports:
+            if(p == port):
+                p = ">" + p
             self.portlist.add_command(label = p, command = lambda:self.set_port(p))
-        self.portlist.add_command(label = "Update", command = self.update)
+        self.portlist.add_command(label = "Update", command = self.update)"""
         
 
     def set_port(self, port_name):
-        print("port set to: " + port_name)
+        
         global port
         port = port_name
+        print("port set to: " + port)
+        self.port_menu()
 
     def update(self):
         print("updated port list")
         getPorts()
-        self.portlist = Menu(self.ports, tearoff=False)
+        self.port_menu()
 
+    def port_menu(self):
+        global serial_ports
+        global port
+        self.menubar = Menu(self._master, tearoff=False)
+        self._master.config(menu = self.menubar)
+
+        self.ports = Menu(self.menubar, tearoff=False)
+        self.portlist = Menu(self.ports, tearoff=False)
+        self.portlist = Menu(self.ports, tearoff=False)
+        
+        self.menubar.add_cascade(label="File", menu = self.ports)
+        self.ports.add_cascade(label = "Choose port", menu = self.portlist)
         for p in serial_ports:
             print(p)
-            self.portlist.add_command(label = p, command = lambda:self.set_port(p))
+            self.portlist.add_command(label = p, command = lambda p = p: self.set_port(p))
         
         self.portlist.add_command(label = "Update", command = self.update)
-        
-
+    
 def getPorts():
     """
     Detects all serial ports on the computer and creates a list that the user can select from
@@ -748,10 +755,10 @@ def sendToClock(args):
             #end = i
         i += 1
     
-    ser = serial.Serial(port, 9600, serial.EIGHTBITS, serial.PARITY_NONE, serial.STOPBITS_ONE)
+    ser = serial.Serial(port, 9600, serial.EIGHTBITS, serial.PARITY_NONE, serial.STOPBITS_TWO)
     print(args + " is -> " + str(start) + " : " + str(end))
-    val = bytearray([start, end])
-    print(str(val[0]) + " : " + str(val[1]))
+    val = bytearray([start])
+    print(str(val[0]))
     
     ser.write(val)
     print("sent")
