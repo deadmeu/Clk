@@ -715,12 +715,15 @@ class ClockApp(object):
         
         self.menubar.add_cascade(label="File", menu = self.ports)
         self.ports.add_cascade(label = "Choose port", menu = self.portlist)
+        i = 0
         for p in serial_ports:
             print(p)
             if(p == port):
-                self.portlist.add_command(label = ">" + p, command = lambda p = p: self.set_port(p))
+                self.portlist.add_command(label = p, command = lambda p = p: self.set_port(p))
+                self.portlist.entryconfig(i, foreground = 'red')
             else:
                 self.portlist.add_command(label = p, command = lambda p = p: self.set_port(p))
+            i += 1
         
         self.portlist.add_command(label = "Update", command = self.update)
     
