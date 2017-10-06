@@ -711,13 +711,11 @@ class ClockApp(object):
 
         self.ports = Menu(self.menubar, tearoff=False)
         self.portlist = Menu(self.ports, tearoff=False)
-        self.portlist = Menu(self.ports, tearoff=False)
         
         self.menubar.add_cascade(label="File", menu = self.ports)
         self.ports.add_cascade(label = "Choose port", menu = self.portlist)
         i = 0
         for p in serial_ports:
-            print(p)
             if(p == port):
                 self.portlist.add_command(label = p, command = lambda p = p: self.set_port(p))
                 self.portlist.entryconfig(i, foreground = 'red')
@@ -760,14 +758,16 @@ def sendToClock(args):
         #if(args.endswith(w)):
             #end = i
         i += 1
-    
-    ser = serial.Serial(port, 9600, serial.EIGHTBITS, serial.PARITY_NONE, serial.STOPBITS_TWO)
-    print(args + " is -> " + str(start) + " : " + str(end))
-    val = bytearray([start])
-    print(str(val[0]))
-    
-    ser.write(val)
-    print("sent")
+    try:
+        ser = serial.Serial(port, 9600, serial.EIGHTBITS, serial.PARITY_NONE, serial.STOPBITS_TWO)
+        print(args + " is -> " + str(start) + " : " + str(end))
+        val = bytearray([start])
+        print(str(val[0]))
+        
+        ser.write(val)
+        print("sent")
+    except:
+        print("error sending, check ports")
 
 def getTime():
     """
@@ -819,10 +819,11 @@ def main():
     global serial_ports
     global port
     weather = get_weather()
-    #sendToClock(weather)
     getPorts()
-    port = serial_ports[0]
-    print(port)
+    try:
+        port = serial_ports[0]
+    except:
+        print("no devices found")
     root = tk.Tk()
     app = ClockApp(root)
     root.geometry("640x480")
