@@ -439,7 +439,10 @@ class SelectionFrame(tk.Frame):
         self._timeLabel = ttk.Label(self, text = " : ")
 
         self._hr = StringVar(self, value = str(hour))
-        self._mn = StringVar(self, value = str(minute))
+        if(minute < 10):
+            self._mn = StringVar(self, value = "0" + str(minute))
+        else:
+            self._mn = StringVar(self, value = str(minute))
         
         self._hour = ttk.Entry(self, width = 3, textvariable = self._hr)
         self._min =  ttk.Entry(self, width = 3, textvariable = self._mn)
@@ -550,12 +553,23 @@ class SelectionFrame(tk.Frame):
 
         reset_input() -> None (Changes the display to reflect the stored hr/min vals)
         """
-        if(not self._hour.get() == str(hour) or not self._min.get() == str(minute) ):
-            self._hr = StringVar(self, value = str(hour))
+        if(minute < 10):
+            self._mn = StringVar(self, value = "0" + str(minute))
+        else:
             self._mn = StringVar(self, value = str(minute))
-            self._hour.config(textvariable = self._hr)
-            self._min.config(textvariable = self._mn)
-            self._am_pm.set(am_pm);
+        self._hr = StringVar(self, value = str(hour))
+        self._hour.config(textvariable = self._hr)
+        self._min.config(textvariable = self._mn)
+        self._am_pm.set(am_pm);
+        
+        if(al_m < 10):
+            self._al_mn = StringVar(self, value = "0" + str(al_m))
+        else:
+            self._al_mn = StringVar(self, value = str(al_m))
+        self._al_hr = StringVar(self, value = str(al_h))
+        self._al_hour.config(textvariable = self._al_hr)
+        self._al_min.config(textvariable = self._al_mn)
+        self._al_am_pm.set(am_pm);
 
     def update_weather(self):
         """Uses the get weather function and updates the gui to display current weather
@@ -645,11 +659,11 @@ class SelectionFrame(tk.Frame):
             h = int(time[0])
             m = int(time[1])
             if((h < 13 and h >= 0) and (m < 60 and m >= 0)):
-                hour = h
-                minute = m
-                am_pm = ap
+                al_h = h
+                al_m = m
+                al_am_pm = ap
                 if(hour == 0):
-                    hour = 12
+                    al_h = 12
                     h = 12
                 self._parent._clock.draw_clock()
                 self.reset_input()
