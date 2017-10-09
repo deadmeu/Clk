@@ -601,7 +601,8 @@ class SelectionFrame(tk.Frame):
         global minute
         global am_pm
         ap = time[2]
-
+        if(time[0] == ''): time[0] = '0'
+        if(time[1] == ''): time[1] = '0'
         if(is_int(time[0]) and is_int(time[1])):
             h = int(time[0])
             m = int(time[1])
@@ -635,6 +636,10 @@ class SelectionFrame(tk.Frame):
         global al_m
         global al_am_pm
         ap = time[2]
+
+        
+        if(time[0] == ''): time[0] = '0'
+        if(time[1] == ''): time[1] = '0'
 
         if(is_int(time[0]) and is_int(time[1])):
             h = int(time[0])
