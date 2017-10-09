@@ -115,7 +115,7 @@ class ClockView(tk.Canvas):
 
         Constructor: ClockView(tk.Tk(), ClockApp())
         """
-        super().__init__(master, bg="#555", relief=tk.SUNKEN)
+        super().__init__(master, bg="#999", relief=tk.SUNKEN)
         self._parent = parent
         self.bind('<Configure>', self.resize)
         self.bind('<B1-Motion>', self.click_drag)
@@ -441,8 +441,8 @@ class SelectionFrame(tk.Frame):
         self._hr = StringVar(self, value = str(hour))
         self._mn = StringVar(self, value = str(minute))
         
-        self._hour = ttk.Entry(self, width = 2, textvariable = self._hr)
-        self._min =  ttk.Entry(self, width = 2, textvariable = self._mn)
+        self._hour = ttk.Entry(self, width = 3, textvariable = self._hr)
+        self._min =  ttk.Entry(self, width = 3, textvariable = self._mn)
         self._set = ttk.Button(self, text = "Set", command = self.set_time)
 
         self._choices = {"", "PM", "AM"}
@@ -564,7 +564,7 @@ class SelectionFrame(tk.Frame):
         """
         global weather
         global draw_wthr
-        weather = get_weather();
+        weather = getWeather();
         draw_wthr = True;
         self._weather.config(text = weather)
 
@@ -672,7 +672,7 @@ class ClockApp(object):
         Constructor: ClockApp(tk.Tk())
         """
         self._master = master
-        master.minsize(500, 375)
+        master.minsize(854, 480)
 
         self._select = SelectionFrame(master, self)
         self._select.pack(side=tk.LEFT, anchor=tk.N)
@@ -780,7 +780,7 @@ def getTime():
 def millis():
     return int(round(time.time() * 1000))
 
-def get_weather():
+def getWeather():
     """Sends an HTTP request to the engg2800-weather.uqcloud.net on port 80
     and asks for 'weather.json'.
 
@@ -818,7 +818,7 @@ def main():
     global frame
     global serial_ports
     global port
-    weather = get_weather()
+    weather = getWeather()
     getPorts()
     try:
         port = serial_ports[0]
