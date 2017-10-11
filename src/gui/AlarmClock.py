@@ -579,7 +579,7 @@ class SelectionFrame(tk.Frame):
         send() -> None (Sends data to usb port to send time, alarm time, etc to clock)
         """
         print("send data")
-        sendToClock(weather)
+        sendToClock()
 
     def toggle_auto(self):
         """Toggles whether weather retrieval is automatic or not
@@ -831,15 +831,15 @@ def getPorts():
 
     serial_ports = connected
 
-def sendToClock(args):
+def sendToClock():
     """
     Uses the pyserial library to send data to the clock via FTDI chip
     over IR
 
     sendToClock(str[] args) -> None (Data sent to the clock)
     """
-    s = "Storm and Windy"
-    #args = s
+
+    #Weather
     start = 0
     end = 0
     i = 0
@@ -850,24 +850,47 @@ def sendToClock(args):
     
     for w in wt:
         if(two_weather):
-            if(args.startswith(w)):
+            if(weather.startswith(w)):
                 start = i
-            if(args.endswith(w)):
+            if(weather.endswith(w)):
                 end = i
         else:
-            if(args == w):
+            if(weather == w):
                 start = i
         i += 1
     
-    print(args + " is -> " + str(start) + " : " + str(end))
+    print(weather + " is -> " + str(start) + " : " + str(end))
 
+    #Time
+    h = hour
+    m = minute
+    s = datetime.datetime.now().time().second 
+    if(am_pm == "PM"):
+        if(h != 12):
+            h += 12
+            h = h % 24
+    elif(h == 12):
+        h = 0
+
+    #Alarm
+    alh = al_h
+    alm = al_m
+    als = 0
+    if(al_am_pm == "PM"):
+        if(alh != 12):
+            alh += 12
+            alh = alh % 24
+    elif(alh == 12):
+        alh = 0
+    
     if(two_weather):
-        val = bytearray([start, end])
-        print(str(val[0]) + " : " + str(val[1]))
+        val = bytearray([start, end, h, m, s, alh, alm, als])
     
     else:
-        val = bytearray([start])
-        print(str(val[0]))
+        val = bytearray([start, h, m, s, alh, alm, als])
+
+    for v in val:
+        print(str(v))
         
     try:
         ser = serial.Serial(port, 9600, serial.EIGHTBITS, serial.PARITY_NONE, serial.STOPBITS_TWO)
