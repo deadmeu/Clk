@@ -52,7 +52,11 @@ al_h = 0
 al_m = 0
 al_am_pm = "PM"
 
-w_types = ["Sunny", "Cloudy", "Rain", "Windy", "Storm", "Sunny and Windy", "Cloudy and Windy", "Cloudy and Rain", "Rain and Windy", "Storm and Windy"]
+
+two_weather = True
+
+w_types = ["Sunny", "Cloudy", "Rain", "Windy", "Storm"]
+w_types_long = ["Sunny", "Cloudy", "Rain", "Windy", "Storm", "Sunny and Windy", "Cloudy and Windy", "Cloudy and Rain", "Rain and Windy", "Storm and Windy"]
 
 sun = ["#9EEDFF", "#9EEDFF", "#9EEDFF", "#9EEDFF",
        "#9EEDFF", "#FFD900", "#FFD900", "#9EEDFF",
@@ -501,6 +505,14 @@ class SelectionFrame(tk.Frame):
         self._send = ttk.Button(self, text = "Send to Clock", command = self.send)
         self._send.grid(row = 10, column = 0, rowspan = 2, columnspan = 5, sticky = 'ewns', pady = 10)
 
+        self._toggle_two_weather = ttk.Button(self, text = "Two weather: " + str(two_weather), command = self.toggle_two_weather)
+        self._toggle_two_weather.grid(row = 12, column = 0, rowspan = 2, columnspan = 5, sticky = "ewns", pady = 10)
+
+    def toggle_two_weather(self):
+        global two_weather
+        two_weather = not two_weather
+        self._toggle_two_weather.config(text = "Two weather: " + str(two_weather))
+        
     def send(self):
         """Sends packet serial -> FTDI -> IR -> Clock
 
@@ -771,22 +783,38 @@ def sendToClock(args):
     start = 0
     end = 0
     i = 0
-    for w in w_types:
-        if(args == w):
-            start = i
-        #if(args.endswith(w)):
-            #end = i
+    if(two_weather):
+        wt = w_types
+    else:
+        wt = w_types_long
+    
+    for w in wt:
+        if(two_weather):
+            if(args.startswith(w)):
+                start = i
+            if(args.endswith(w)):
+                end = i
+        else:
+            if(args == w):
+                start = i
         i += 1
-    try:
-        ser = serial.Serial(port, 9600, serial.EIGHTBITS, serial.PARITY_NONE, serial.STOPBITS_TWO)
-        print(args + " is -> " + str(start) + " : " + str(end))
+    
+    print(args + " is -> " + str(start) + " : " + str(end))
+
+    if(two_weather):
+        val = bytearray([start, end])
+        print(str(val[0]) + " : " + str(val[1]))
+    
+    else:
         val = bytearray([start])
         print(str(val[0]))
         
+    try:
+        ser = serial.Serial(port, 9600, serial.EIGHTBITS, serial.PARITY_NONE, serial.STOPBITS_TWO)
         ser.write(val)
         print("sent")
     except:
-        print("error sending, check ports")
+        print("error sending, please check you have selected the correct port")
 
 def getTime():
     """
