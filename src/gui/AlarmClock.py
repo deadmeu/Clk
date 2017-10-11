@@ -893,8 +893,9 @@ def sendToClock():
         print(str(v))
         
     try:
-        ser = serial.Serial(port, 9600, serial.EIGHTBITS, serial.PARITY_NONE, serial.STOPBITS_TWO)
-        ser.write(val)
+        ser = serial.Serial(port, 300, serial.EIGHTBITS, serial.PARITY_NONE, serial.STOPBITS_TWO)
+        for i in range(5):
+            ser.write(val)
         print("sent")
     except:
         print("error sending, please check you have selected the correct port")
