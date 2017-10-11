@@ -13,7 +13,7 @@
 #include "pixel_colour.h"
 
 typedef enum {
-    RING_PIN = 0,
+    RING_PIN = 5,
     GRID_PIN = 1
 } pindef_t;
 

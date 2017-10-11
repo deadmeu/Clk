@@ -11,7 +11,7 @@
 #include "clock.h"
 
 #define ADC_PIN            0    // PC0
-#define ADC_MIN          100
+#define ADC_MIN          200
 #define ADC_MAX         1000
 
 #define ADC_RANGE       (ADC_MAX - ADC_MIN)
@@ -34,10 +34,12 @@ uint8_t get_ldr_opacity(void) {
     // Clamp the adc values between ADC_MIN and ADC_MAX
     result = (adc_value > ADC_MAX) ? ADC_MAX : adc_value;
     result = (adc_value < ADC_MIN) ? ADC_MIN : adc_value;
-	
-    // Convert result from ADC value range to opacity value range
-    result = (((result - ADC_MIN) * OPACITY_RANGE) / ADC_RANGE) + MIN_OPACITY;
 
+    //return result/10;
+
+    // Convert result from ADC value range to opacity value range
+    // result = (((result - ADC_MIN) * OPACITY_RANGE) / ADC_RANGE) + MIN_OPACITY;
+    result = (result - ADC_MIN) * (OPACITY_RANGE*100 / ADC_RANGE) / 100 * AMBIENT_MULTIPLIER + MIN_OPACITY;    
 	
 	// if (result < 10) {
 	// 	set_meridiem_colours(1, 255,0,0);
@@ -58,7 +60,9 @@ static uint16_t adc_read(uint8_t pin) {
     // Disable interrupts
     cli();
 
-    ADMUX &= 0xF0;
+    //ADMUX &= 0xF0;
+    //ADMUX &= 0x87;
+    ADMUX &= 0xF8;
     ADMUX |= pin;
 
     // Start the ADC conversion

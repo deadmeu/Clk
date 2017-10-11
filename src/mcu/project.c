@@ -24,7 +24,7 @@
 #define DISPLAY_UPDATE_DELAY         100    // 100 ms
 #define DISPLAY_HOUR_MARKER_DELAY    500    // 500 ms 
 #define DISPLAY_ANIMATION_TIME      4000    // 4 seconds
-#define OPACITY_UPDATE_DELAY        2    // 2 ms
+#define OPACITY_UPDATE_DELAY        2000    // 2 s
 #define ANIMATION_FRAME_TIME         500    // 500 ms
 #define PLAY_ALARM_TIME             3000	// 10 seconds
 
@@ -35,18 +35,18 @@ void update_clock(void);
 void reset_clock(void);
 
 /* The program's main function. */
-int main(void) {
-    initialise_hardware();
-    //splash_screen();
-    //splash_off();
+// int main(void) {
+//     initialise_hardware();
+//     //splash_screen();
+//     //splash_off();
 
-    while (1) {
-        initialise_clock();
-        run_clock();
-        //update_clock();
-        //reset_clock();
-    }
-}
+//     while (1) {
+//         initialise_clock();
+//         run_clock();
+//         //update_clock();
+//         //reset_clock();
+//     }
+// }
 
 /* Initialises the hardware used (timers, ports, etc.) */
 void initialise_hardware(void) {

@@ -43,7 +43,9 @@ typedef enum {
     LIME        = 0x96FF00,
     SKY_BLUE    = 0x0064FF,
     SUN_YELLOW  = 0xC8DC19,
-    TOXIC_GREEN = 0xB4FF00
+    TOXIC_GREEN = 0xB4FF00,
+    CLOUD_GREY  = 0x82827F,
+    RAIN_BLUE   = BLUE
 } pcol_t;
 
 #endif /* PIXEL_COLOUR_H_ */

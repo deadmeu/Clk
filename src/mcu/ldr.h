@@ -8,7 +8,8 @@
 #define LDR_H_
 
 #define MAX_OPACITY      100
-#define MIN_OPACITY        0
+#define MIN_OPACITY        5
+#define AMBIENT_MULTIPLIER	0.5
 
 void init_ldr(void);
 
