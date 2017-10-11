@@ -45,10 +45,12 @@ frame = 0
 port = 'COM1'
 serial_ports = []
 
+alarm_set = False
+
 drag = False
 
 alarm = False
-al_h = 0
+al_h = 12
 al_m = 0
 al_am_pm = "PM"
 
@@ -132,6 +134,11 @@ class ClockView(tk.Canvas):
         self._tmp_hr = 0
         self._tmp_min = 0
         self._r = 0
+
+        #variables for alarm toggle switch
+        self._s = 30
+        self._sx = 10
+        self._sy = 10
         
 
     def draw_clock(self):
@@ -145,13 +152,32 @@ class ClockView(tk.Canvas):
         self._y = self.winfo_height()
 
         global drag
+        global alarm_set
 
+        #Draw alarm switch
+        self.create_rectangle(self._sx, self._sy, self._sx + self._s * 2, self._sy + self._s, outline="#000", fill="#fff", width = 1)
+        self.create_text(self._sx + self._s * (1/2), self._sy + self._s * (1/2), text="A")
+        self.create_text(self._sx + self._s * (3/2), self._sy + self._s * (1/2), text="T")
+        if(alarm_set):
+            x = self._sx + self._s
+        else:
+            x = self._sx
+        self.create_rectangle(x, self._sy, x + self._s, self._sy + self._s, fill="#555")
+        
         #Drawing ring
         cx = self._x/2
         cy = self._y/2
 
         lw = 1
-
+        if(alarm_set):
+            h = al_h
+            m = al_m
+            ap = al_am_pm
+        else:
+            h = hour
+            m = minute
+            ap = am_pm
+        
         a = math.pi/6
         off = math.pi/2
         rad = (min(self._x, self._y) - 50)/32
@@ -159,11 +185,11 @@ class ClockView(tk.Canvas):
         self._r = r
         c = "#fff"
         for i in range(12):
-            h = hour % 12
+            h = h % 12
             if(i == h and (hour_disp or drag)):
                 c = "#f0f"
-            elif(i <= minute / 5):
-                if(am_pm == "AM"):
+            elif(i <= m / 5):
+                if(ap == "AM"):
                     c = "#0f0"
                 else:
                     c = "#ff0"
@@ -173,7 +199,7 @@ class ClockView(tk.Canvas):
 
         #Drawing square
         spc = (r - 25)/4
-        rem = minute % 5
+        rem = m % 5
         for i in range(4):
             for j in range(4):
                 if(draw_wthr):
@@ -265,22 +291,22 @@ class ClockView(tk.Canvas):
                     
                 else:
                     if(i == 0 and j == 0 and rem > 0):
-                        if(am_pm == "AM"):
+                        if(ap == "AM"):
                             c = "#00ff00"
                         else:
                             c = "#ffff00"
                     elif(i == 3 and j == 0 and rem > 1):
-                        if(am_pm == "AM"):
+                        if(ap == "AM"):
                             c = "#00ff00"
                         else:
                             c = "#ffff00"
                     elif(i == 0 and j == 3 and rem > 2):
-                        if(am_pm == "AM"):
+                        if(ap == "AM"):
                             c = "#00ff00"
                         else:
                             c = "#ffff00"
                     elif(i == 3 and j == 3 and rem > 3):
-                        if(am_pm == "AM"):
+                        if(ap == "AM"):
                             c = "#00ff00"
                         else:
                             c = "#ffff00"
@@ -326,13 +352,19 @@ class ClockView(tk.Canvas):
         except:
             pass
 
+    def point_in_switch(self, x, y):
+        return(x >= self._sx and x <= self._sx + self._s * 2 and y >= self._sy and y <= self._sy + self._s)
+
     def up(self, event):
         """When the interface is no longer being dragged on, reset the drag variable
 
         upevent) -> None
         """
         global drag
+        global alarm_set
         drag = False
+        if(self.point_in_switch(event.x, event.y)):
+            alarm_set = not alarm_set
     
     def down(self, event):
         """Checks to see if the mouse pointer (when initially pressed) is
@@ -342,6 +374,14 @@ class ClockView(tk.Canvas):
         to change the minute or hour)
         """
         global drag
+
+        if(alarm_set):
+            global al_h
+            h = al_h
+        else:
+            global hour
+            h = hour
+        
         self._x = self.winfo_width()
         self._y = self.winfo_height()
         cx = self._x/2
@@ -356,7 +396,7 @@ class ClockView(tk.Canvas):
         r = math.sqrt((dx ** 2) + (dy ** 2))
         a = math.atan2(dy, dx) % (2 * math.pi)
 
-        h = (hour % 12) + 3
+        h = (h % 12) + 3
         h_a = (math.pi/6 * h) % (2 * math.pi)
 
         if(r < self._r + 10 and r > self._r - 10):
@@ -387,22 +427,42 @@ class ClockView(tk.Canvas):
             dy = cy - y
             dx = cx - x
             a = math.atan2(dy, dx) % (2 * math.pi)
-
-            if(self._set_hour):
+            if(alarm_set):
+                global al_h
+                global al_m
+                global al_am_pm
+                h = al_h
+                m = al_m
+                ap = al_am_pm
+            else:
                 global hour
+                global minute
                 global am_pm
-                ph = hour
-                hour = self.hour_from_ang(a)
-                if((ph == 12 and hour == 11) or (ph == 11 and hour == 12)):
-                    if(am_pm == "AM"):
-                        am_pm = "PM"
+                h = hour
+                m = minute
+                ap = am_pm
+            if(self._set_hour):
+                ph = h
+                h = self.hour_from_ang(a)
+                if((ph == 12 and h == 11) or (ph == 11 and h == 12)):
+                    if(ap == "AM"):
+                        ap = "PM"
                     else:
-                        am_pm = "AM"
+                        ap = "AM"
+                if(alarm_set):
+                    al_h = h
+                    al_am_pm = ap
+                else:
+                    hour = h
+                    am_pm = ap
                 self._parent._select.reset_input()
                 self.draw_clock
             else:
-                global minute
-                minute = self.minute_from_ang(a)
+                m = self.minute_from_ang(a)
+                if(alarm_set):
+                    al_m = m
+                else:
+                    minute = m
                 self._parent._select.reset_input()
                 self.draw_clock
         
@@ -484,8 +544,8 @@ class SelectionFrame(tk.Frame):
         self._al_hr = StringVar(self, value = str(al_h))
         self._al_mn = StringVar(self, value = str(al_m))
         
-        self._al_hour = ttk.Entry(self, width = 2, textvariable = self._al_hr, state = 'disabled')
-        self._al_min =  ttk.Entry(self, width = 2, textvariable = self._al_mn, state = 'disabled')
+        self._al_hour = ttk.Entry(self, width = 3, textvariable = self._al_hr, state = 'disabled')
+        self._al_min =  ttk.Entry(self, width = 3, textvariable = self._al_mn, state = 'disabled')
         self._al_set = ttk.Button(self, text = "Set", command = self.set_alarm, state = 'disabled')
 
         self._al_am_pm = StringVar(self, value = al_am_pm)
@@ -581,7 +641,7 @@ class SelectionFrame(tk.Frame):
         self._al_hr = StringVar(self, value = str(al_h))
         self._al_hour.config(textvariable = self._al_hr)
         self._al_min.config(textvariable = self._al_mn)
-        self._al_am_pm.set(am_pm);
+        self._al_am_pm.set(al_am_pm);
 
     def update_weather(self):
         """Uses the get weather function and updates the gui to display current weather
