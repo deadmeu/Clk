@@ -5,6 +5,7 @@
  */
 
 #include "pixel_colour.h"
+#include "unique_types.h"
 
 pcol_t frames_sunny[2][16] = { 
                                 {SKY_BLUE,   SKY_BLUE,   SKY_BLUE,   SKY_BLUE,

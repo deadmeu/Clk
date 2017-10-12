@@ -1,0 +1,250 @@
+/*
+ * ir.c
+ *
+ * Written by Alex Subaric and Huy Nguyen.
+ */
+
+#include <stdint.h>
+#include <avr/interrupt.h>
+
+#include "ir.h" 
+#include "unique_types.h"
+#include "clock.h" 
+
+/*****************************************************************************
+ * Useful constants.
+ ****************************************************************************/
+
+#define BYTESTREAMS_RECV    5
+#define DATA_ELEMENTS       8
+#define CHAR_BIT            8          // copied from <limits.h>
+#define BYTESTREAM_SIZE     8
+#define EMPTY_VALUE      0xFF
+
+/*****************************************************************************
+ * Data structures and markers relevant to receiving bytestreams.
+ ****************************************************************************/
+
+/*
+ * Markers to correctly place characters read from the serial stream
+ * into the buffers.
+ */
+static volatile uint8_t size_marker;
+static volatile uint8_t recv_marker;
+static volatile uint8_t updating_flag;
+
+/*
+ * Buffers.
+ */
+uint8_t receive_buffer[BYTESTREAMS_RECV][BYTESTREAM_SIZE];
+uint8_t checked_buffer[BYTESTREAM_SIZE];
+
+/* 
+ * Received bytestream struct 
+ */
+bystream_t data;
+
+/*****************************************************************************
+ * Functions for handling the serial stream and data buffers.
+ ****************************************************************************/
+
+/* 
+ * Assigns pointers from each element in the data struct to each 
+ * element of the data pointer array. 
+ */
+void init_ir(void) {
+    /*
+     * Disable interrupts.
+     */
+    cli();
+
+    UBRR0 = 0;
+    
+    /*
+     * Set frame format: 8 data, 2 stop bits.
+     */
+    UCSR0C = (1 << USBS0) | (1 << UCSZ00) | (1 << UCSZ01);
+
+    /*
+     * Enable TX and RX and enable interrupt on receive.
+     * Enable interrupt on serial read.
+     */
+    UCSR0B = (1 << RXEN0) | (1 << TXEN0) | (1 << RXCIE0);    
+
+    /*
+     * Set the baud rate.
+     */
+    UBRR0H = (uint8_t) (UBRR_IR >> 8);
+    UBRR0L = (uint8_t) (UBRR_IR);
+
+    size_marker = 0;
+    recv_marker = 0;
+    updating_flag = 0;
+    clear_receive_buffer();
+
+    /*
+     * Reenable interrupts.
+     */
+    sei();
+}
+
+uint8_t clock_is_updating(void) {
+    return updating_flag;
+}
+
+/* 
+ * Clears the receive buffer to prevent dereferencing of garbage. 
+ */
+void clear_receive_buffer(void) {
+    for (uint8_t i = 0; i < BYTESTREAMS_RECV; i++) {
+        for (uint8_t j = 0; j < BYTESTREAM_SIZE; j++) {
+            receive_buffer[i][j] = EMPTY_VALUE;
+        }
+    }
+}
+
+/* 
+ * Examines each element of the bytestream buffers (stored in the 
+ * receive buffer), then fills the respective element in the checked 
+ * buffer with the mode value of each element of the bytestream buffers. 
+ */
+void check_receive_buffer(void) {
+    uint8_t ones;
+    for (uint16_t byte = 0; byte < BYTESTREAM_SIZE; byte++) {
+        checked_buffer[byte] = 0x00;
+        for (uint8_t bit = 0; bit < CHAR_BIT; bit++) {
+            ones = 0;
+            for (uint8_t stream = 0; stream < BYTESTREAMS_RECV; stream++) {
+                /* 
+                 * Examine right-most bit (least-valued bit) after shifting.
+                 */
+                ones += (receive_buffer[stream][byte] >> bit) & 0x01;   
+            }
+            checked_buffer[byte] |= ((ones > (BYTESTREAMS_RECV / 2)) << bit);
+        }
+    }
+}
+
+/* 
+ * Copies each data block of the checked buffer into the data struct. 
+ */
+void ir_update_data(void) {
+    // uint16_t byte_offset = 0;
+    // uint8_t temp[sizeof(uint32_t)];
+
+    // for (uint8_t i = 0; i < DATA_ELEMENTS; i++) {
+    //     convert_endianness(temp, checked_buffer + byte_offset, 
+    //             data_size_array[i]);
+    //     memcpy(p_data[i], temp, data_size_array[i]);
+    //     byte_offset += data_size_array[i];
+    // }
+
+    data.weather_one     = checked_buffer[WEATHER_ONE];
+    data.weather_two     = checked_buffer[WEATHER_TWO];
+    data.time_alarm_hour = checked_buffer[ALARM_HOUR];
+    data.time_alarm_mins = checked_buffer[ALARM_MINS];
+    data.time_alarm_secs = checked_buffer[ALARM_SECS];
+    data.time_clock_hour = checked_buffer[CLOCK_HOUR];
+    data.time_clock_mins = checked_buffer[CLOCK_MINS];
+    data.time_clock_secs = checked_buffer[CLOCK_SECS];
+
+
+}
+
+/* 
+ * Copies an unsigned integer from one array to another, and swaps the 
+ * endianness (little -> big, big -> little). 
+ */
+void convert_endianness(uint8_t *dest, uint8_t *src, uint8_t size) {
+    for (uint8_t i = 0; i < size; i ++) {
+        dest[i] = src[(size - i) - 1];
+    }
+}
+
+uint8_t add_byte_to_buffer(uint8_t value) {
+    receive_buffer[recv_marker][size_marker] = value;
+    return increment_size_marker();
+}
+
+/*
+ * The reading of data will be interrupt based.
+ * Everytime an interrupt is triggered, the input character will be placed 
+ * into the next available position in the input buffer. 
+ * The size_marker will increment until BYTESTREAM_SIZE - 1. 
+ * When the full bytestream has been received, recv_marker will be incremented 
+ * until BYTESTREAMS_RECV - 1.
+ */
+
+uint8_t increment_size_marker(void) {
+    size_marker++;
+    if (size_marker == BYTESTREAM_SIZE) {
+    /*
+     * Wrap around to the start and update the recv marker to note that
+     * we've received a whole bytestream once.
+     */
+        size_marker = 0;   
+        if (increment_recv_marker()) {
+            return BUFFER_FULL;
+        }
+    }
+    return 0;
+}
+
+uint8_t increment_recv_marker(void) {
+    recv_marker++;
+    if (recv_marker == BYTESTREAMS_RECV) {
+    /*
+     * Wrap around.
+     */
+        recv_marker = 0;
+        return 1;
+    }
+    return 0;
+}
+
+/*****************************************************************************
+ * Functions for extracting data from the buffer and updating the clock's
+ * state.
+ ****************************************************************************/
+
+void ir_set_data(void) {
+    // Set the weather data
+    if (data.weather_one == EMPTY_VALUE || data.weather_two == EMPTY_VALUE) {
+        disable_weather();
+    } else {
+        enable_weather();
+        set_weather(data.weather_one, data.weather_two);
+    }
+
+    // Set the alarm time data
+    if (data.time_alarm_hour == EMPTY_VALUE 
+            || data.time_alarm_mins == EMPTY_VALUE 
+            || data.time_alarm_secs == EMPTY_VALUE) {
+        disable_alarm();
+    } else {
+        enable_alarm();
+        set_split_alarm_time(data.time_alarm_hour, data.time_alarm_mins, 
+            data.time_alarm_secs);
+    }
+
+    // Set the clock time data
+    if (data.time_clock_hour == EMPTY_VALUE
+            || data.time_clock_mins == EMPTY_VALUE
+            || data.time_clock_secs == EMPTY_VALUE) {
+        // If the clock time was was not transmitted correctly, 
+        // reset the time to 0.
+        set_split_clock_time(MIN_HOUR, MIN_MINUTE, MIN_SECOND);
+    } else {
+        set_split_clock_time(data.time_clock_hour, data.time_clock_mins, 
+                                data.time_clock_secs);
+    }
+}
+
+ISR(USART_RX_vect) {
+    // Enable clock updating flag
+    updating_flag = 1;
+
+    if (usart_enabled()) {
+        if (add_byte_to_buffer(UDR0) == BUFFER_FULL) disable_usart();
+    }
+}

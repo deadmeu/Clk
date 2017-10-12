@@ -4,6 +4,8 @@
  * Written by Alex Subaric.
  */
 
-typedef enum { SUNNY, CLOUDY, RAINY, STORMY, WINDY } wtype_t;
+#ifndef ANIMATION_H_
+#define ANIMATION_H_
 
 
+#endif /* ANIMATION_H_ */
