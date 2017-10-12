@@ -7,6 +7,7 @@
 #include <stdint.h>
 
 #include "clock.h"
+#include "unique_types.h"
 #include "light_ws2812.h"
 #include "ledarray.h"
 #include "ldr.h"
@@ -14,13 +15,11 @@
 
 #define RING_LEDS           12
 #define GRID_LEDS           16
-#define MAX_TIME            86399L    // 23:59:59 converted to seconds.
-#define MID_DAY_TIME        43200L    // 12:00:00 (midday) converted to seconds
 
-#define HOURS               (time / 3600)
-#define MINUTES             ((time - 3600 * HOURS) / 60)
-#define SECONDS             ((time - 3600 * HOURS) - 60 * MINUTES)
-#define FOURS               (MINUTES % 5)
+#define HOURS(t)               (t / 3600)
+#define MINUTES(t)             ((t - 3600 * HOURS(t)) / 60)
+#define SECONDS(t)             ((t - 3600 * HOURS(t)) - 60 * MINUTES(t))
+#define FOURS               (MINUTES(time) % 5)
 #define NEW_CYCLE_TIME      (time == 0L || time == MID_DAY_TIME)
 
 #define HOUR_MARKER_COLOUR  GREEN
@@ -30,6 +29,7 @@
 // #define GRID_PIN            1
 
 static void init_leds(void);
+static void set_default_values(void);
 
 // LED arrays
 struct cRGB led_ring[RING_LEDS];
@@ -38,10 +38,6 @@ struct cRGB led_grid[GRID_LEDS];
 // RGB arrays
 struct cRGB rgb_ring[RING_LEDS];
 struct cRGB rgb_grid[GRID_LEDS];
-
-// Opacity arrays
-uint8_t opacity_ring[RING_LEDS];
-uint8_t opacity_grid[GRID_LEDS];
 
                                             // [0]   [3] ~Index numbers~
                                             // {1 0 0 2} Grid is arranged in a 
@@ -60,17 +56,21 @@ uint8_t opacity;
 
 // TODO maybe use a bitfield for these?
 // Flags
+static uint8_t new_reset_flag;
 static uint8_t splash_flag;
 static uint8_t animation_flag;
 static uint8_t alarm_flag;
 static uint8_t hour_marker_flag;
 static uint8_t new_minute_flag;
+static uint8_t time_changed_flag;
 static uint8_t alarm_playing_flag;
 static uint8_t weather_set_flag;
+static uint8_t eeprom_set_flag;
 static uint8_t alarm_set_flag;
 static uint8_t draw_ring_flag;
 static uint8_t draw_grid_flag;
 static uint8_t meridiem_flag;
+static uint8_t usart_enabled_flag;
 
 void init_clock(void) {
     init_leds();
@@ -81,25 +81,45 @@ void init_clock(void) {
     reset_alarm_flag();
     reset_minute_flag();
 
+    enable_usart();
+    reset_time_changed_flag();
+
     call_ring_redraw();
     call_grid_redraw();
 
     set_meridiem_colours(ANTE, RED);
     set_meridiem_colours(POST, BLUE);
-  
-    time = MAX_TIME-3;       // 
-    alarm_time = 0;    // 0 minute past midnight
-    splash_flag = 1;
-    hour_marker_flag = 1;
-    weather_set_flag = 0;
-    alarm_set_flag = 1;
-    opacity = 30;
+
+    if (is_new_reset() || !eeprom_is_set()) {
+        set_default_values();
+    }
 
     update_meridiem();
+
+    hour_marker_flag = 1;
+    splash_flag = 1;
+
+    opacity = 30;
+}
+
+static void set_default_values(void) {
+    time = 0;
+    alarm_time = 0;
+    alarm_set_flag = 0;
+    weather_set_flag = 0;
+    eeprom_set_flag = 0;
 }
 
 void splash_off(void) {
     splash_flag = 0;
+}
+
+void enable_new_reset(void) {
+    new_reset_flag = 1;
+}
+
+void disable_new_reset(void) {
+    new_reset_flag = 0;
 }
 
 // TODO: A lot of the timekeeping functionality should be in its own timekeeper.c file
@@ -110,15 +130,38 @@ void increment_seconds(void) {
     //     set_time(0L);
     // }
     time = (time + 1) % (MAX_TIME + 1);
-    if (MINUTES % 60 == 0) {
-        new_minute_flag = 1;
-    }
+    
+    update_new_minute_flag();
+
     if (time == alarm_time) {
         alarm_flag = 1;
     }
     if (NEW_CYCLE_TIME) {
         update_meridiem();
     }
+}
+
+void update_new_minute_flag(void) {
+    if (MINUTES(time) % 60 == 0) {
+        new_minute_flag = 1;
+    }
+}
+
+uint8_t clock_update_time(void) {
+    //
+    // new_time = rtc_get_time()
+    // time_changed_flag = newtime != time
+    // if (clock_time_changed()) update_new_minute_flag();
+    // set_time(new_time)
+    return 0;
+}
+
+uint8_t clock_time_changed(void) {
+    return time_changed_flag;
+}
+
+void reset_time_changed_flag(void) {
+    time_changed_flag = 0;
 }
 
 void set_meridiem_colours(merid_t merid, pcol_t col) {
@@ -165,6 +208,10 @@ uint8_t redraw_grid_needed(void) {
     return draw_grid_flag;
 }
 
+uint8_t is_new_reset(void) {
+    return new_reset_flag;
+}
+
 uint8_t alarm_is_playing(void) {
     return alarm_playing_flag;
 }
@@ -177,8 +224,16 @@ uint8_t alarm_is_set(void) {
     return alarm_set_flag;
 }
 
+uint8_t eeprom_is_set(void) {
+    return eeprom_set_flag;
+}
+
 uint8_t weather_is_set(void) {
     return weather_set_flag;
+}
+
+uint8_t usart_enabled(void) {
+    return usart_enabled_flag;
 }
 
 // TODO: maybe put this in a timekeeper.c file? or maybe not?
@@ -190,20 +245,64 @@ uint8_t reached_alarm_time(void) {
     return alarm_flag;
 }
 
+uint8_t get_alarm_seconds(void) {
+    return SECONDS(alarm_time);
+}
+
+uint8_t get_alarm_minutes(void) {
+    return MINUTES(alarm_time);
+}
+
+uint8_t get_alarm_hours(void) {
+    return HOURS(alarm_time);
+}
+
 uint8_t get_clock_seconds(void) {
-    return SECONDS;
+    return SECONDS(time);
 }
 
 uint8_t get_clock_minutes(void) {
-    return MINUTES;
+    return MINUTES(time);
 }
 
 uint8_t get_clock_hours(void) {
-    return HOURS;
+    return HOURS(time);
 }
 
 uint32_t get_time(void) {
     return time;
+}
+
+void disable_alarm(void) {
+    alarm_set_flag = 0;
+}
+
+void enable_alarm(void) {
+    alarm_set_flag = 1;
+}
+
+void enable_usart(void) {
+    usart_enabled_flag = 1;
+}
+
+void disable_usart(void) {
+    usart_enabled_flag = 0;
+}
+
+void disable_weather(void) {
+    weather_set_flag = 0;
+}
+
+void enable_weather(void) {
+    weather_set_flag = 1;
+}
+
+void disable_eeprom(void) {
+    eeprom_set_flag = 0;
+}
+
+void enable_eeprom(void) {
+    eeprom_set_flag = 1;
 }
 
 void reset_ring_redraw(void) {
@@ -239,6 +338,15 @@ uint8_t set_time(uint32_t new_time) {
     return 1;
 }
 
+// TODO change these magic numbers to MAX_HOUR, MIN_SECOND, SECONDS_IN_HOUR, etc.
+uint8_t set_split_clock_time(uint8_t h, uint8_t m, uint8_t s) {
+    if (!(h >= 0 && h < 24 && m >= 0 && m < 60 && s >= 0 && s < 60)) {
+        return 0;
+    }
+    time = (h*3600) + (m*60) + s;
+    return 1;
+}
+
 uint8_t set_alarm_time(uint32_t new_time) {
     if (!(new_time >= 0L && new_time <= MAX_TIME)) { // new_time (in seconds) 
                                                      // isn't between 00:00:00 
@@ -246,6 +354,15 @@ uint8_t set_alarm_time(uint32_t new_time) {
         return 0;
     }
     alarm_time = new_time;
+    return 1;
+}
+
+// TODO change these magic numbers to MAX_HOUR, MIN_SECOND, SECONDS_IN_HOUR, etc.
+uint8_t set_split_alarm_time(uint8_t h, uint8_t m, uint8_t s) {
+    if (!(h >= 0 && h < 24 && m >= 0 && m < 60 && s >= 0 && s < 60)) {
+        return 0;
+    }
+    alarm_time = (h*3600) + (m*60) + s;
     return 1;
 }
 
@@ -258,7 +375,15 @@ uint8_t set_opacity(uint8_t new_opacity) {
 }
 
 // TODO improve this: better variable names, maybe a new weather type?
-uint8_t set_weather(uint8_t weather1_type, uint8_t weather2_type) {
+uint8_t set_weather(wtype_t weather_one, wtype_t weather_two) {
+    return 0;
+}
+
+wtype_t get_weather_one(void) {
+    return 0;
+}
+
+wtype_t get_weather_two(void) {
     return 0;
 }
 
@@ -275,11 +400,7 @@ void apply_opacity(void) {
     // Adjust the ring 
     for (uint8_t i = 0; i < RING_LEDS; i++) {
         // Set each element of the led array to the combination of the rgb array
-        // and opacity array.
-        //update_pixel(&led_ring[i], (rgb_ring[i].r * opacity_ring[i]) / 100, 
-        //    (rgb_ring[i].g * opacity_ring[i]) / 100, (rgb_ring[i].b * opacity_ring[i]) / 100);
-
-        // This is using a constant opacity amount
+        // and opacity value.
         update_pixel_rgb(&led_ring[i], (rgb_ring[i].r * opacity) / 100, 
             (rgb_ring[i].g * opacity) / 100, (rgb_ring[i].b * opacity) / 100);
     }
@@ -287,11 +408,7 @@ void apply_opacity(void) {
     // Adjust the grid 
     for (uint8_t i = 0; i < GRID_LEDS; i++) {
         // Set each element of the led array to the combination of the rgb array
-        // and opacity array.
-        //update_pixel(&led_grid[i], (rgb_grid[i].r * opacity_grid[i]) / 100, 
-        //    (rgb_grid[i].g * opacity_grid[i]) / 100, (rgb_grid[i].b * opacity_grid[i]) / 100);
-
-        // This is using a constant opacity amount
+        // and opacity value.
         update_pixel_rgb(&led_grid[i], (rgb_grid[i].r * opacity) / 100, 
             (rgb_grid[i].g * opacity) / 100, (rgb_grid[i].b * opacity) / 100);
     }
@@ -314,7 +431,7 @@ void update_display(void) {
     // Update entire ring
     if (draw_ring_flag) {
         for (uint8_t i = 0; i < RING_LEDS; i++) { 
-            if (i * (60 / RING_LEDS) <= MINUTES) {
+            if (i * (60 / RING_LEDS) <= MINUTES(time)) {
                 update_pixel_col(&rgb_ring[i], meridiem_colours[meridiem_flag]);
             } else {
                 update_pixel_col(&rgb_ring[i], BLACK);
@@ -324,16 +441,19 @@ void update_display(void) {
 
     // Add hour marker to grid if necessary
     if (hour_marker_flag) {
-        update_pixel_col(&rgb_ring[HOURS % RING_LEDS], HOUR_MARKER_COLOUR);
+        update_pixel_col(&rgb_ring[HOURS(time) % RING_LEDS], HOUR_MARKER_COLOUR);
     }
 	// TODO change grid coour to meridiem
     // Update grid
     if (draw_grid_flag) {
         if (animation_is_playing()) {      // display the animation
             // TODO animation logic
-        } else {                        
+        } else {
+            // Only update the grid time if no weather animation is playing.
+            if (animation_is_playing()) return;
+
             // Display the fours
-            if (MINUTES % 5) {    // between 1-4 minutes past a 5 minute marker
+            if (MINUTES(time) % 5) {    // between 1-4 minutes past a 5 minute marker
                 for (uint8_t i = 0; i < FOURS; i++) {
                     update_pixel_col(&rgb_grid[grid_minute_states[i]], 
                                      meridiem_colours[meridiem_flag]);
@@ -354,8 +474,4 @@ static void init_leds(void) {
     // Clear the RGB arrays
     led_array_clear(rgb_ring, RING_LEDS);
     led_array_clear(rgb_grid, GRID_LEDS);
-
-    // Clear the opacity arrays
-    opacity_array_clear(opacity_ring, RING_LEDS);
-    opacity_array_clear(opacity_grid, GRID_LEDS);
 }

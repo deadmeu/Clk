@@ -58,16 +58,6 @@ uint32_t start_delay_time;
 uint16_t delay_duration;
 uint8_t note_index;
 
-// example usage
-// uint8_t main(void)
-// {
-// 	setup_sound();
-//     play_alarm();
-//     /* Replace with your application code */
-//     while (1) {
-//     }
-// }
-
 void setup_sound(void) {
     note_index = 0;
     delay_duration = 0;
@@ -97,7 +87,7 @@ void update_sound(void) {
     if (alarm_is_playing()) {
         sound_on();
         
-        // Check if its time to update the note.
+        // Check if it's time to update the note.
         if (get_clock_ticks() - start_delay_time >= delay_duration) {
             // Not a delay note - so play the note.
             play_note(sheet_alarm[note_index++ % (sizeof(sheet_alarm) 
