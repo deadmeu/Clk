@@ -54,11 +54,8 @@ al_h = 12
 al_m = 0
 al_am_pm = "PM"
 
-
-two_weather = True
-
 w_types = ["Sunny", "Cloudy", "Rain", "Windy", "Storm"]
-w_types_long = ["Sunny", "Cloudy", "Rain", "Windy", "Storm", "Sunny and Windy", "Cloudy and Windy", "Cloudy and Rain", "Rain and Windy", "Storm and Windy"]
+#w_types_long = ["Sunny", "Cloudy", "Rain", "Windy", "Storm", "Sunny and Windy", "Cloudy and Windy", "Cloudy and Rain", "Rain and Windy", "Storm and Windy"]
 
 sun = ["#9EEDFF", "#9EEDFF", "#9EEDFF", "#9EEDFF",
        "#9EEDFF", "#FFD900", "#FFD900", "#9EEDFF",
@@ -564,14 +561,6 @@ class SelectionFrame(tk.Frame):
 
         self._send = ttk.Button(self, text = "Send to Clock", command = self.send)
         self._send.grid(row = 10, column = 0, rowspan = 2, columnspan = 5, sticky = 'ewns', pady = 10)
-
-        self._toggle_two_weather = ttk.Button(self, text = "Two weather: " + str(two_weather), command = self.toggle_two_weather)
-        self._toggle_two_weather.grid(row = 12, column = 0, rowspan = 2, columnspan = 5, sticky = "ewns", pady = 10)
-
-    def toggle_two_weather(self):
-        global two_weather
-        two_weather = not two_weather
-        self._toggle_two_weather.config(text = "Two weather: " + str(two_weather))
         
     def send(self):
         """Sends packet serial -> FTDI -> IR -> Clock
@@ -843,20 +832,12 @@ def sendToClock():
     start = 0
     end = 0
     i = 0
-    if(two_weather):
-        wt = w_types
-    else:
-        wt = w_types_long
-    
-    for w in wt:
-        if(two_weather):
-            if(weather.startswith(w)):
-                start = i
-            if(weather.endswith(w)):
-                end = i
-        else:
-            if(weather == w):
-                start = i
+   
+    for w in w_types:
+        if(weather.startswith(w)):
+            start = i
+        if(weather.endswith(w)):
+            end = i
         i += 1
     
     print(weather + " is -> " + str(start) + " : " + str(end))
@@ -883,12 +864,9 @@ def sendToClock():
     elif(alh == 12):
         alh = 0
     
-    if(two_weather):
-        val = bytearray([start, end, h, m, s, alh, alm, als])
     
-    else:
-        val = bytearray([start, h, m, s, alh, alm, als])
-
+    val = bytearray([start, end, alh, alm, als, h, m, s])
+    
     for v in val:
         print(str(v))
         
