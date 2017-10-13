@@ -9,43 +9,64 @@
 #define IR_H_
 
 #include <stdint.h>
-#include <string.h>
+
+#include "unique_types.h"
+
+#ifndef F_CPU
+#define F_CPU 8000000L
+#endif
+
+#define BAUD_IR 300
+#define UBRR_IR ((F_CPU/16/BAUD_IR) - 1)
+
+#define BUFFER_FULL     1
 
 /*****************************************************************************
  * Data structures and markers relevant to receiving bytestreams.
  ****************************************************************************/
 
-typedef struct bytestream {
-    uint32_t new_time;
-    uint32_t alarm_time;
-    uint8_t weather_type;
-    uint8_t weather_play_time;
-    uint8_t alarm_play_time;
-    uint8_t ante_meridiem_colour;
-    uint8_t post_meridiem_colour;
-    uint8_t hour_marker_colour;
-} bytestream;
+typedef struct {
+    wtype_t weather_one;
+    wtype_t weather_two;
+    uint8_t time_alarm_hour;
+    uint8_t time_alarm_mins;
+    uint8_t time_alarm_secs;
+    uint8_t time_clock_hour;
+    uint8_t time_clock_mins;
+    uint8_t time_clock_secs;
+} bystream_t;
+
+typedef enum {
+    WEATHER_ONE,
+    WEATHER_TWO,
+    ALARM_HOUR,
+    ALARM_MINS,
+    ALARM_SECS,
+    CLOCK_HOUR,
+    CLOCK_MINS,
+    CLOCK_SECS
+} cbufindex_t;
 
 /*****************************************************************************
  * Functions for handling the serial stream and data buffers.
  ****************************************************************************/
 
-void init_data_pointers(void);
-void init_data_size_array(void);
+void init_ir(void);
 void clear_receive_buffer(void);
 void check_receive_buffer(void);
-void populate_data_struct(void);
+void ir_update_data(void);
 void convert_endianness(uint8_t *dest, uint8_t *src, uint8_t size);
 
-void add_char_to_buffer(uint8_t c);
-void increment_size_marker(void);
-void increment_recv_marker(void);
+uint8_t clock_is_updating(void);
+uint8_t increment_size_marker(void);
+uint8_t increment_recv_marker(void);
+uint8_t add_byte_to_buffer(uint8_t value);
 
 /*****************************************************************************
  * Functions for extracting data from the buffer and updating the clock's
  * state.
  ****************************************************************************/
 
-void set_clock_data(void);
+void ir_set_data(void);
 
 #endif /* IR_H_ */
