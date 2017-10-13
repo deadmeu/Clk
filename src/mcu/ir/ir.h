@@ -69,4 +69,52 @@ uint8_t add_byte_to_buffer(uint8_t value);
 
 void ir_set_data(void);
 
+/*****************************************************************************
+ * Functions to handle serial communication.
+ ****************************************************************************/
+
+/*
+ * This function is called as 
+ * USART_init(UBRR);
+ */
+void USART_init(uint32_t ubrr);
+
+/*
+ * Return the next character in the serial buffer.
+ */
+uint8_t USART_getc(void);
+
+/*
+ * Send a character to the serial stream.
+ */
+void USART_putc(uint8_t data);
+
+/*
+ * Send a string to the serial stream.
+ */
+void USART_puts(char *string);
+
+/*
+ * Clear the USART data register.
+ */
+void USART_flush(void);
+
+/*****************************************************************************
+ * Functions to handle the message buffer.
+ * The buffer is a matrix / 2d array of characters.
+ ****************************************************************************/
+
+/*
+ * Print what's currently in the buffer to the serial line.
+ */
+void print_buffer(void);
+
+/*****************************************************************************
+ * Functions to handle terminal io.
+ ****************************************************************************/
+
+void initialise_terminal(void);
+
+void cursor_to_top_left(void);
+
 #endif /* IR_H_ */

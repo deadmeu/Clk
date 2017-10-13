@@ -49,6 +49,9 @@ int main(void) {
         run_clock();
         update_clock();
         reset_clock();
+
+        // Print the contents of the serial buffer to the terminal.
+        print_buffer();
     }
 
     return 0;
@@ -76,6 +79,9 @@ void initialise_hardware(void) {
 
     // Turn on global interrupts
     sei();
+
+    // Clear the terminal
+    initialise_terminal();
 }
 
 /* Initialises the clock flags, timers, counters, and other variables. */
