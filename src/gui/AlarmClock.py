@@ -42,6 +42,10 @@ auto = True
 draw_wthr = False
 frame = 0
 
+draw_ir_prog = False
+ir_prog = 0
+t_ir_prog = 10
+
 port = 'COM1'
 serial_ports = []
 
@@ -133,7 +137,8 @@ class ClockView(tk.Canvas):
         self._r = 0
 
         #variables for alarm toggle switch
-        self._s = 30
+        self._sw = 40
+        self._sh = 30
         self._sx = 10
         self._sy = 10
         
@@ -150,16 +155,17 @@ class ClockView(tk.Canvas):
 
         global drag
         global alarm_set
+        global draw_ir_prog
 
         #Draw alarm switch
-        self.create_rectangle(self._sx, self._sy, self._sx + self._s * 2, self._sy + self._s, outline="#000", fill="#fff", width = 1)
-        self.create_text(self._sx + self._s * (1/2), self._sy + self._s * (1/2), text="A")
-        self.create_text(self._sx + self._s * (3/2), self._sy + self._s * (1/2), text="T")
+        self.create_rectangle(self._sx, self._sy, self._sx + self._sw * 2, self._sy + self._sh, outline="#000", fill="#fff", width = 1)
+        self.create_text(self._sx + self._sw * (1/2), self._sy + self._sh * (1/2), text="Clock")
+        self.create_text(self._sx + self._sw * (3/2), self._sy + self._sh * (1/2), text="Alarm")
         if(alarm_set):
-            x = self._sx + self._s
-        else:
             x = self._sx
-        self.create_rectangle(x, self._sy, x + self._s, self._sy + self._s, fill="#555")
+        else:
+            x = self._sx + self._sw
+        self.create_rectangle(x, self._sy, x + self._sw, self._sy + self._sh, fill="#777")
         
         #Drawing ring
         cx = self._x/2
@@ -313,6 +319,16 @@ class ClockView(tk.Canvas):
                         
                 self.draw_led(cx - (1.5 * spc + 3 * rad) + (2 * rad + spc) * i, cy - (1.5 * spc + 3 * rad) + (2 * rad + spc) * j, rad, 0, outline="#000000", fill=c, width=lw)
 
+        if(draw_ir_prog == True):
+            global ir_prog
+            global t_ir_prog
+            
+            w = self._x/4 - 5
+            dw = w * (ir_prog/t_ir_prog) 
+            self.create_rectangle(5, self._y - 25, self._x/4, self._y - 5, fill = "#fff")
+            self.create_rectangle(5, self._y - 25, 5 + dw, self._y - 5, fill = "#0f0")
+            self.create_text(w/2, self._y - 15, text = "IR Progress: " + str(ir_prog/t_ir_prog * 100) + "%")
+
         
     def draw_led(self, x, y, r, a, **kwargs):
         """Creates a square at position (x, y) with a side distace from centre to corner of r
@@ -337,6 +353,8 @@ class ClockView(tk.Canvas):
         
         return self.create_polygon(x0, y0, x1, y1, x2, y2, x3, y3, **kwargs)
 
+
+
         
     
     def resize(self, e):
@@ -350,7 +368,7 @@ class ClockView(tk.Canvas):
             pass
 
     def point_in_switch(self, x, y):
-        return(x >= self._sx and x <= self._sx + self._s * 2 and y >= self._sy and y <= self._sy + self._s)
+        return(x >= self._sx and x <= self._sx + self._sw * 2 and y >= self._sy and y <= self._sy + self._sh)
 
     def up(self, event):
         """When the interface is no longer being dragged on, reset the drag variable
@@ -550,6 +568,7 @@ class SelectionFrame(tk.Frame):
         self._al_am_pm_option.config(state = 'disabled')
         self._al_am_pm_option.config(width = 3)
         self._alarm_switch = ttk.Button(self, text = "Alarm: OFF", command = self.toggle_alarm)
+        
 
         self._alarm.grid(row = 7, column = 0, pady = 10)
         self._al_set.grid(row = 8, column = 0, sticky = 'ew', pady = 10)
@@ -561,14 +580,91 @@ class SelectionFrame(tk.Frame):
 
         self._send = ttk.Button(self, text = "Send to Clock", command = self.send)
         self._send.grid(row = 10, column = 0, rowspan = 2, columnspan = 5, sticky = 'ewns', pady = 10)
-        
+
+    def inc_ir_prog(self):
+        """Used to increment the IR progress used to display the sending progress
+
+        incIrProg() -> None (changes global variable and redraws the progress bar)
+        """
+
+        global ir_prog
+        ir_prog += 1
+        self._parent._clock.draw_clock()
+        self._parent._master.update_idletasks()
+        self._parent._master.update()
+       
     def send(self):
         """Sends packet serial -> FTDI -> IR -> Clock
 
-        send() -> None (Sends data to usb port to send time, alarm time, etc to clock)
+        sendToClock(str[] args) -> None (Data sent to the clock)
+
+
+        Send protocol:
+        weather 1, weather 2, alarm hour, alarm minute, alarm second, clock hour, clock minute, clock second.
         """
-        print("send data")
-        sendToClock()
+        global draw_ir_prog
+        global ir_prog
+
+        draw_ir_prog = True
+        self.inc_ir_prog()
+        
+        #Weather
+        start = 0
+        end = 0
+        i = 0
+       
+        for w in w_types:
+            if(weather.startswith(w)):
+                start = i
+            if(weather.endswith(w)):
+                end = i
+            i += 1
+        
+        print(weather + " is -> " + str(start) + " : " + str(end))
+        self.inc_ir_prog()
+        #Time
+        h = hour
+        m = minute
+        s = datetime.datetime.now().time().second 
+        if(am_pm == "PM"):
+            if(h != 12):
+                h += 12
+                h = h % 24
+        elif(h == 12):
+            h = 0
+        self.inc_ir_prog()
+
+        #Alarm
+        if(alarm == True):
+            alh = al_h
+            alm = al_m
+            als = 0
+            if(al_am_pm == "PM"):
+                if(alh != 12):
+                    alh += 12
+                    alh = alh % 24
+            elif(alh == 12):
+                alh = 0
+        else:
+            alh = 255
+            alm = 255
+            als = 255
+        self.inc_ir_prog()
+        
+        val = bytearray([start, end, alh, alm, als, h, m, s])
+        self.inc_ir_prog()
+        
+        try:
+            ser = serial.Serial(port, 300, serial.EIGHTBITS, serial.PARITY_NONE, serial.STOPBITS_TWO)
+            for i in range(5):
+                ser.write(val)
+                self.inc_ir_prog()
+            print("sent")
+        except:
+            print("error sending, please check you have selected the correct port")
+
+        draw_ir_prog = False
+        ir_prog = 0
 
     def toggle_auto(self):
         """Toggles whether weather retrieval is automatic or not
@@ -735,7 +831,7 @@ class SelectionFrame(tk.Frame):
         else:
                 messagebox.showerror("Invalid Input", "Invalid input: " + str(time[0]) + ":" + str(time[1]) + " " + ap + "\n Please ensure you enter numbers\n"
                                      "Between 1 and 12 for the hour and\nBetween 0 and 59 for the minute")
-                self.reset_input()
+                self.reset_input()     
 
 
 class ClockApp(object):
@@ -779,9 +875,9 @@ class ClockApp(object):
         self.port_menu()
 
     def update(self):
-        print("updated port list")
         getPorts()
         self.port_menu()
+        print("updated port list")
 
     def port_menu(self):
         global serial_ports
@@ -819,64 +915,6 @@ def getPorts():
     print("Connected COM ports: " + str(connected))
 
     serial_ports = connected
-
-def sendToClock():
-    """
-    Uses the pyserial library to send data to the clock via FTDI chip
-    over IR
-
-    sendToClock(str[] args) -> None (Data sent to the clock)
-    """
-
-    #Weather
-    start = 0
-    end = 0
-    i = 0
-   
-    for w in w_types:
-        if(weather.startswith(w)):
-            start = i
-        if(weather.endswith(w)):
-            end = i
-        i += 1
-    
-    print(weather + " is -> " + str(start) + " : " + str(end))
-
-    #Time
-    h = hour
-    m = minute
-    s = datetime.datetime.now().time().second 
-    if(am_pm == "PM"):
-        if(h != 12):
-            h += 12
-            h = h % 24
-    elif(h == 12):
-        h = 0
-
-    #Alarm
-    alh = al_h
-    alm = al_m
-    als = 0
-    if(al_am_pm == "PM"):
-        if(alh != 12):
-            alh += 12
-            alh = alh % 24
-    elif(alh == 12):
-        alh = 0
-    
-    
-    val = bytearray([start, end, alh, alm, als, h, m, s])
-    
-    for v in val:
-        print(str(v))
-        
-    try:
-        ser = serial.Serial(port, 300, serial.EIGHTBITS, serial.PARITY_NONE, serial.STOPBITS_TWO)
-        for i in range(5):
-            ser.write(val)
-        print("sent")
-    except:
-        print("error sending, please check you have selected the correct port")
 
 def getTime():
     """
@@ -933,10 +971,11 @@ def main():
         port = serial_ports[0]
     except:
         print("no devices found")
+
     root = tk.Tk()
     app = ClockApp(root)
     root.geometry("640x480")
-
+    
     old = millis()
     f = millis()
     s = datetime.datetime.now().time().second

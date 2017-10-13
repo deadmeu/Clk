@@ -1,11 +1,8 @@
-'alarm:HH:MM:AM/PM'
-eg 'alarm:10:20:0' -> 10:20am
 
-'time:HH:MM:AM/PM'
-eg 'time:03:49:1' -> 3:49pm
+w1, w2, alrm_h, alrm_m, alrm_s, time_h, time_m, time_s
 
-'weather:ENUM'
-eg 'weather:0' -> sunny
+
+Weathers:
 
 0 Sunny
 1 Cloudy
