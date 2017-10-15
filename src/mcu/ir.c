@@ -6,6 +6,7 @@
 
 #include <stdint.h>
 #include <avr/interrupt.h>
+#include <string.h>
 
 #include "ir.h" 
 #include "unique_types.h"
@@ -317,6 +318,7 @@ void USART_flush(void) {
     char dummy;
     while (UCSR0A & ( 1 << RXC0)) {
         dummy = UDR0;
+		dummy++;
     }
 }
 
@@ -328,7 +330,7 @@ void USART_flush(void) {
 void print_buffer(void) {
     cursor_to_top_left();
     for (int i = 0; i < BYTESTREAMS_RECV; i++) {
-        for (int j = 0; j < BYTESTREAMS_SIZE; j++) {
+        for (int j = 0; j < BYTESTREAM_SIZE; j++) {
             USART_putc(receive_buffer[i][j]);
         }
         USART_putc('\r');

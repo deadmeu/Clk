@@ -11,6 +11,7 @@
 #include "light_ws2812.h"
 #include "ledarray.h"
 #include "ldr.h"
+#include "rtc.h"
 #include "pixel_colour.h"
 
 #define RING_LEDS           12
@@ -50,9 +51,9 @@ uint8_t grid_minute_states[4] = { 0,  3,    // {0 0 0 0} markers in each corner.
 pcol_t meridiem_colours[2];
 
 // Other variables
-uint32_t time;
-uint32_t alarm_time;
-uint8_t opacity;
+static volatile uint32_t time;
+static volatile uint32_t alarm_time;
+static volatile uint8_t opacity;
 
 // TODO maybe use a bitfield for these?
 // Flags
@@ -148,12 +149,16 @@ void update_new_minute_flag(void) {
 }
 
 uint8_t clock_update_time(void) {
-    //
-    // new_time = rtc_get_time()
-    // time_changed_flag = newtime != time
-    // if (clock_time_changed()) update_new_minute_flag();
-    // set_time(new_time)
-    return 0;
+    if (!rtc_running()) return 0;
+
+    uint32_t new_time = rtc_get_time();
+    
+    time_changed_flag = new_time != time;
+    if (clock_time_changed()) update_new_minute_flag();
+    
+    if (!set_time(new_time)) return 0;
+    
+    return 1;
 }
 
 uint8_t clock_time_changed(void) {
@@ -379,10 +384,12 @@ uint8_t set_weather(wtype_t weather_one, wtype_t weather_two) {
     return 0;
 }
 
+//TODO this
 wtype_t get_weather_one(void) {
     return 0;
 }
 
+// TODO this
 wtype_t get_weather_two(void) {
     return 0;
 }

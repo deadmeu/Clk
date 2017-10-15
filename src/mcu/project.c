@@ -11,6 +11,7 @@
 #include "clock.h"
 #include "ir.h"
 #include "ldr.h"
+#include "rtc.h"
 #include "ledarray.h"
 #include "splash.h"
 #include "timer.h"
@@ -43,15 +44,11 @@ int main(void) {
     initialise_hardware();
     //splash_screen(); // TODO what happens when try update clock at splash?
     //splash_off();
-
     while (1) {
         initialise_clock();
         run_clock();
         update_clock();
         reset_clock();
-
-        // Print the contents of the serial buffer to the terminal.
-        print_buffer();
     }
 
     return 0;
@@ -71,6 +68,14 @@ void initialise_hardware(void) {
     // Setup ADC for brightness checking from the LDR
     init_ldr();
 
+    // Setup RTC for timekeeping
+    init_rtc();
+
+    if (!rtc_started()) {
+        // Error with starting the RTC.
+        // TODO add a flag or something?
+    }
+
     // Setup I2C for serial RTC communication
     // USART_init(UBRR);
 
@@ -85,17 +90,13 @@ void initialise_hardware(void) {
 }
 
 /* Initialises the clock flags, timers, counters, and other variables. */
-void initialise_clock(void) {
-    // Read eeprom data if it was set
-    if (is_new_reset() || eeprom_is_set()) {
-        if (!eeprom_read_data()) {
-            // TODO Error in reading data
-        }
-        eeprom_set_data();  // update the clock's variables with the eeprom data
-    }
-    
+void initialise_clock(void) { 
     init_clock();
+    
     setup_sound();
+
+    eeprom_read_data();
+    eeprom_set_data();
 }
 
 /* Handles the main clock program (displaying time, animations, alarm, etc.) */
@@ -133,7 +134,7 @@ void run_clock(void) {
             reset_time_changed_flag();
             last_clock_tick_time = get_clock_ticks();
         }
-        
+
         // Handle a remote time update from the RTC.
         if (get_clock_ticks() - last_rtc_update_time >= RTC_UPDATE_TIME) {
             clock_update_time();
