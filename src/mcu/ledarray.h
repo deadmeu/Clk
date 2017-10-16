@@ -14,7 +14,7 @@
 
 typedef enum {
     RING_PIN = 5,
-    GRID_PIN = 1
+    GRID_PIN = 6
 } pindef_t;
 
 void enable_leds(struct cRGB *led_array, uint8_t size, pindef_t pin_type);
