@@ -75,12 +75,12 @@ pcol_t frames_windy[ANIMATION_FRAMES][GRID_LEDS] = {
 uint8_t frame_count;
 
 void reset_frame_count(void) {
-    frame_count = 1;
+    frame_count = 0;
 }
 
 uint8_t incr_frame_count(void) {
-    if (++frame_count > 2) {
-        frame_count = 1;
+    if (++frame_count > ANIMATION_FRAMES-1) {
+        frame_count = 0;
     }
     return frame_count;
 }
