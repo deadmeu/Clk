@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include <util/delay.h>
 
+#include "rtc.h"
 #include "i2c_lib/i2c_master.h"
 
 #define MCP7940N_WRITE  0b11011110
@@ -22,34 +23,6 @@
                                                              | (1 << ONE3_BIT)))
 #define MASK_TENS(t) ((t & ((1 << TEN0_BIT) | (1 << TEN1_BIT) \
                                             | (1 << TEN2_BIT))) >> 4)
-
-typedef enum {
-    RTCSEC_ADDR,
-    RTCMIN_ADDR,
-    RTCHOUR_ADDR,
-    RTCWKDAY_ADDR
-} RTCADDR;
-
-typedef enum {
-    ONE0_BIT,
-    ONE1_BIT,
-    ONE2_BIT,
-	ONE3_BIT,
-    TEN0_BIT,
-    TEN1_BIT,
-    TEN2_BIT,
-    TIMEFORMAT_BIT = 6,
-    ST_BIT = 7
-} TIMEREG;
-
-typedef enum {
-    WKDAY0_BIT,
-    WKDAY1_BIT,
-    WKDAY2_BIT,
-    VBATEN_BIT,
-    PWRFAIL_BIT,
-    OSCRUN_BIT
-} WKDAYREG;
 
 static void set_hours(uint8_t hours);
 static void set_minutes(uint8_t minutes);

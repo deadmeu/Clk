@@ -54,9 +54,11 @@ bystream_t data;
  * element of the data pointer array. 
  */
 void init_ir(void) {
-    /*
-     * Disable interrupts.
-     */
+    // Disable interrupts to ensure safe copy. Interrupts are only
+    // reenabled if they were enabled from the start.
+    uint8_t interrupts_enabled = bit_is_set(SREG, SREG_I);
+
+    // Disable interrupts
     cli();
 
     UBRR0 = 0;
@@ -86,10 +88,8 @@ void init_ir(void) {
     updating_flag = 0;
     clear_receive_buffer();
 
-    /*
-     * Reenable interrupts.
-     */
-    sei();
+    // Renable interrupts if they were enabled previously
+    if (interrupts_enabled) sei();
 }
 
 uint8_t clock_is_updating(void) {
@@ -180,8 +180,7 @@ uint8_t add_byte_to_buffer(uint8_t value) {
  */
 
 uint8_t increment_size_marker(void) {
-    size_marker++;
-    if (size_marker == BYTESTREAM_SIZE) {
+    if (++size_marker == BYTESTREAM_SIZE) {
     /*
      * Wrap around to the start and update the recv marker to note that
      * we've received a whole bytestream once.

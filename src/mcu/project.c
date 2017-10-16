@@ -76,9 +76,6 @@ void initialise_hardware(void) {
         // TODO add a flag or something?
     }
 
-    // Setup I2C for serial RTC communication
-    // USART_init(UBRR);
-
     // Setup IR data buffers for USART data
     init_ir();
 
@@ -92,7 +89,9 @@ void initialise_hardware(void) {
 /* Initialises the clock flags, timers, counters, and other variables. */
 void initialise_clock(void) { 
     init_clock();
-    
+
+    set_weather(SUNNY, SUNNY);
+
     setup_sound();
 
     eeprom_read_data();
@@ -101,7 +100,7 @@ void initialise_clock(void) {
 
 /* Handles the main clock program (displaying time, animations, alarm, etc.) */
 void run_clock(void) {
-    // TODO only look at redrawing each pixel that is changed?
+	/* Variables used for tracking time-delayed events. */
     uint32_t last_clock_tick_time;
     uint32_t last_display_time;
     uint32_t last_hour_marker_display_time;
@@ -110,7 +109,8 @@ void run_clock(void) {
     uint32_t start_animation_time;
     uint32_t last_animation_frame_time;
     uint32_t start_alarm_time;
-
+	
+	/* Set the time-tracking variables to the current time. */
     last_clock_tick_time = last_display_time = last_hour_marker_display_time 
             = last_opacity_update_time = start_animation_time = start_alarm_time
             = last_rtc_update_time =  last_animation_frame_time 
