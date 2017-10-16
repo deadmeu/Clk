@@ -90,9 +90,9 @@ void initialise_hardware(void) {
 void initialise_clock(void) { 
     init_clock();
 
-    set_weather(SUNNY, SUNNY);
-
     setup_sound();
+
+    set_weather(SUNNY, SUNNY);
 
     eeprom_read_data();
     eeprom_set_data();
@@ -156,6 +156,7 @@ void run_clock(void) {
                                             >= ANIMATION_FRAME_TIME)) {
             update_animation_frame();
             call_grid_redraw();
+            last_animation_frame_time = get_clock_ticks();
         }
 
         // If the weather animation is playing, turn it off after it's played 

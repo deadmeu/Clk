@@ -114,7 +114,7 @@ void init_clock(void) {
 }
 
 static void set_default_values(void) {
-    time = 0;
+    time = MAX_TIME;
     alarm_time = 0;
     alarm_set_flag = 0;
     weather_set_flag = 0;
@@ -193,6 +193,8 @@ void update_meridiem(void) {
 void play_weather_animation(void) {
     animation_flag = 1;
     playing_weather_index = 0;
+    total_animation_loops = 0;
+    reset_frame_count();
     update_playing_weather();
 }
 
@@ -364,6 +366,7 @@ uint8_t set_split_clock_time(uint8_t h, uint8_t m, uint8_t s) {
         return 0;
     }
     time = CONV_TIME(h, m, s);
+	update_meridiem();
     return 1;
 }
 
@@ -441,14 +444,19 @@ void apply_opacity(void) {
 }
 
 void update_animation_frame(void) {
-    if (incr_frame_count() == ANIMATION_FRAMES) {
+    
+
+    if (total_animation_loops == ANIMATION_LOOPS) {
+        total_animation_loops = 0;
+        playing_weather_index = (playing_weather_index + 1) % ANIMATION_FRAMES;
+        update_playing_weather();
+    }
+
+    if (incr_frame_count() == ANIMATION_FRAMES-1) {
         total_animation_loops++;
     }
 
-    if (total_animation_loops == ANIMATION_LOOPS) {
-        playing_weather_index++;
-        update_playing_weather();
-    }
+    
 }
 
 void update_opacity(void) {

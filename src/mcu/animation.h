@@ -7,6 +7,7 @@
 #ifndef ANIMATION_H_
 #define ANIMATION_H_
 
+#include <stdint.h>
 #include "unique_types.h"
 #include "pixel_colour.h"
 
