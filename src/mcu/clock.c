@@ -153,7 +153,7 @@ void increment_seconds(void) {
 }
 
 void update_new_minute_flag(void) {
-    if (MINUTES(time) % 60 == 0) {
+    if (SECONDS(time) % 60 == 0) {
         new_minute_flag = 1;
     }
 }
@@ -479,6 +479,7 @@ void update_display(void) {
             }
         // Display the fours
         } else if (MINUTES(time) % 5) {    // between 1-4 minutes past a 5 minute marker
+            led_array_clear(rgb_grid, GRID_LEDS);
             for (uint8_t i = 0; i < FOURS; i++) {
                 update_pixel_col(&rgb_grid[grid_minute_states[i]], 
                                     meridiem_colours[meridiem_flag]);
