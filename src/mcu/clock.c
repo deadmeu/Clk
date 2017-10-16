@@ -193,6 +193,7 @@ void update_meridiem(void) {
 void play_weather_animation(void) {
     animation_flag = 1;
     playing_weather_index = 0;
+    update_playing_weather();
 }
 
 void update_playing_weather(void) {

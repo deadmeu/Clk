@@ -144,10 +144,11 @@ void run_clock(void) {
         // Turn on the weather animation
         if (weather_is_set() && reached_new_minute() 
                              && !animation_is_playing()) {
+            reset_minute_flag();
             play_weather_animation();
+            call_grid_redraw();
             start_animation_time = get_clock_ticks();
             last_animation_frame_time = start_animation_time;
-            reset_minute_flag();
         }
 
         // Update animation frame
