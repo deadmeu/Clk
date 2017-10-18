@@ -537,7 +537,7 @@ class SelectionFrame(tk.Frame):
 
         self._choices = {"PM", "AM"}
         self._am_pm = StringVar(self, value = am_pm)
-        self._am_pm_option = tk.OptionMenu(self, self._am_pm,  *self._choices)
+        self._am_pm_option = tk.OptionMenu(self, self._am_pm, *self._choices)
         self._am_pm_option.config(width = 3)
 
         self._select.grid(row = 0, column = 0, pady = 10)
@@ -572,7 +572,7 @@ class SelectionFrame(tk.Frame):
         self._al_set = ttk.Button(self, text = "Set", command = self.set_alarm, state = 'disabled')
 
         self._al_am_pm = StringVar(self, value = al_am_pm)
-        self._al_am_pm_option = ttk.OptionMenu(self, self._al_am_pm, al_am_pm, *self._choices)
+        self._al_am_pm_option = tk.OptionMenu(self, self._al_am_pm, *self._choices)
         self._al_am_pm_option.config(state = 'disabled')
         self._al_am_pm_option.config(width = 3)
         self._alarm_switch = ttk.Button(self, text = "Alarm: OFF", command = self.toggle_alarm)
@@ -703,7 +703,7 @@ class SelectionFrame(tk.Frame):
             self._al_hour.config(state = 'enabled')
             self._al_min.config(state = 'enabled')
             self._al_set.config(state = 'enabled')
-            self._al_am_pm_option.config(state = 'enabled')
+            self._al_am_pm_option.config(state = 'active')
         else:
             self._alarm_switch.config(text = "Alarm: OFF")
 
