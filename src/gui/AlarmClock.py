@@ -19,6 +19,8 @@ from tkinter import *
 from tkinter import messagebox
 from tkinter import ttk
 
+import threading
+
 import serial
 import serial.tools.list_ports
 
@@ -57,6 +59,8 @@ alarm = False
 al_h = 12
 al_m = 0
 al_am_pm = "PM"
+
+thread = False
 
 w_types = ["Sunny", "Cloudy", "Rain", "Windy", "Storm"]
 #w_types_long = ["Sunny", "Cloudy", "Rain", "Windy", "Storm", "Sunny and Windy", "Cloudy and Windy", "Cloudy and Rain", "Rain and Windy", "Storm and Windy"]
@@ -858,6 +862,7 @@ class ClockApp(object):
 
         
 
+        self.update()
         self.port_menu()
         
         """for p in serial_ports:
@@ -875,9 +880,7 @@ class ClockApp(object):
         self.port_menu()
 
     def update(self):
-        getPorts()
-        self.port_menu()
-        print("updated port list")
+        getPortList()
 
     def port_menu(self):
         global serial_ports
@@ -900,14 +903,24 @@ class ClockApp(object):
             i += 1
         
         self.portlist.add_command(label = "Update", command = self.update)
-    
+
+def getPortList():
+    global thread
+    thread = True
+    try:
+    	t = threading.Thread(target = getPorts, name = "Thread", args = ())
+    	t.start()
+    except Exception as e: print(e)
+    	#print("Can't start port thread") 
+
 def getPorts():
     """
     Detects all serial ports on the computer and creates a list that the user can select from
 
-    getPorts() -> None(updates list)
+    getPorts(app[ClockApp]) -> None(updates list)
     """
     global serial_ports
+    global port
     ports = serial.tools.list_ports.comports()
     connected = []
     for element in ports:
@@ -915,6 +928,11 @@ def getPorts():
     print("Connected COM ports: " + str(connected))
 
     serial_ports = connected
+    try:
+        port = serial_ports[0]
+        print("port set to: " + port)
+    except Exception as e: print(e)
+        #print("no devices found")
 
 def getTime():
     """
@@ -940,7 +958,7 @@ def getWeather():
         
         data = str(output)[2:-1] #Strip the quotes it comes in to allow for JSON parsing
         weather_list = json.loads(data)
-        weather = weather_list['weather']#['main']
+        weather = weather_list['weather']
         request.close;
         return(weather)
     except:
@@ -965,13 +983,8 @@ def main():
     global frame
     global serial_ports
     global port
+    global thread
     weather = getWeather()
-    getPorts()
-    try:
-        port = serial_ports[0]
-    except:
-        print("no devices found")
-
     root = tk.Tk()
     app = ClockApp(root)
     root.geometry("640x480")
@@ -1025,6 +1038,16 @@ def main():
             x += 1
             f = cur
             app._clock.draw_clock()
+            if(thread):
+                th = False
+                for t in threading.enumerate():
+                    if(t.getName() == "Thread"):
+                       th = True
+                       break
+                if(not th):
+                    thread = False
+                    app.port_menu()
+                    print("updated port list")
 
 if __name__ == '__main__':
     main()
