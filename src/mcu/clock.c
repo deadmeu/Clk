@@ -11,16 +11,16 @@
 #include "light_ws2812.h"
 #include "ledarray.h"
 #include "ldr.h"
+#include "rtc.h"
+#include "animation.h"
 #include "pixel_colour.h"
 
-#define RING_LEDS           12
-#define GRID_LEDS           16
-
-#define HOURS(t)               (t / 3600)
-#define MINUTES(t)             ((t - 3600 * HOURS(t)) / 60)
-#define SECONDS(t)             ((t - 3600 * HOURS(t)) - 60 * MINUTES(t))
-#define FOURS               (MINUTES(time) % 5)
-#define NEW_CYCLE_TIME      (time == 0L || time == MID_DAY_TIME)
+#define CONV_TIME(h, m, s)      ((h*3600) + (m*60) + s)
+#define HOURS(t)                (t / 3600)
+#define MINUTES(t)              ((t - 3600 * HOURS(t)) / 60)
+#define SECONDS(t)              ((t - 3600 * HOURS(t)) - 60 * MINUTES(t))
+#define FOURS                   (MINUTES(time) % 5)
+#define NEW_CYCLE_TIME          (time == 0L || time == MID_DAY_TIME)
 
 #define HOUR_MARKER_COLOUR  GREEN
 //#define ANTE_MERIDIEM       0
@@ -49,10 +49,17 @@ uint8_t grid_minute_states[4] = { 0,  3,    // {0 0 0 0} markers in each corner.
 // Meridiem colours
 pcol_t meridiem_colours[2];
 
+// Weather array
+wtype_t current_weather[2];
+
 // Other variables
-uint32_t time;
-uint32_t alarm_time;
-uint8_t opacity;
+static volatile uint32_t time;
+static volatile uint32_t alarm_time;
+static volatile uint8_t opacity;
+static volatile uint8_t total_animation_loops;
+static volatile uint8_t playing_weather_index;
+
+static volatile wtype_t playing_weather;
 
 // TODO maybe use a bitfield for these?
 // Flags
@@ -90,6 +97,9 @@ void init_clock(void) {
     set_meridiem_colours(ANTE, RED);
     set_meridiem_colours(POST, BLUE);
 
+    // weather animation frame reset
+    reset_frame_count();
+
     if (is_new_reset() || !eeprom_is_set()) {
         set_default_values();
     }
@@ -98,12 +108,13 @@ void init_clock(void) {
 
     hour_marker_flag = 1;
     splash_flag = 1;
+    total_animation_loops = 0;
 
     opacity = 30;
 }
 
 static void set_default_values(void) {
-    time = 0;
+    time = MAX_TIME;
     alarm_time = 0;
     alarm_set_flag = 0;
     weather_set_flag = 0;
@@ -142,18 +153,22 @@ void increment_seconds(void) {
 }
 
 void update_new_minute_flag(void) {
-    if (MINUTES(time) % 60 == 0) {
+    if (SECONDS(time) % 60 == 0) {
         new_minute_flag = 1;
     }
 }
 
 uint8_t clock_update_time(void) {
-    //
-    // new_time = rtc_get_time()
-    // time_changed_flag = newtime != time
-    // if (clock_time_changed()) update_new_minute_flag();
-    // set_time(new_time)
-    return 0;
+    if (!rtc_running()) return 0;
+
+    uint32_t new_time = rtc_get_time();
+    
+    time_changed_flag = new_time != time;
+    if (clock_time_changed()) update_new_minute_flag();
+    
+    if (!set_time(new_time)) return 0;
+    
+    return 1;
 }
 
 uint8_t clock_time_changed(void) {
@@ -175,9 +190,16 @@ void update_meridiem(void) {
     meridiem_flag = (time < MID_DAY_TIME) ? ANTE : POST;
 }
 
-// TODO: probably put this in a weather.c file?
 void play_weather_animation(void) {
     animation_flag = 1;
+    playing_weather_index = 0;
+    total_animation_loops = 0;
+    reset_frame_count();
+    update_playing_weather();
+}
+
+void update_playing_weather(void) {
+    playing_weather = current_weather[playing_weather_index];
 }
 
 void stop_weather_animation(void) {
@@ -343,7 +365,8 @@ uint8_t set_split_clock_time(uint8_t h, uint8_t m, uint8_t s) {
     if (!(h >= 0 && h < 24 && m >= 0 && m < 60 && s >= 0 && s < 60)) {
         return 0;
     }
-    time = (h*3600) + (m*60) + s;
+    time = CONV_TIME(h, m, s);
+	update_meridiem();
     return 1;
 }
 
@@ -362,7 +385,7 @@ uint8_t set_split_alarm_time(uint8_t h, uint8_t m, uint8_t s) {
     if (!(h >= 0 && h < 24 && m >= 0 && m < 60 && s >= 0 && s < 60)) {
         return 0;
     }
-    alarm_time = (h*3600) + (m*60) + s;
+    alarm_time = CONV_TIME(h, m, s);
     return 1;
 }
 
@@ -374,17 +397,23 @@ uint8_t set_opacity(uint8_t new_opacity) {
     return 1;    
 }
 
-// TODO improve this: better variable names, maybe a new weather type?
 uint8_t set_weather(wtype_t weather_one, wtype_t weather_two) {
-    return 0;
+    if (!(weather_one >= SUNNY && weather_one <= WINDY 
+            && weather_two >= SUNNY && weather_two <= WINDY)) {
+        return 0;
+    }
+    current_weather[0] = weather_one;
+    current_weather[1] = weather_two;
+    weather_set_flag = 1;
+    return 1;
 }
 
 wtype_t get_weather_one(void) {
-    return 0;
+    return (weather_is_set()) ? current_weather[0] : SUNNY;
 }
 
 wtype_t get_weather_two(void) {
-    return 0;
+    return (weather_is_set()) ? current_weather[1] : SUNNY;
 }
 
 void show_display(void) {
@@ -414,13 +443,20 @@ void apply_opacity(void) {
     }
 }
 
-// pcol_t combine_rgb_opacity(struct cRGB *pixel, uint8_t opacity) {
-//     pcol_t result = col;
-//     result = ((col >> 16) & ((1 << 9)-1) * opacity)
-// }
-
 void update_animation_frame(void) {
-    // TODO animation logic
+    
+
+    if (total_animation_loops == ANIMATION_LOOPS) {
+        total_animation_loops = 0;
+        playing_weather_index = (playing_weather_index + 1) % ANIMATION_FRAMES;
+        update_playing_weather();
+    }
+
+    if (incr_frame_count() == ANIMATION_FRAMES-1) {
+        total_animation_loops++;
+    }
+
+    
 }
 
 void update_opacity(void) {
@@ -447,20 +483,19 @@ void update_display(void) {
     // Update grid
     if (draw_grid_flag) {
         if (animation_is_playing()) {      // display the animation
-            // TODO animation logic
-        } else {
-            // Only update the grid time if no weather animation is playing.
-            if (animation_is_playing()) return;
-
-            // Display the fours
-            if (MINUTES(time) % 5) {    // between 1-4 minutes past a 5 minute marker
-                for (uint8_t i = 0; i < FOURS; i++) {
-                    update_pixel_col(&rgb_grid[grid_minute_states[i]], 
-                                     meridiem_colours[meridiem_flag]);
-                }
-            } else {
-                led_array_clear(rgb_grid, GRID_LEDS);
+            for (uint8_t i = 0; i < GRID_LEDS; i++) {
+                update_pixel_col(&rgb_grid[i], get_frame_pixel(playing_weather, i));
             }
+        // Display the fours
+        } else if (MINUTES(time) % 5) {    // between 1-4 minutes past a 5 minute marker
+            led_array_clear(rgb_grid, GRID_LEDS);
+            for (uint8_t i = 0; i < FOURS; i++) {
+                update_pixel_col(&rgb_grid[grid_minute_states[i]], 
+                                    meridiem_colours[meridiem_flag]);
+            }
+        // Clear the array
+        } else {
+            led_array_clear(rgb_grid, GRID_LEDS);
         }
     }
 }

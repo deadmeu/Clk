@@ -629,7 +629,6 @@ class SelectionFrame(tk.Frame):
         #Time
         h = hour
         m = minute
-        s = datetime.datetime.now().time().second 
         if(am_pm == "PM"):
             if(h != 12):
                 h += 12
@@ -642,7 +641,6 @@ class SelectionFrame(tk.Frame):
         if(alarm == True):
             alh = al_h
             alm = al_m
-            als = 0
             if(al_am_pm == "PM"):
                 if(alh != 12):
                     alh += 12
@@ -655,7 +653,7 @@ class SelectionFrame(tk.Frame):
             als = 255
         self.inc_ir_prog()
         
-        val = bytearray([start, end, alh, alm, als, h, m, s])
+        val = bytearray([start, end, alh, alm, h, m])
         self.inc_ir_prog()
         
         try:

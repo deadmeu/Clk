@@ -11,6 +11,7 @@
 #include "clock.h"
 #include "ir.h"
 #include "ldr.h"
+#include "rtc.h"
 #include "ledarray.h"
 #include "splash.h"
 #include "timer.h"
@@ -43,15 +44,11 @@ int main(void) {
     initialise_hardware();
     //splash_screen(); // TODO what happens when try update clock at splash?
     //splash_off();
-
     while (1) {
         initialise_clock();
         run_clock();
         update_clock();
         reset_clock();
-
-        // Print the contents of the serial buffer to the terminal.
-        print_buffer();
     }
 
     return 0;
@@ -71,8 +68,13 @@ void initialise_hardware(void) {
     // Setup ADC for brightness checking from the LDR
     init_ldr();
 
-    // Setup I2C for serial RTC communication
-    // USART_init(UBRR);
+    // Setup RTC for timekeeping
+    init_rtc();
+
+    if (!rtc_started()) {
+        // Error with starting the RTC.
+        // TODO add a flag or something?
+    }
 
     // Setup IR data buffers for USART data
     init_ir();
@@ -85,22 +87,20 @@ void initialise_hardware(void) {
 }
 
 /* Initialises the clock flags, timers, counters, and other variables. */
-void initialise_clock(void) {
-    // Read eeprom data if it was set
-    if (is_new_reset() || eeprom_is_set()) {
-        if (!eeprom_read_data()) {
-            // TODO Error in reading data
-        }
-        eeprom_set_data();  // update the clock's variables with the eeprom data
-    }
-    
+void initialise_clock(void) { 
     init_clock();
+
     setup_sound();
+
+    set_weather(SUNNY, SUNNY);
+
+    eeprom_read_data();
+    eeprom_set_data();
 }
 
 /* Handles the main clock program (displaying time, animations, alarm, etc.) */
 void run_clock(void) {
-    // TODO only look at redrawing each pixel that is changed?
+	/* Variables used for tracking time-delayed events. */
     uint32_t last_clock_tick_time;
     uint32_t last_display_time;
     uint32_t last_hour_marker_display_time;
@@ -109,7 +109,8 @@ void run_clock(void) {
     uint32_t start_animation_time;
     uint32_t last_animation_frame_time;
     uint32_t start_alarm_time;
-
+	
+	/* Set the time-tracking variables to the current time. */
     last_clock_tick_time = last_display_time = last_hour_marker_display_time 
             = last_opacity_update_time = start_animation_time = start_alarm_time
             = last_rtc_update_time =  last_animation_frame_time 
@@ -133,7 +134,7 @@ void run_clock(void) {
             reset_time_changed_flag();
             last_clock_tick_time = get_clock_ticks();
         }
-        
+
         // Handle a remote time update from the RTC.
         if (get_clock_ticks() - last_rtc_update_time >= RTC_UPDATE_TIME) {
             clock_update_time();
@@ -143,10 +144,11 @@ void run_clock(void) {
         // Turn on the weather animation
         if (weather_is_set() && reached_new_minute() 
                              && !animation_is_playing()) {
+            reset_minute_flag();
             play_weather_animation();
+            call_grid_redraw();
             start_animation_time = get_clock_ticks();
             last_animation_frame_time = start_animation_time;
-            reset_minute_flag();
         }
 
         // Update animation frame
@@ -154,6 +156,7 @@ void run_clock(void) {
                                             >= ANIMATION_FRAME_TIME)) {
             update_animation_frame();
             call_grid_redraw();
+            last_animation_frame_time = get_clock_ticks();
         }
 
         // If the weather animation is playing, turn it off after it's played 

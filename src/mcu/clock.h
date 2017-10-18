@@ -10,7 +10,15 @@
 #include "pixel_colour.h"
 #include "unique_types.h"
 
+#define RING_LEDS           12
+#define GRID_LEDS           16
+
 typedef enum { ANTE, POST } merid_t;
+
+typedef enum {
+    ANIMATION_FRAMES = 2,
+    ANIMATION_LOOPS = 2
+} anim_t;
 
 void init_clock(void);
 void enable_new_reset(void);
@@ -31,6 +39,7 @@ void enable_alarm(void);
 void disable_usart(void);
 void disable_weather(void);
 void enable_weather(void);
+void update_playing_weather(void);
 void disable_eeprom(void);
 void enable_eeprom(void);
 void reset_minute_flag(void);
