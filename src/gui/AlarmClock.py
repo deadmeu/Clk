@@ -60,6 +60,10 @@ al_h = 12
 al_m = 0
 al_am_pm = "PM"
 
+AM = "#f40"
+PM = "#00f"
+HOUR = "#0f0"
+
 thread = False
 
 w_types = ["Sunny", "Cloudy", "Rain", "Windy", "Storm"]
@@ -194,12 +198,12 @@ class ClockView(tk.Canvas):
         for i in range(12):
             h = h % 12
             if(i == h and (hour_disp or drag)):
-                c = "#f0f"
+                c = HOUR
             elif(i <= m / 5):
                 if(ap == "AM"):
-                    c = "#0f0"
+                    c = AM
                 else:
-                    c = "#ff0"
+                    c = PM
             else:
                 c = "#fff"
             self.draw_led(cx + math.cos(a*i - off)*r, cy + math.sin(a*i - off)*r, rad, (a*i - off), outline="#000", fill=c, width=lw)
@@ -299,24 +303,24 @@ class ClockView(tk.Canvas):
                 else:
                     if(i == 0 and j == 0 and rem > 0):
                         if(ap == "AM"):
-                            c = "#00ff00"
+                            c = AM
                         else:
-                            c = "#ffff00"
+                            c = PM
                     elif(i == 3 and j == 0 and rem > 1):
                         if(ap == "AM"):
-                            c = "#00ff00"
+                            c = AM
                         else:
-                            c = "#ffff00"
+                            c = PM
                     elif(i == 0 and j == 3 and rem > 2):
                         if(ap == "AM"):
-                            c = "#00ff00"
+                            c = AM
                         else:
-                            c = "#ffff00"
+                            c = PM
                     elif(i == 3 and j == 3 and rem > 3):
                         if(ap == "AM"):
-                            c = "#00ff00"
+                            c = AM
                         else:
-                            c = "#ffff00"
+                            c = PM
                     else:
                         c = "#ffffff"
 
@@ -531,9 +535,9 @@ class SelectionFrame(tk.Frame):
         self._min =  ttk.Entry(self, width = 3, textvariable = self._mn)
         self._set = ttk.Button(self, text = "Set", command = self.set_time)
 
-        self._choices = {"", "PM", "AM"}
+        self._choices = {"PM", "AM"}
         self._am_pm = StringVar(self, value = am_pm)
-        self._am_pm_option = ttk.OptionMenu(self, self._am_pm, *self._choices)
+        self._am_pm_option = tk.OptionMenu(self, self._am_pm,  *self._choices)
         self._am_pm_option.config(width = 3)
 
         self._select.grid(row = 0, column = 0, pady = 10)
@@ -568,7 +572,7 @@ class SelectionFrame(tk.Frame):
         self._al_set = ttk.Button(self, text = "Set", command = self.set_alarm, state = 'disabled')
 
         self._al_am_pm = StringVar(self, value = al_am_pm)
-        self._al_am_pm_option = ttk.OptionMenu(self, self._al_am_pm, *self._choices)
+        self._al_am_pm_option = ttk.OptionMenu(self, self._al_am_pm, al_am_pm, *self._choices)
         self._al_am_pm_option.config(state = 'disabled')
         self._al_am_pm_option.config(width = 3)
         self._alarm_switch = ttk.Button(self, text = "Alarm: OFF", command = self.toggle_alarm)
@@ -721,7 +725,7 @@ class SelectionFrame(tk.Frame):
         self._hr = StringVar(self, value = str(hour))
         self._hour.config(textvariable = self._hr)
         self._min.config(textvariable = self._mn)
-        self._am_pm.set(am_pm);
+        self._am_pm.set(am_pm)
         
         if(al_m < 10):
             self._al_mn = StringVar(self, value = "0" + str(al_m))
