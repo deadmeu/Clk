@@ -629,6 +629,7 @@ class SelectionFrame(tk.Frame):
         #Time
         h = hour
         m = minute
+        s = datetime.datetime.now().time().second 
         if(am_pm == "PM"):
             if(h != 12):
                 h += 12
@@ -641,6 +642,7 @@ class SelectionFrame(tk.Frame):
         if(alarm == True):
             alh = al_h
             alm = al_m
+            als = 0
             if(al_am_pm == "PM"):
                 if(alh != 12):
                     alh += 12
@@ -653,7 +655,7 @@ class SelectionFrame(tk.Frame):
             als = 255
         self.inc_ir_prog()
         
-        val = bytearray([start, end, alh, alm, h, m])
+        val = bytearray([start, end, alh, alm, als, h, m, s])
         self.inc_ir_prog()
         
         try:
@@ -986,7 +988,7 @@ def main():
     root = tk.Tk()
     app = ClockApp(root)
     root.geometry("640x480")
-    
+    root.title("Clk")
     old = millis()
     f = millis()
     s = datetime.datetime.now().time().second
@@ -1001,7 +1003,7 @@ def main():
         except:
             break
         if(cur - old > 500):
-            root.title("Clk | " + str(x/(0.5)) + " fps")
+            #root.title("Clk | " + str(x/(0.5)) + " fps")
             x = 0
             hour_disp = not hour_disp
             if(draw_wthr):
@@ -1035,7 +1037,7 @@ def main():
         if(cur - f > (500/30)):
             x += 1
             f = cur
-            app._clock.draw_clock()
+            
             if(thread):
                 th = False
                 for t in threading.enumerate():
@@ -1046,6 +1048,7 @@ def main():
                     thread = False
                     app.port_menu()
                     print("updated port list")
+            app._clock.draw_clock()
 
 if __name__ == '__main__':
     main()
