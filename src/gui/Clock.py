@@ -304,24 +304,29 @@ class ClockView(tk.Canvas):
                             c = storm[(i + j * 4) + x]
                         else:
                             c = wind[(i + j * 4) + x]
+                    else:
+                        if(ap == "AM"):
+                            c = AM
+                        else:
+                            c = PM
                     
                 else:
-                    if(i == 0 and j == 0 and rem > 0):
+                    if(((i == 2 and j == 0) or (i == 3 and j == 1)) and rem > 0):
                         if(ap == "AM"):
                             c = AM
                         else:
                             c = PM
-                    elif(i == 3 and j == 0 and rem > 1):
+                    elif(((i == 2 and j == 3) or (i == 3 and j == 2)) and rem > 1):
                         if(ap == "AM"):
                             c = AM
                         else:
                             c = PM
-                    elif(i == 0 and j == 3 and rem > 2):
+                    elif(((i == 0 and j == 2) or (i == 1 and j == 3)) and rem > 2):
                         if(ap == "AM"):
                             c = AM
                         else:
                             c = PM
-                    elif(i == 3 and j == 3 and rem > 3):
+                    elif(((i == 1 and j == 0) or (i == 0 and j == 1)) and rem > 3):
                         if(ap == "AM"):
                             c = AM
                         else:
@@ -868,14 +873,7 @@ class ClockApp(object):
         
 
         self.update()
-        self.port_menu()
-        
-        """for p in serial_ports:
-            if(p == port):
-                p = ">" + p
-            self.portlist.add_command(label = p, command = lambda:self.set_port(p))
-        self.portlist.add_command(label = "Update", command = self.update)"""
-        
+        self.port_menu()        
 
     def set_port(self, port_name):
         
@@ -1073,11 +1071,11 @@ def main():
         if(cur - old > 500):
             #root.title("Clk | " + str(x/(0.5)) + " fps")
             x = 0
+            s = datetime.datetime.now().time().second
             hour_disp = not hour_disp
             if(draw_wthr):
                 frame += 1
             if(hour_disp):
-                s = datetime.datetime.now().time().second
                 if(s != 0):
                     s_set = False
             if(s == 0 and not s_set):
