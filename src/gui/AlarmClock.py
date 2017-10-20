@@ -608,7 +608,7 @@ class SelectionFrame(tk.Frame):
 
 
         Send protocol:
-        weather 1, weather 2, alarm hour, alarm minute, alarm second, clock hour, clock minute, clock second.
+        weather 1, weather 2, alarm hour, alarm minute, clock hour, clock minute
         """
         global draw_ir_prog
         global ir_prog
@@ -659,7 +659,7 @@ class SelectionFrame(tk.Frame):
             als = 255
         self.inc_ir_prog()
         
-        val = bytearray([start, end, alh, alm, als, h, m, s])
+        val = bytearray([start, end, alh, alm, h, m])
         self.inc_ir_prog()
         
         try:

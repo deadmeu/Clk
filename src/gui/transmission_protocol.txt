@@ -1,5 +1,5 @@
 
-w1, w2, alrm_h, alrm_m, time_h, time_m
+weather1, weather2, alarm_hour, alarm_minute, time_hour, time_minute
 
 
 Weathers:
