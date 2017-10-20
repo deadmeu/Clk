@@ -925,18 +925,27 @@ def getPorts():
     """
     global serial_ports
     global port
-    ports = serial.tools.list_ports.comports()
+    ports = list(serial.tools.list_ports.comports())
     connected = []
-    for element in ports:
-        connected.append(element.device)
+    default = 0
+    i = 0
+    for p in ports:
+        print(p)
+        if "FTDI" in p:
+            default = i
+        connected.append(p.device)
+        i += 1
     print("Connected COM ports: " + str(connected))
 
     serial_ports = connected
     try:
-        port = serial_ports[0]
+        port = serial_ports[default]
         print("port set to: " + port)
     except Exception as e: print(e)
         #print("no devices found")
+
+def dongleConnected():
+    print("dongle connected")
 
 def getTime():
     """
