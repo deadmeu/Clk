@@ -66,6 +66,11 @@ HOUR = "#0f0"
 
 thread = False
 
+STOPPED = False
+
+donglePrev = False
+dongleCurrent = False
+
 w_types = ["Sunny", "Cloudy", "Rain", "Windy", "Storm"]
 #w_types_long = ["Sunny", "Cloudy", "Rain", "Windy", "Storm", "Sunny and Windy", "Cloudy and Windy", "Cloudy and Rain", "Rain and Windy", "Storm and Windy"]
 
@@ -633,7 +638,6 @@ class SelectionFrame(tk.Frame):
         #Time
         h = hour
         m = minute
-        s = datetime.datetime.now().time().second 
         if(am_pm == "PM"):
             if(h != 12):
                 h += 12
@@ -646,7 +650,6 @@ class SelectionFrame(tk.Frame):
         if(alarm == True):
             alh = al_h
             alm = al_m
-            als = 0
             if(al_am_pm == "PM"):
                 if(alh != 12):
                     alh += 12
@@ -656,7 +659,6 @@ class SelectionFrame(tk.Frame):
         else:
             alh = 255
             alm = 255
-            als = 255
         self.inc_ir_prog()
         
         val = bytearray([start, end, alh, alm, h, m])
@@ -682,7 +684,6 @@ class SelectionFrame(tk.Frame):
         """
         global auto
         auto = not auto
-        print(auto)
         if(auto):
             self._auto_weather.config(text = "Auto-Retrieve Weather: ON")
             self.update_weather()
@@ -912,7 +913,7 @@ def getPortList():
     global thread
     thread = True
     try:
-    	t = threading.Thread(target = getPorts, name = "Thread", args = ())
+    	t = threading.Thread(target = getPorts, name = "Portlist", args = ())
     	t.start()
     except Exception as e: print(e)
     	#print("Can't start port thread") 
@@ -925,14 +926,15 @@ def getPorts():
     """
     global serial_ports
     global port
+    global dongleCurrent
     ports = list(serial.tools.list_ports.comports())
     connected = []
     default = 0
     i = 0
     for p in ports:
-        print(p)
-        if "FTDI" in p:
+        if "USB Serial Port" in p.description:
             default = i
+            dongleCurrent = True
         connected.append(p.device)
         i += 1
     print("Connected COM ports: " + str(connected))
@@ -944,8 +946,53 @@ def getPorts():
     except Exception as e: print(e)
         #print("no devices found")
 
+def detectDongle():
+    try:
+    	t = threading.Thread(target = dongleConnected, name = "Dongle", args = ())
+    	t.start()
+    except Exception as e: print(e)
+    	#print("Can't start port thread") 
+
+
 def dongleConnected():
-    print("dongle connected")
+    """
+    Detects if the dongle is connected and changes a flag based on it. 
+
+    dongleConnected() -> None (changes a flag)
+    """
+
+    global port
+    global dongleCurrent
+    global serial_ports
+
+    while not(STOPPED):
+        dongle = False
+        ports = serial.tools.list_ports.comports()
+        for p in ports:
+            if "USB Serial Port" in p.description:
+                dongle = True
+                port = p.device
+                print("Dongle on port: " + port)
+                getPortList()
+                break
+        dongleCurrent = dongle
+def dongleConnectSend():
+    """
+    Triggered when the dongle is detected. Sends the clock a signal to let it know to display splash
+
+    dongleConnectSend() -> None (sends IR signal to clock)
+    """
+    val = bytearray([99])
+    
+    try:
+        ser = serial.Serial(port, 300, serial.EIGHTBITS, serial.PARITY_NONE, serial.STOPBITS_TWO)
+        for i in range(5):
+            ser.write(val)
+        print("dongle connected")
+    except:
+        print("error sending dongle connect message")
+    
+
 
 def getTime():
     """
@@ -997,6 +1044,10 @@ def main():
     global serial_ports
     global port
     global thread
+    global dongleCurrent
+    global donglePrev
+    global STOPPED
+    detectDongle()
     weather = getWeather()
     root = tk.Tk()
     app = ClockApp(root)
@@ -1014,6 +1065,10 @@ def main():
             root.update_idletasks()
             root.update()
         except:
+            STOPPED = True
+            for t in threading.enumerate():
+               if(t.getName() == "Portlist" or t.getName() == "Dongle"):
+                    t.join()
             break
         if(cur - old > 500):
             #root.title("Clk | " + str(x/(0.5)) + " fps")
@@ -1046,6 +1101,9 @@ def main():
             if(draw_wthr == True and frame > 7):
                 draw_wthr = False
                 frame = 0
+            if(dongleCurrent and not(donglePrev)):
+                dongleConnectSend()
+            donglePrev = dongleCurrent
             old = cur
         if(cur - f > (500/30)):
             x += 1
@@ -1054,7 +1112,7 @@ def main():
             if(thread):
                 th = False
                 for t in threading.enumerate():
-                    if(t.getName() == "Thread"):
+                    if(t.getName() == "Portlist"):
                        th = True
                        break
                 if(not th):

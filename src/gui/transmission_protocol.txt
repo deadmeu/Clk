@@ -1,6 +1,9 @@
 
+STANDARD SIGNAL:
+
 weather1, weather2, alarm_hour, alarm_minute, time_hour, time_minute
 
+Each variable is 1 byte.
 
 Weathers:
 
@@ -9,3 +12,9 @@ Weathers:
 2 Rain
 3 Windy
 4 Storm
+
+
+IR DONGLE CONNECTED:
+
+99
+(sends single byte of value 99)
