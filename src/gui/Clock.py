@@ -157,8 +157,7 @@ class ClockView(tk.Canvas):
         
 
     def draw_clock(self):
-        """Takes the station data and uses the CoordinateTranslator class
-        to convert temperatures for all the stations into coordinates
+        """Takes the time data and displays the clock layout on the 
 
         draw_clock() -> None (clock on canvas)
         """
@@ -386,12 +385,16 @@ class ClockView(tk.Canvas):
             pass
 
     def point_in_switch(self, x, y):
+        """Determines whether the coordinates (x, y) are within the bounds of the switch on the display
+
+        point_in_switch(x, y) -> Boolean
+        """
         return(x >= self._sx and x <= self._sx + self._sw * 2 and y >= self._sy and y <= self._sy + self._sh)
 
     def up(self, event):
         """When the interface is no longer being dragged on, reset the drag variable
 
-        upevent) -> None
+        up(event) -> None
         """
         global drag
         global alarm_set
@@ -527,7 +530,7 @@ class SelectionFrame(tk.Frame):
     def __init__(self,master,parent):
         """initializes the internal data
 
-        Constructor: SelectionFrame(tk.Tk(), TemperaturePlotApp())
+        Constructor: SelectionFrame(tk.Tk(), ClockApp())
         """
         super().__init__(master)
         self._parent = parent
@@ -617,8 +620,7 @@ class SelectionFrame(tk.Frame):
         sendToClock(str[] args) -> None (Data sent to the clock)
 
 
-        Send protocol:
-        weather 1, weather 2, alarm hour, alarm minute, clock hour, clock minute
+        Send protocol: See transmission_protocol.txt
         """
         global draw_ir_prog
         global ir_prog
@@ -720,7 +722,7 @@ class SelectionFrame(tk.Frame):
     
 
     def reset_input(self):
-        """Resets the value in the input
+        """Resets the value in the input to be the same as the stored values
 
         reset_input() -> None (Changes the display to reflect the stored hr/min vals)
         """
@@ -855,7 +857,7 @@ class ClockApp(object):
     def __init__(self, master):
         """initializes the internal data
         Creates instances of the following classes:
-        SelectionFrame, DataFrame, temperatureData, Plotter
+        SelectionFrame, ClockView
 
         constructs the gui (packs all the frames & canvases)
 
@@ -876,16 +878,27 @@ class ClockApp(object):
         self.port_menu()        
 
     def set_port(self, port_name):
-        
+        """Used for the menu item to set the port to the selected value (port_name)
+
+        set_port(port_name) -> None (Sets the selected port to port_name)
+        """
         global port
         port = port_name
         print("port set to: " + port)
         self.port_menu()
 
     def update(self):
+        """Retrieves the list of connected ports
+
+        update() -> None
+        """
         getPortList()
 
     def port_menu(self):
+        """displays the file menu for the showing the available ports.
+
+        port_menu() -> None (Updates/Displays a menu that allows user to selected the 
+        """
         global serial_ports
         global port
         self.menubar = Menu(self._master, tearoff=False)
@@ -908,6 +921,10 @@ class ClockApp(object):
         self.portlist.add_command(label = "Update", command = self.update)
 
 def getPortList():
+    """Starts a thread that gets all the available ports
+    
+    getPortList() -> None (starts thread)
+    """
     global thread
     thread = True
     try:
@@ -918,7 +935,8 @@ def getPortList():
 
 def getPorts():
     """
-    Detects all serial ports on the computer and creates a list that the user can select from
+    Is run from a thread
+    Detects all serial ports on the computer and creates a list that the user can choose from
 
     getPorts(app[ClockApp]) -> None(updates list)
     """
@@ -945,6 +963,10 @@ def getPorts():
         #print("no devices found")
 
 def detectDongle():
+    """starts a thread to detect if the dongle gets connected
+
+    detectDongle() -> None (Starts thread)
+    """
     try:
     	t = threading.Thread(target = dongleConnected, name = "Dongle", args = ())
     	t.start()
@@ -954,6 +976,7 @@ def detectDongle():
 
 def dongleConnected():
     """
+    Is run from thread
     Detects if the dongle is connected and changes a flag based on it. 
 
     dongleConnected() -> None (changes a flag)
@@ -1001,6 +1024,10 @@ def getTime():
     return datetime.datetime.now().time()
 
 def millis():
+    """Used to get the current milliseconds used for counting frames
+
+    millis() -> int (current milliseconds)
+    """
     return int(round(time.time() * 1000))
 
 def getWeather():
@@ -1031,6 +1058,12 @@ def is_int(x):
         return False
 
 def main():
+    """ Main loop for app.
+    Used to keep track of time and animation frames.
+    Updates the display
+
+    main() -> None
+    """
     global weather
     global hour_disp
     global hour
