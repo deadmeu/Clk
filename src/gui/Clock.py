@@ -39,7 +39,7 @@ hour_disp = True
 hour = 0
 minute = 0
 am_pm = "PM"
-weather = ""
+weather = "Sunny"
 auto = True
 draw_wthr = False
 frame = 0
@@ -624,7 +624,7 @@ class SelectionFrame(tk.Frame):
         """
         global draw_ir_prog
         global ir_prog
-
+        ir_prog = 0
         draw_ir_prog = True
         self.inc_ir_prog()
         
@@ -681,7 +681,6 @@ class SelectionFrame(tk.Frame):
             print("error sending, please check you have selected the correct port")
 
         draw_ir_prog = False
-        ir_prog = 0
 
     def toggle_auto(self):
         """Toggles whether weather retrieval is automatic or not
@@ -993,7 +992,6 @@ def dongleConnected():
             if "USB Serial Port" in p.description:
                 dongle = True
                 port = p.device
-                print("Dongle on port: " + port)
                 getPortList()
                 break
         dongleCurrent = dongle
