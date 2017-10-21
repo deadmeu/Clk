@@ -1,11 +1,30 @@
+For all IR Communications 
+Baudrate : 300
+Startbits: 1
+Stopbits : 2
 
-w1, w2, alrm_h, alrm_m, time_h, time_m
 
+STANDARD SIGNAL:
+
+A byte array of six(6) bytes is sent. The byte array is detailed below:
+
+[weather1, weather2, alarm_hour, alarm_minute, time_hour, time_minute]
 
 Weathers:
-
 0 Sunny
 1 Cloudy
 2 Rain
 3 Windy
 4 Storm
+
+eg.
+[0, 3, 13, 15, 7, 30]
+represents
+weather: Sunny and Windy
+alarm  : 1:15 PM
+time   : 7:30 AM
+
+IR DONGLE CONNECTED:
+
+When the IR Dongle is detected as being connected a single byte of value
+99 is sent

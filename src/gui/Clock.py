@@ -39,7 +39,7 @@ hour_disp = True
 hour = 0
 minute = 0
 am_pm = "PM"
-weather = ""
+weather = "Sunny"
 auto = True
 draw_wthr = False
 frame = 0
@@ -65,6 +65,11 @@ PM = "#00f"
 HOUR = "#0f0"
 
 thread = False
+
+STOPPED = False
+
+donglePrev = False
+dongleCurrent = False
 
 w_types = ["Sunny", "Cloudy", "Rain", "Windy", "Storm"]
 #w_types_long = ["Sunny", "Cloudy", "Rain", "Windy", "Storm", "Sunny and Windy", "Cloudy and Windy", "Cloudy and Rain", "Rain and Windy", "Storm and Windy"]
@@ -152,8 +157,7 @@ class ClockView(tk.Canvas):
         
 
     def draw_clock(self):
-        """Takes the station data and uses the CoordinateTranslator class
-        to convert temperatures for all the stations into coordinates
+        """Takes the time data and displays the clock layout on the 
 
         draw_clock() -> None (clock on canvas)
         """
@@ -299,24 +303,29 @@ class ClockView(tk.Canvas):
                             c = storm[(i + j * 4) + x]
                         else:
                             c = wind[(i + j * 4) + x]
+                    else:
+                        if(ap == "AM"):
+                            c = AM
+                        else:
+                            c = PM
                     
                 else:
-                    if(i == 0 and j == 0 and rem > 0):
+                    if(((i == 2 and j == 0) or (i == 3 and j == 1)) and rem > 0):
                         if(ap == "AM"):
                             c = AM
                         else:
                             c = PM
-                    elif(i == 3 and j == 0 and rem > 1):
+                    elif(((i == 2 and j == 3) or (i == 3 and j == 2)) and rem > 1):
                         if(ap == "AM"):
                             c = AM
                         else:
                             c = PM
-                    elif(i == 0 and j == 3 and rem > 2):
+                    elif(((i == 0 and j == 2) or (i == 1 and j == 3)) and rem > 2):
                         if(ap == "AM"):
                             c = AM
                         else:
                             c = PM
-                    elif(i == 3 and j == 3 and rem > 3):
+                    elif(((i == 1 and j == 0) or (i == 0 and j == 1)) and rem > 3):
                         if(ap == "AM"):
                             c = AM
                         else:
@@ -376,12 +385,16 @@ class ClockView(tk.Canvas):
             pass
 
     def point_in_switch(self, x, y):
+        """Determines whether the coordinates (x, y) are within the bounds of the switch on the display
+
+        point_in_switch(x, y) -> Boolean
+        """
         return(x >= self._sx and x <= self._sx + self._sw * 2 and y >= self._sy and y <= self._sy + self._sh)
 
     def up(self, event):
         """When the interface is no longer being dragged on, reset the drag variable
 
-        upevent) -> None
+        up(event) -> None
         """
         global drag
         global alarm_set
@@ -517,7 +530,7 @@ class SelectionFrame(tk.Frame):
     def __init__(self,master,parent):
         """initializes the internal data
 
-        Constructor: SelectionFrame(tk.Tk(), TemperaturePlotApp())
+        Constructor: SelectionFrame(tk.Tk(), ClockApp())
         """
         super().__init__(master)
         self._parent = parent
@@ -607,12 +620,11 @@ class SelectionFrame(tk.Frame):
         sendToClock(str[] args) -> None (Data sent to the clock)
 
 
-        Send protocol:
-        weather 1, weather 2, alarm hour, alarm minute, alarm second, clock hour, clock minute, clock second.
+        Send protocol: See transmission_protocol.txt
         """
         global draw_ir_prog
         global ir_prog
-
+        ir_prog = 0
         draw_ir_prog = True
         self.inc_ir_prog()
         
@@ -633,7 +645,6 @@ class SelectionFrame(tk.Frame):
         #Time
         h = hour
         m = minute
-        s = datetime.datetime.now().time().second 
         if(am_pm == "PM"):
             if(h != 12):
                 h += 12
@@ -646,7 +657,6 @@ class SelectionFrame(tk.Frame):
         if(alarm == True):
             alh = al_h
             alm = al_m
-            als = 0
             if(al_am_pm == "PM"):
                 if(alh != 12):
                     alh += 12
@@ -656,10 +666,9 @@ class SelectionFrame(tk.Frame):
         else:
             alh = 255
             alm = 255
-            als = 255
         self.inc_ir_prog()
         
-        val = bytearray([start, end, alh, alm, als, h, m, s])
+        val = bytearray([start, end, alh, alm, h, m])
         self.inc_ir_prog()
         
         try:
@@ -672,7 +681,6 @@ class SelectionFrame(tk.Frame):
             print("error sending, please check you have selected the correct port")
 
         draw_ir_prog = False
-        ir_prog = 0
 
     def toggle_auto(self):
         """Toggles whether weather retrieval is automatic or not
@@ -682,7 +690,6 @@ class SelectionFrame(tk.Frame):
         """
         global auto
         auto = not auto
-        print(auto)
         if(auto):
             self._auto_weather.config(text = "Auto-Retrieve Weather: ON")
             self.update_weather()
@@ -714,7 +721,7 @@ class SelectionFrame(tk.Frame):
     
 
     def reset_input(self):
-        """Resets the value in the input
+        """Resets the value in the input to be the same as the stored values
 
         reset_input() -> None (Changes the display to reflect the stored hr/min vals)
         """
@@ -849,7 +856,7 @@ class ClockApp(object):
     def __init__(self, master):
         """initializes the internal data
         Creates instances of the following classes:
-        SelectionFrame, DataFrame, temperatureData, Plotter
+        SelectionFrame, ClockView
 
         constructs the gui (packs all the frames & canvases)
 
@@ -867,26 +874,30 @@ class ClockApp(object):
         
 
         self.update()
-        self.port_menu()
-        
-        """for p in serial_ports:
-            if(p == port):
-                p = ">" + p
-            self.portlist.add_command(label = p, command = lambda:self.set_port(p))
-        self.portlist.add_command(label = "Update", command = self.update)"""
-        
+        self.port_menu()        
 
     def set_port(self, port_name):
-        
+        """Used for the menu item to set the port to the selected value (port_name)
+
+        set_port(port_name) -> None (Sets the selected port to port_name)
+        """
         global port
         port = port_name
         print("port set to: " + port)
         self.port_menu()
 
     def update(self):
+        """Retrieves the list of connected ports
+
+        update() -> None
+        """
         getPortList()
 
     def port_menu(self):
+        """displays the file menu for the showing the available ports.
+
+        port_menu() -> None (Updates/Displays a menu that allows user to selected the 
+        """
         global serial_ports
         global port
         self.menubar = Menu(self._master, tearoff=False)
@@ -909,34 +920,98 @@ class ClockApp(object):
         self.portlist.add_command(label = "Update", command = self.update)
 
 def getPortList():
+    """Starts a thread that gets all the available ports
+    
+    getPortList() -> None (starts thread)
+    """
     global thread
     thread = True
     try:
-    	t = threading.Thread(target = getPorts, name = "Thread", args = ())
+    	t = threading.Thread(target = getPorts, name = "Portlist", args = ())
     	t.start()
     except Exception as e: print(e)
     	#print("Can't start port thread") 
 
 def getPorts():
     """
-    Detects all serial ports on the computer and creates a list that the user can select from
+    Is run from a thread
+    Detects all serial ports on the computer and creates a list that the user can choose from
 
     getPorts(app[ClockApp]) -> None(updates list)
     """
     global serial_ports
     global port
-    ports = serial.tools.list_ports.comports()
+    global dongleCurrent
+    ports = list(serial.tools.list_ports.comports())
     connected = []
-    for element in ports:
-        connected.append(element.device)
+    default = 0
+    i = 0
+    for p in ports:
+        if "USB Serial Port" in p.description:
+            default = i
+            dongleCurrent = True
+        connected.append(p.device)
+        i += 1
     print("Connected COM ports: " + str(connected))
 
     serial_ports = connected
     try:
-        port = serial_ports[0]
+        port = serial_ports[default]
         print("port set to: " + port)
     except Exception as e: print(e)
         #print("no devices found")
+
+def detectDongle():
+    """starts a thread to detect if the dongle gets connected
+
+    detectDongle() -> None (Starts thread)
+    """
+    try:
+    	t = threading.Thread(target = dongleConnected, name = "Dongle", args = ())
+    	t.start()
+    except Exception as e: print(e)
+    	#print("Can't start port thread") 
+
+
+def dongleConnected():
+    """
+    Is run from thread
+    Detects if the dongle is connected and changes a flag based on it. 
+
+    dongleConnected() -> None (changes a flag)
+    """
+
+    global port
+    global dongleCurrent
+    global serial_ports
+
+    while not(STOPPED):
+        dongle = False
+        ports = serial.tools.list_ports.comports()
+        for p in ports:
+            if "USB Serial Port" in p.description:
+                dongle = True
+                port = p.device
+                getPortList()
+                break
+        dongleCurrent = dongle
+def dongleConnectSend():
+    """
+    Triggered when the dongle is detected. Sends the clock a signal to let it know to display splash
+
+    dongleConnectSend() -> None (sends IR signal to clock)
+    """
+    val = bytearray([99])
+    
+    try:
+        ser = serial.Serial(port, 300, serial.EIGHTBITS, serial.PARITY_NONE, serial.STOPBITS_TWO)
+        for i in range(5):
+            ser.write(val)
+        print("dongle connected")
+    except:
+        print("error sending dongle connect message")
+    
+
 
 def getTime():
     """
@@ -947,6 +1022,10 @@ def getTime():
     return datetime.datetime.now().time()
 
 def millis():
+    """Used to get the current milliseconds used for counting frames
+
+    millis() -> int (current milliseconds)
+    """
     return int(round(time.time() * 1000))
 
 def getWeather():
@@ -977,6 +1056,12 @@ def is_int(x):
         return False
 
 def main():
+    """ Main loop for app.
+    Used to keep track of time and animation frames.
+    Updates the display
+
+    main() -> None
+    """
     global weather
     global hour_disp
     global hour
@@ -988,6 +1073,10 @@ def main():
     global serial_ports
     global port
     global thread
+    global dongleCurrent
+    global donglePrev
+    global STOPPED
+    detectDongle()
     weather = getWeather()
     root = tk.Tk()
     app = ClockApp(root)
@@ -1005,15 +1094,19 @@ def main():
             root.update_idletasks()
             root.update()
         except:
+            STOPPED = True
+            for t in threading.enumerate():
+               if(t.getName() == "Portlist" or t.getName() == "Dongle"):
+                    t.join()
             break
         if(cur - old > 500):
             #root.title("Clk | " + str(x/(0.5)) + " fps")
             x = 0
+            s = datetime.datetime.now().time().second
             hour_disp = not hour_disp
             if(draw_wthr):
                 frame += 1
             if(hour_disp):
-                s = datetime.datetime.now().time().second
                 if(s != 0):
                     s_set = False
             if(s == 0 and not s_set):
@@ -1037,6 +1130,9 @@ def main():
             if(draw_wthr == True and frame > 7):
                 draw_wthr = False
                 frame = 0
+            if(dongleCurrent and not(donglePrev)):
+                dongleConnectSend()
+            donglePrev = dongleCurrent
             old = cur
         if(cur - f > (500/30)):
             x += 1
@@ -1045,7 +1141,7 @@ def main():
             if(thread):
                 th = False
                 for t in threading.enumerate():
-                    if(t.getName() == "Thread"):
+                    if(t.getName() == "Portlist"):
                        th = True
                        break
                 if(not th):
