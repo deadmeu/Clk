@@ -16,5 +16,8 @@ void reset_frame_count(void);
 uint8_t incr_frame_count(void);
 
 pcol_t get_frame_pixel(wtype_t weather, uint8_t i);
+pcol_t get_ir_frame_pixel(uint8_t i);
+pcol_t get_alarm_frame_pixel(uint8_t i);
+pcol_t get_splash_frame_pixel(uint8_t i);
 
 #endif /* ANIMATION_H_ */

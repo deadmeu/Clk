@@ -15,18 +15,15 @@
 #include "animation.h"
 #include "pixel_colour.h"
 
-#define CONV_TIME(h, m, s)      ((h*3600) + (m*60) + s)
+#define CONV_TIME(h, m, s)      (((uint32_t)h*(uint32_t)3600) + ((uint32_t)m*(uint32_t)60) + (uint32_t)s)
 #define HOURS(t)                (t / 3600)
 #define MINUTES(t)              ((t - 3600 * HOURS(t)) / 60)
 #define SECONDS(t)              ((t - 3600 * HOURS(t)) - 60 * MINUTES(t))
 #define FOURS                   (MINUTES(time) % 5)
 #define NEW_CYCLE_TIME          (time == 0L || time == MID_DAY_TIME)
+#define FOURS_LEDS              2
 
 #define HOUR_MARKER_COLOUR  GREEN
-//#define ANTE_MERIDIEM       0
-// #define RING_PIN            0
-//#define POST_MERIDIEM       1
-// #define GRID_PIN            1
 
 static void init_leds(void);
 static void set_default_values(void);
@@ -39,12 +36,12 @@ struct cRGB led_grid[GRID_LEDS];
 struct cRGB rgb_ring[RING_LEDS];
 struct cRGB rgb_grid[GRID_LEDS];
 
-                                            // [0]   [3] ~Index numbers~
-                                            // {1 0 0 2} Grid is arranged in a 
-                                            // {0 0 0 0} 4x4 layout with minute 
-uint8_t grid_minute_states[4] = { 0,  3,    // {0 0 0 0} markers in each corner.
-                                 12, 15};   // {3 0 0 4} 
-                                            // [12] [15] ~Index numbers~
+
+
+
+uint8_t grid_minute_states[4][FOURS_LEDS] = { {2 ,7}, {11,14},
+                                              {13,8}, { 4,1 } };
+
 
 // Meridiem colours
 pcol_t meridiem_colours[2];
@@ -55,17 +52,19 @@ wtype_t current_weather[2];
 // Other variables
 static volatile uint32_t time;
 static volatile uint32_t alarm_time;
+
 static volatile uint8_t opacity;
 static volatile uint8_t total_animation_loops;
 static volatile uint8_t playing_weather_index;
 
 static volatile wtype_t playing_weather;
 
-// TODO maybe use a bitfield for these?
 // Flags
 static uint8_t new_reset_flag;
-static uint8_t splash_flag;
 static uint8_t animation_flag;
+static uint8_t ir_animation_flag;
+static uint8_t alarm_animation_flag;
+static uint8_t splash_animation_flag;
 static uint8_t alarm_flag;
 static uint8_t hour_marker_flag;
 static uint8_t new_minute_flag;
@@ -83,7 +82,7 @@ void init_clock(void) {
     init_leds();
     
     stop_alarm_sound();
-    stop_weather_animation();
+    stop_animation();
 
     reset_alarm_flag();
     reset_minute_flag();
@@ -101,14 +100,20 @@ void init_clock(void) {
     reset_frame_count();
 
     if (is_new_reset() || !eeprom_is_set()) {
-        set_default_values();
+       set_default_values();
     }
+    
+    // TODO 
+	// if (is_new_reset()) {
+	// 	set_default_values();
+	// }
 
     update_meridiem();
 
     hour_marker_flag = 1;
-    splash_flag = 1;
     total_animation_loops = 0;
+    ir_animation_flag = 0;
+    alarm_animation_flag = 0;
 
     opacity = 30;
 }
@@ -118,11 +123,8 @@ static void set_default_values(void) {
     alarm_time = 0;
     alarm_set_flag = 0;
     weather_set_flag = 0;
-    eeprom_set_flag = 0;
-}
-
-void splash_off(void) {
-    splash_flag = 0;
+    eeprom_set_flag = 1;
+	play_splash_animation();
 }
 
 void enable_new_reset(void) {
@@ -133,9 +135,6 @@ void disable_new_reset(void) {
     new_reset_flag = 0;
 }
 
-// TODO: A lot of the timekeeping functionality should be in its own timekeeper.c file
-
-// TODO: should interrupts be disabled before incrementing this stuff?
 void increment_seconds(void) {
     // if (time++ == MAX_TIME) {
     //     set_time(0L);
@@ -167,6 +166,8 @@ uint8_t clock_update_time(void) {
     if (clock_time_changed()) update_new_minute_flag();
     
     if (!set_time(new_time)) return 0;
+	
+	update_meridiem();
     
     return 1;
 }
@@ -190,20 +191,46 @@ void update_meridiem(void) {
     meridiem_flag = (time < MID_DAY_TIME) ? ANTE : POST;
 }
 
+void play_ir_animation(void) {
+    play_animation();
+    ir_animation_flag = 1;
+}
+
+void play_splash_animation(void) {
+    play_animation();
+    splash_animation_flag = 1;
+}
+
+uint8_t splash_playing(void) {
+	return splash_animation_flag;
+}
+
+void play_alarm_animation(void) {
+    play_animation();
+    alarm_animation_flag = 1;
+}
+
 void play_weather_animation(void) {
-    animation_flag = 1;
+    play_animation();
     playing_weather_index = 0;
     total_animation_loops = 0;
-    reset_frame_count();
     update_playing_weather();
+}
+
+void play_animation(void) {
+    animation_flag = 1;
+    reset_frame_count();
 }
 
 void update_playing_weather(void) {
     playing_weather = current_weather[playing_weather_index];
 }
 
-void stop_weather_animation(void) {
+void stop_animation(void) {
     animation_flag = 0;
+    ir_animation_flag = 0;
+    alarm_animation_flag = 0;
+    splash_animation_flag = 0;
 }
 
 void play_alarm_sound(void) {
@@ -258,7 +285,6 @@ uint8_t usart_enabled(void) {
     return usart_enabled_flag;
 }
 
-// TODO: maybe put this in a timekeeper.c file? or maybe not?
 uint8_t reached_new_minute(void) {
     return new_minute_flag;
 }
@@ -360,9 +386,9 @@ uint8_t set_time(uint32_t new_time) {
     return 1;
 }
 
-// TODO change these magic numbers to MAX_HOUR, MIN_SECOND, SECONDS_IN_HOUR, etc.
 uint8_t set_split_clock_time(uint8_t h, uint8_t m, uint8_t s) {
-    if (!(h >= 0 && h < 24 && m >= 0 && m < 60 && s >= 0 && s < 60)) {
+    if (!(h >= MIN_HOUR && h <= MAX_HOUR && m >= MIN_MINUTE && m <= MAX_MINUTE 
+            && s >= MIN_SECOND && s < MAX_SECOND)) {
         return 0;
     }
     time = CONV_TIME(h, m, s);
@@ -380,9 +406,9 @@ uint8_t set_alarm_time(uint32_t new_time) {
     return 1;
 }
 
-// TODO change these magic numbers to MAX_HOUR, MIN_SECOND, SECONDS_IN_HOUR, etc.
 uint8_t set_split_alarm_time(uint8_t h, uint8_t m, uint8_t s) {
-    if (!(h >= 0 && h < 24 && m >= 0 && m < 60 && s >= 0 && s < 60)) {
+    if (!(h >= MIN_HOUR && h <= MAX_HOUR && m >= MIN_MINUTE && m <= MAX_MINUTE 
+            && s >= MIN_SECOND && s < MAX_SECOND)) {
         return 0;
     }
     alarm_time = CONV_TIME(h, m, s);
@@ -444,7 +470,10 @@ void apply_opacity(void) {
 }
 
 void update_animation_frame(void) {
-    
+    if (ir_animation_flag || alarm_animation_flag) {
+		incr_frame_count();
+		return;
+    }
 
     if (total_animation_loops == ANIMATION_LOOPS) {
         total_animation_loops = 0;
@@ -467,7 +496,7 @@ void update_display(void) {
     // Update entire ring
     if (draw_ring_flag) {
         for (uint8_t i = 0; i < RING_LEDS; i++) { 
-            if (i * (60 / RING_LEDS) <= MINUTES(time)) {
+            if (i * (60 / RING_LEDS) <= MINUTES(time) && !ir_animation_flag && !splash_animation_flag) {
                 update_pixel_col(&rgb_ring[i], meridiem_colours[meridiem_flag]);
             } else {
                 update_pixel_col(&rgb_ring[i], BLACK);
@@ -476,28 +505,49 @@ void update_display(void) {
     }
 
     // Add hour marker to grid if necessary
-    if (hour_marker_flag) {
+    if (hour_marker_flag && !ir_animation_flag && !splash_animation_flag) {
         update_pixel_col(&rgb_ring[HOURS(time) % RING_LEDS], HOUR_MARKER_COLOUR);
     }
-	// TODO change grid coour to meridiem
+
     // Update grid
     if (draw_grid_flag) {
         if (animation_is_playing()) {      // display the animation
-            for (uint8_t i = 0; i < GRID_LEDS; i++) {
-                update_pixel_col(&rgb_grid[i], get_frame_pixel(playing_weather, i));
+            if (splash_animation_flag) {
+                for (uint8_t i = 0; i < GRID_LEDS; i++) {
+                    update_pixel_col(&rgb_grid[i], get_splash_frame_pixel(i));
+                }
+            } else if (ir_animation_flag) {
+                for (uint8_t i = 0; i < GRID_LEDS; i++) {
+                    update_pixel_col(&rgb_grid[i], get_ir_frame_pixel(i));
+                }
+            } else if (alarm_animation_flag) {
+                for (uint8_t i = 0; i < GRID_LEDS; i++) {
+                    update_pixel_col(&rgb_grid[i], get_alarm_frame_pixel(i));
+                }
+            } else {
+                for (uint8_t i = 0; i < GRID_LEDS; i++) {
+                    update_pixel_col(&rgb_grid[i], get_frame_pixel(playing_weather, i));
+                }
             }
         // Display the fours
         } else if (MINUTES(time) % 5) {    // between 1-4 minutes past a 5 minute marker
             led_array_clear(rgb_grid, GRID_LEDS);
             for (uint8_t i = 0; i < FOURS; i++) {
-                update_pixel_col(&rgb_grid[grid_minute_states[i]], 
-                                    meridiem_colours[meridiem_flag]);
+                for (uint8_t j = 0; j < FOURS_LEDS; j++) {
+                    update_pixel_col(&rgb_grid[grid_minute_states[i][j]], 
+                                        meridiem_colours[meridiem_flag]);
+                    }
             }
         // Clear the array
         } else {
             led_array_clear(rgb_grid, GRID_LEDS);
         }
     }
+}
+
+void clear_display(void) {
+    init_leds();
+    show_display();
 }
 
 // Setup the LED arrays, clearing the r, g, b values

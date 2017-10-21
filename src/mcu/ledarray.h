@@ -13,8 +13,8 @@
 #include "pixel_colour.h"
 
 typedef enum {
-    RING_PIN = 5,
-    GRID_PIN = 6
+    RING_PIN = 6,
+    GRID_PIN = 7
 } pindef_t;
 
 void enable_leds(struct cRGB *led_array, uint8_t size, pindef_t pin_type);

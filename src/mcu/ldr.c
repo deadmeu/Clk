@@ -11,7 +11,7 @@
 #include "clock.h"
 
 #define ADC_PIN            0    // PC0
-#define ADC_MIN          200
+#define ADC_MIN          100
 #define ADC_MAX         1000
 
 #define ADC_RANGE       (ADC_MAX - ADC_MIN)

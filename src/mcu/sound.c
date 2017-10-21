@@ -90,6 +90,20 @@ void update_sound(void) {
         // Check if it's time to update the note.
         if (get_clock_ticks() - start_delay_time >= delay_duration) {
             // Not a delay note - so play the note.
+            play_note(sheet_bigben[note_index++ % (sizeof(sheet_bigben) 
+                                                    / sizeof(sheet_bigben[0]))]);
+
+            // Update the delay time.
+            delay_duration = sheet_bigben[note_index++ % (sizeof(sheet_bigben) 
+                                                    / sizeof(sheet_bigben[0]))];
+            start_delay_time = get_clock_ticks();
+        }
+    } else if (splash_playing()) {
+        sound_on();
+        
+        // Check if it's time to update the note.
+        if (get_clock_ticks() - start_delay_time >= delay_duration) {
+            // Not a delay note - so play the note.
             play_note(sheet_alarm[note_index++ % (sizeof(sheet_alarm) 
                                                     / sizeof(sheet_alarm[0]))]);
 

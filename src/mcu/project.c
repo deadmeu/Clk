@@ -13,7 +13,6 @@
 #include "ldr.h"
 #include "rtc.h"
 #include "ledarray.h"
-#include "splash.h"
 #include "timer.h"
 #include "sound.h"
 #include "progmem.h"
@@ -27,11 +26,14 @@
 #define DISPLAY_HOUR_MARKER_DELAY    500    // 500 ms 
 #define DISPLAY_ANIMATION_TIME      4000    // 4 seconds
 #define RTC_UPDATE_TIME            30000    // 30 seconds
-#define OPACITY_UPDATE_DELAY        2000    // 2 s
+#define OPACITY_UPDATE_DELAY        1000    // 1 s
 #define ANIMATION_FRAME_TIME         500    // 500 ms
-#define PLAY_ALARM_TIME             3000	// 10 seconds
+#define PLAY_ALARM_TIME             10000	// 10 seconds
 #define MAX_CLOCK_UPDATE_TIME       3000    // 3 seconds
 #define SECOND_INCREMENT_TIME       1000    // 1 second
+#define IR_LED_PLAYTIME             1500    // 1 second
+#define IR_LED_DELAY                250     // 250 ms
+#define SPLASH_PLAY_TIME			4000	// 4 seconds
 
 void initialise_hardware(void);
 void initialise_clock(void);
@@ -42,8 +44,6 @@ void reset_clock(void);
 /* The program's main function. */
 int main(void) {
     initialise_hardware();
-    //splash_screen(); // TODO what happens when try update clock at splash?
-    //splash_off();
     while (1) {
         initialise_clock();
         run_clock();
@@ -69,21 +69,17 @@ void initialise_hardware(void) {
     init_ldr();
 
     // Setup RTC for timekeeping
-    init_rtc();
+    //init_rtc();
 
-    if (!rtc_started()) {
-        // Error with starting the RTC.
-        // TODO add a flag or something?
-    }
+    //if (!rtc_started()) {
+    //    // Error with starting the RTC.
+    //}
 
-    // Setup IR data buffers for USART data
+    // Setup UART and IR data buffers
     init_ir();
 
     // Turn on global interrupts
     sei();
-
-    // Clear the terminal
-    initialise_terminal();
 }
 
 /* Initialises the clock flags, timers, counters, and other variables. */
@@ -92,15 +88,19 @@ void initialise_clock(void) {
 
     setup_sound();
 
-    set_weather(SUNNY, SUNNY);
-
     eeprom_read_data();
     eeprom_set_data();
+	enable_eeprom();
+
+	//clock_update_time();
+
+	enable_usart();
 }
 
 /* Handles the main clock program (displaying time, animations, alarm, etc.) */
 void run_clock(void) {
 	/* Variables used for tracking time-delayed events. */
+	uint32_t start_splash_time;
     uint32_t last_clock_tick_time;
     uint32_t last_display_time;
     uint32_t last_hour_marker_display_time;
@@ -113,12 +113,18 @@ void run_clock(void) {
 	/* Set the time-tracking variables to the current time. */
     last_clock_tick_time = last_display_time = last_hour_marker_display_time 
             = last_opacity_update_time = start_animation_time = start_alarm_time
-            = last_rtc_update_time =  last_animation_frame_time 
+            = last_rtc_update_time =  last_animation_frame_time = start_splash_time
             = get_clock_ticks();
 
     while (1) {
         if (clock_is_updating()) {
-            // Clock is receiving IR transmission, move to the next clock state.
+            // if (!connection_established()) {
+            //     // Clock is receiving IR transmission, move to the next clock state.
+            //     break;
+            // }
+            // play_splash_animation();
+            // reset_updating_flag();
+            // reset_connection_flag();
             break;
         }
 
@@ -136,10 +142,10 @@ void run_clock(void) {
         }
 
         // Handle a remote time update from the RTC.
-        if (get_clock_ticks() - last_rtc_update_time >= RTC_UPDATE_TIME) {
-            clock_update_time();
-            last_rtc_update_time = get_clock_ticks();
-        }
+        //if (get_clock_ticks() - last_rtc_update_time >= RTC_UPDATE_TIME) {
+         //   clock_update_time();
+         //   last_rtc_update_time = get_clock_ticks();
+        //}
 
         // Turn on the weather animation
         if (weather_is_set() && reached_new_minute() 
@@ -159,19 +165,28 @@ void run_clock(void) {
             last_animation_frame_time = get_clock_ticks();
         }
 
-        // If the weather animation is playing, turn it off after it's played 
-        // for long enough.
-        if (animation_is_playing() && (get_clock_ticks() - start_animation_time 
-                                            >= DISPLAY_ANIMATION_TIME)) {
-            stop_weather_animation();
+        // If an animation is playing, turn it off after it's played 
+        // for long enough (4 seconds).
+        if (animation_is_playing() && !alarm_is_playing() 
+                && (get_clock_ticks() - start_animation_time >= DISPLAY_ANIMATION_TIME)) {
+            stop_animation();
+            call_grid_redraw();
+        }
+		
+		// If an animation is playing, turn it off after it's played 
+        // for long enough (4 seconds).
+        if (animation_is_playing() && alarm_is_playing() 
+                && (get_clock_ticks() - start_animation_time >= PLAY_ALARM_TIME)) {
+            stop_animation();
             call_grid_redraw();
         }
 
         // Handle alarm
         if (alarm_is_set() && reached_alarm_time() && !alarm_is_playing()) {
             play_alarm_sound();
-            // play_alarm();
+            play_alarm_animation();
             start_alarm_time = get_clock_ticks();
+			start_animation_time = get_clock_ticks();
             reset_alarm_flag();
         }
 
@@ -180,6 +195,7 @@ void run_clock(void) {
         if (alarm_is_playing() && (get_clock_ticks() - start_alarm_time 
                                         >= PLAY_ALARM_TIME)) {
             stop_alarm_sound();
+            stop_animation();
         }
 
         // Handle brightness updating
@@ -224,14 +240,39 @@ void run_clock(void) {
 /* Handles settings & config updates via IR communication. */
 void update_clock(void) {
     uint32_t start_update_time = get_clock_ticks();
+    uint32_t last_animation_frame_time = start_update_time;
 
-    while (usart_enabled()) {
-        if (get_clock_ticks() - start_update_time < MAX_CLOCK_UPDATE_TIME) {
+    clear_display();
+
+    play_ir_animation();
+	call_grid_redraw();
+
+    while (usart_enabled() || (get_clock_ticks() - start_update_time < IR_LED_PLAYTIME)) {
+        if (get_clock_ticks() - start_update_time >= MAX_CLOCK_UPDATE_TIME) {
+            // ERROR IN UART COMMUNICATION
             disable_usart();
-            // TODO maybe raise an error flag?
+            stop_animation();
+            clear_display();
+
+			// Cancel this read
             return;
         }
+
+        // Display the IR animation
+        if (get_clock_ticks() - last_animation_frame_time >= IR_LED_DELAY) {
+            update_animation_frame();
+			call_grid_redraw();
+            last_animation_frame_time = get_clock_ticks();
+        }
+		
+		update_display();
+        apply_opacity();
+        show_display();
     }
+
+    stop_animation();
+
+    clear_display();
 
     // Filter out any errors from lossy IR transmission
     check_receive_buffer();
@@ -245,11 +286,20 @@ void update_clock(void) {
 
 /* The clock is gracefully stopped. */
 void reset_clock(void) {
-    if (eeprom_is_set()) {
+	disable_usart();
+	USART_flush();
+    reset_updating_flag();
+    reset_buffer_markers();
+    clear_receive_buffer();
+    
+    // Handle EEPROM writing
+    //if (eeprom_is_set()) {
+		eeprom_update_data();
         eeprom_write_data();
-    }
-    // TODO this logic
-    while (1) {     //hang the system
-    }
+    //}
+    // Update the RTC time
+    rtc_set_split_time(get_clock_hours(), get_clock_minutes(), get_clock_seconds());
+
+    // Clear the new reset flag
     disable_new_reset();
 }

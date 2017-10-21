@@ -38,13 +38,13 @@ void eeprom_update_data(void) {
 }
 
 void eeprom_set_data(void) {
-    // Enable/disable eeprom
-    if (data.eeprom_enabled == EMPTY_VALUE) {
-        disable_eeprom();
-        return;
-    } else {
-        enable_eeprom();
-    }
+    // // Enable/disable eeprom
+    // if (data.eeprom_enabled == EMPTY_VALUE) {
+    //     disable_eeprom();
+    //     //return;
+    // } else {
+    //     enable_eeprom();
+    // }
 
     // Set the weather data
     if (data.weather_one == EMPTY_VALUE || data.weather_two == EMPTY_VALUE) {

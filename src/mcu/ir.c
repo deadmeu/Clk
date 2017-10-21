@@ -17,9 +17,9 @@
  ****************************************************************************/
 
 #define BYTESTREAMS_RECV    5
-#define DATA_ELEMENTS       8
+#define DATA_ELEMENTS       6
 #define CHAR_BIT            8          // copied from <limits.h>
-#define BYTESTREAM_SIZE     8
+#define BYTESTREAM_SIZE     6
 #define EMPTY_VALUE      0xFF
 
 /*****************************************************************************
@@ -33,17 +33,18 @@
 static volatile uint8_t size_marker;
 static volatile uint8_t recv_marker;
 static volatile uint8_t updating_flag;
+static volatile uint8_t connection_flag;
 
 /*
  * Buffers.
  */
-uint8_t receive_buffer[BYTESTREAMS_RECV][BYTESTREAM_SIZE];
-uint8_t checked_buffer[BYTESTREAM_SIZE];
+static volatile uint8_t receive_buffer[BYTESTREAMS_RECV][BYTESTREAM_SIZE];
+static volatile uint8_t checked_buffer[BYTESTREAM_SIZE];
 
 /* 
  * Received bytestream struct 
  */
-bystream_t data;
+static volatile bystream_t data;
 
 /*****************************************************************************
  * Functions for handling the serial stream and data buffers.
@@ -54,46 +55,39 @@ bystream_t data;
  * element of the data pointer array. 
  */
 void init_ir(void) {
-    // Disable interrupts to ensure safe copy. Interrupts are only
-    // reenabled if they were enabled from the start.
-    uint8_t interrupts_enabled = bit_is_set(SREG, SREG_I);
+    // initialise UART
+    USART_init(UBRR_IR);
 
-    // Disable interrupts
-    cli();
-
-    UBRR0 = 0;
-    
-    /*
-     * Set frame format: 8 data, 2 stop bits.
-     */
-    UCSR0C = (1 << USBS0) | (1 << UCSZ00) | (1 << UCSZ01);
-
-    /*
-     * Flush the USART data register.
-     */
+    // Flush the USART data register.
     USART_flush();
 
-    /*
-     * Enable TX and RX and enable interrupt on receive.
-     * Enable interrupt on serial read.
-     */
-    UCSR0B = (1 << RXEN0) | (1 << TXEN0) | (1 << RXCIE0);    
-
-    /*
-     * Set the baud rate.
-     */
-    UBRR0H = (uint8_t) (UBRR_IR >> 8);
-    UBRR0L = (uint8_t) (UBRR_IR);
-
-    updating_flag = 0;
+    // Clear flags & buffers
+    reset_updating_flag();
     clear_receive_buffer();
+    reset_buffer_markers();
 
-    // Renable interrupts if they were enabled previously
-    if (interrupts_enabled) sei();
+    
+}
+
+uint8_t connection_established(void) {
+    return connection_flag;
 }
 
 uint8_t clock_is_updating(void) {
     return updating_flag;
+}
+
+void reset_updating_flag(void) {
+	updating_flag = 0;
+}
+
+void reset_connection_flag(void) {
+    connection_flag = 0;
+}
+
+void reset_buffer_markers(void) {
+    recv_marker = 0;
+    size_marker = 0;
 }
 
 /* 
@@ -147,12 +141,8 @@ void ir_update_data(void) {
     data.weather_two     = checked_buffer[WEATHER_TWO];
     data.time_alarm_hour = checked_buffer[ALARM_HOUR];
     data.time_alarm_mins = checked_buffer[ALARM_MINS];
-    data.time_alarm_secs = checked_buffer[ALARM_SECS];
     data.time_clock_hour = checked_buffer[CLOCK_HOUR];
     data.time_clock_mins = checked_buffer[CLOCK_MINS];
-    data.time_clock_secs = checked_buffer[CLOCK_SECS];
-
-
 }
 
 /* 
@@ -194,8 +184,7 @@ uint8_t increment_size_marker(void) {
 }
 
 uint8_t increment_recv_marker(void) {
-    recv_marker++;
-    if (recv_marker == BYTESTREAMS_RECV) {
+    if (++recv_marker == BYTESTREAMS_RECV) {
     /*
      * Wrap around.
      */
@@ -221,34 +210,42 @@ void ir_set_data(void) {
 
     // Set the alarm time data
     if (data.time_alarm_hour == EMPTY_VALUE 
-            || data.time_alarm_mins == EMPTY_VALUE 
-            || data.time_alarm_secs == EMPTY_VALUE) {
+            || data.time_alarm_mins == EMPTY_VALUE) {
         disable_alarm();
     } else {
         enable_alarm();
         set_split_alarm_time(data.time_alarm_hour, data.time_alarm_mins, 
-            data.time_alarm_secs);
+                                MIN_SECOND);
     }
 
     // Set the clock time data
     if (data.time_clock_hour == EMPTY_VALUE
-            || data.time_clock_mins == EMPTY_VALUE
-            || data.time_clock_secs == EMPTY_VALUE) {
+            || data.time_clock_mins == EMPTY_VALUE) {
         // If the clock time was was not transmitted correctly, 
         // reset the time to 0.
         set_split_clock_time(MIN_HOUR, MIN_MINUTE, MIN_SECOND);
     } else {
         set_split_clock_time(data.time_clock_hour, data.time_clock_mins, 
-                                data.time_clock_secs);
+                                MIN_SECOND);
     }
 }
 
-ISR(USART_RX_vect) {
-    // Enable clock updating flag
-    updating_flag = 1;
 
+
+ISR(USART_RX_vect) {
     if (usart_enabled()) {
-        if (add_byte_to_buffer(UDR0) == BUFFER_FULL) disable_usart();
+		// // Enable clock updating flag
+        updating_flag = 1;
+
+        uint8_t byte = UDR0;
+        // if (byte == 99) {
+        //     connection_flag = 1;
+        //     return;
+        // }
+
+        if (add_byte_to_buffer(byte) == BUFFER_FULL) {
+			disable_usart();
+		}
     }
 }
 
@@ -257,6 +254,11 @@ ISR(USART_RX_vect) {
  ****************************************************************************/
 
 void USART_init(uint32_t ubrr) {
+    // Disable interrupts to ensure safe copy. Interrupts are only
+    // reenabled if they were enabled from the start.
+    uint8_t interrupts_enabled = bit_is_set(SREG, SREG_I);
+
+    // Disable interrupts
     cli();
 
     /*
@@ -266,12 +268,7 @@ void USART_init(uint32_t ubrr) {
     UBRR0L = (uint8_t) (ubrr);
 
     /*
-     * Flush the USART data register.
-     */
-    USART_flush();
-
-    /*
-     * Enable TX, RX and interrupt on receive complete.
+     * Enable RX and interrupt on receive complete.
      */
     UCSR0B = (1 << RXEN0) | (1 << TXEN0) | (1 << RXCIE0);
 
@@ -280,8 +277,10 @@ void USART_init(uint32_t ubrr) {
      */
     UCSR0C = (1 << USBS0) | (3 << UCSZ00);
 
-    sei();
+    // Renable interrupts if they were enabled previously
+    if (interrupts_enabled) sei();
 }
+
 uint8_t USART_getc(void) {
     while (!(UCSR0A & (1 << RXC0))) {
     /*

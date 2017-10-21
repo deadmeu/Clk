@@ -30,10 +30,8 @@ typedef struct {
     wtype_t weather_two;
     uint8_t time_alarm_hour;
     uint8_t time_alarm_mins;
-    uint8_t time_alarm_secs;
     uint8_t time_clock_hour;
     uint8_t time_clock_mins;
-    uint8_t time_clock_secs;
 } bystream_t;
 
 typedef enum {
@@ -41,10 +39,8 @@ typedef enum {
     WEATHER_TWO,
     ALARM_HOUR,
     ALARM_MINS,
-    ALARM_SECS,
     CLOCK_HOUR,
-    CLOCK_MINS,
-    CLOCK_SECS
+    CLOCK_MINS
 } cbufindex_t;
 
 /*****************************************************************************
@@ -52,11 +48,15 @@ typedef enum {
  ****************************************************************************/
 
 void init_ir(void);
+void reset_buffer_markers(void);
 void clear_receive_buffer(void);
 void check_receive_buffer(void);
 void ir_update_data(void);
 void convert_endianness(uint8_t *dest, uint8_t *src, uint8_t size);
+void reset_updating_flag(void);
+void reset_connection_flag(void);
 
+uint8_t connection_established(void);
 uint8_t clock_is_updating(void);
 uint8_t increment_size_marker(void);
 uint8_t increment_recv_marker(void);
