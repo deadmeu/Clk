@@ -78,6 +78,7 @@ static uint8_t draw_grid_flag;
 static uint8_t meridiem_flag;
 static uint8_t usart_enabled_flag;
 
+// Initialises clock variables
 void init_clock(void) {
     init_leds();
     
@@ -118,6 +119,7 @@ void init_clock(void) {
     opacity = 30;
 }
 
+// Default values to be applied on a hard reset
 static void set_default_values(void) {
     time = MAX_TIME;
     alarm_time = 0;
@@ -127,14 +129,17 @@ static void set_default_values(void) {
 	play_splash_animation();
 }
 
+// Enable a hard reset
 void enable_new_reset(void) {
     new_reset_flag = 1;
 }
 
+// Disables a hard reset
 void disable_new_reset(void) {
     new_reset_flag = 0;
 }
 
+// Increments a second on the clock
 void increment_seconds(void) {
     // if (time++ == MAX_TIME) {
     //     set_time(0L);

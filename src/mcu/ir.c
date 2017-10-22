@@ -63,10 +63,9 @@ void init_ir(void) {
 
     // Clear flags & buffers
     reset_updating_flag();
+    reset_connection_flag();
     clear_receive_buffer();
     reset_buffer_markers();
-
-    
 }
 
 uint8_t connection_established(void) {
@@ -78,7 +77,7 @@ uint8_t clock_is_updating(void) {
 }
 
 void reset_updating_flag(void) {
-	updating_flag = 0;
+    updating_flag = 0;
 }
 
 void reset_connection_flag(void) {
@@ -233,19 +232,20 @@ void ir_set_data(void) {
 
 
 ISR(USART_RX_vect) {
+    uint8_t byte = UDR0;
+    
     if (usart_enabled()) {
-		// // Enable clock updating flag
+        // // Enable clock updating flag
         updating_flag = 1;
 
-        uint8_t byte = UDR0;
         // if (byte == 99) {
         //     connection_flag = 1;
         //     return;
         // }
 
         if (add_byte_to_buffer(byte) == BUFFER_FULL) {
-			disable_usart();
-		}
+            disable_usart();
+        }
     }
 }
 
@@ -270,7 +270,7 @@ void USART_init(uint32_t ubrr) {
     /*
      * Enable RX and interrupt on receive complete.
      */
-    UCSR0B = (1 << RXEN0) | (1 << TXEN0) | (1 << RXCIE0);
+    UCSR0B = (1 << RXEN0) | (1 << RXCIE0);
 
     /*
      * Set frame format: 8 data, 2 stop bits.
@@ -316,7 +316,7 @@ void USART_flush(void) {
     char dummy;
     while (UCSR0A & ( 1 << RXC0)) {
         dummy = UDR0;
-		dummy++;
+        dummy++;
     }
 }
 

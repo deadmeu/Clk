@@ -18,9 +18,9 @@
 # FUSES ........ Parameters for avrdude to flash the fuses appropriately.
 
 DEVICE     = atmega328p
-CLOCK      = 8000000
-PROGRAMMER = #-c stk500v2 -P avrdoper
-OBJECTS    = main.o i2c_lib/i2c_master.o serialio/serialio.o
+CLOCK      = 8000000L
+PROGRAMMER = -c avrisp2
+OBJECTS    = project.o light_ws2812.o i2c_lib/i2c_master.o clock.o ir.o ldr.o ledarray.o animation.o rtc.o timer.o sound.o progmem.o
 FUSES      = -U lfuse:w:0xe2:m -U hfuse:w:0xd9:m -U efuse:w:0xff:m
 
 # ATMega8 fuse bits used above (fuse bits for other devices are different!):
@@ -49,10 +49,10 @@ FUSES      = -U lfuse:w:0xe2:m -U hfuse:w:0xd9:m -U efuse:w:0xff:m
 # Tune the lines below only if you know what you are doing:
 
 AVRDUDE = avrdude $(PROGRAMMER) -p $(DEVICE)
-COMPILE = avr-gcc -std=gnu99 -Wall -Os -DF_CPU=$(CLOCK) -mmcu=$(DEVICE)
+COMPILE = avr-gcc -Wall -Os -DF_CPU=$(CLOCK) -mmcu=$(DEVICE)
 
 # symbolic targets:
-all:	main.hex
+all:	mcu.hex
 
 .c.o:
 	$(COMPILE) -c $< -o $@
@@ -68,7 +68,7 @@ all:	main.hex
 	$(COMPILE) -S $< -o $@
 
 flash:	all
-	$(AVRDUDE) -U flash:w:main.hex:i
+	$(AVRDUDE) -U flash:w:mcu.hex:i
 
 fuse:
 	$(AVRDUDE) $(FUSES)
@@ -78,25 +78,25 @@ install: flash fuse
 
 # if you use a bootloader, change the command below appropriately:
 load: all
-	bootloadHID main.hex
+	bootloadHID mcu.hex
 
 clean:
-	rm -f main.hex main.elf $(OBJECTS)
+	rm -f mcu.hex mcu.elf $(OBJECTS)
 
 # file targets:
-main.elf: $(OBJECTS)
-	$(COMPILE) -o main.elf $(OBJECTS)
+mcu.elf: $(OBJECTS)
+	$(COMPILE) -o mcu.elf $(OBJECTS)
 
-main.hex: main.elf
-	rm -f main.hex
-	avr-objcopy -j .text -j .data -O ihex main.elf main.hex
-	avr-size --format=avr --mcu=$(DEVICE) main.elf
+mcu.hex: mcu.elf
+	rm -f mcu.hex
+	avr-objcopy -j .text -j .data -O ihex mcu.elf mcu.hex
+	avr-size --format=avr --mcu=$(DEVICE) mcu.elf
 # If you have an EEPROM section, you must also create a hex file for the
 # EEPROM and add it to the "flash" target.
 
 # Targets for code debugging and analysis:
-disasm:	main.elf
-	avr-objdump -d main.elf
+disasm:	mcu.elf
+	avr-objdump -d mcu.elf
 
 cpp:
 	$(COMPILE) -E main.c
