@@ -35,7 +35,7 @@
 #define SECOND_INCREMENT_TIME       1000    // 1 second
 #define IR_LED_PLAYTIME             1500    // 1 second
 #define IR_LED_DELAY                250     // 250 ms
-#define SPLASH_PLAY_TIME            4000    // 4 seconds
+// #define SPLASH_PLAY_TIME            4000    // 4 seconds
 
 void initialise_hardware(void);
 void initialise_clock(void);
@@ -71,11 +71,11 @@ void initialise_hardware(void) {
     init_ldr();
 
     // Setup RTC for timekeeping
-    //init_rtc();
+    init_rtc();
 
-    //if (!rtc_started()) {
-    //    // Error with starting the RTC.
-    //}
+    if (!rtc_started()) {
+       // Error with starting the RTC.
+    }
 
     // Setup UART and IR data buffers
     init_ir();
@@ -94,7 +94,7 @@ void initialise_clock(void) {
     eeprom_set_data();
     enable_eeprom();
 
-    //clock_update_time();
+    clock_update_time();
 
     enable_usart();
 }
@@ -120,13 +120,13 @@ void run_clock(void) {
 
     while (1) {
         if (clock_is_updating()) {
-            // if (!connection_established()) {
-            //     // Clock is receiving IR transmission, move to the next clock state.
-            //     break;
-            // }
-            // play_splash_animation();
-            // reset_updating_flag();
-            // reset_connection_flag();
+            if (!connection_established()) {
+                // Clock is receiving IR transmission, move to the next clock state.
+                break;
+            }
+            play_splash_animation();
+            reset_updating_flag();
+            reset_connection_flag();
             break;
         }
 
@@ -144,10 +144,10 @@ void run_clock(void) {
         }
 
         // Handle a remote time update from the RTC.
-        //if (get_clock_ticks() - last_rtc_update_time >= RTC_UPDATE_TIME) {
-         //   clock_update_time();
-         //   last_rtc_update_time = get_clock_ticks();
-        //}
+        if (get_clock_ticks() - last_rtc_update_time >= RTC_UPDATE_TIME) {
+           clock_update_time();
+           last_rtc_update_time = get_clock_ticks();
+        }
 
         // Turn on the weather animation
         if (weather_is_set() && reached_new_minute() 

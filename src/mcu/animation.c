@@ -110,10 +110,12 @@ pcol_t frames_splash[ANIMATION_FRAMES][GRID_LEDS] = {
 
 uint8_t frame_count;
 
+// Sets the frame counter to 0
 void reset_frame_count(void) {
     frame_count = 0;
 }
 
+// Moves the frame counter to the next available frame
 uint8_t incr_frame_count(void) {
     if (++frame_count > ANIMATION_FRAMES-1) {
         frame_count = 0;
@@ -121,6 +123,7 @@ uint8_t incr_frame_count(void) {
     return frame_count;
 }
 
+// Returns the colour for a pixel based on the weather and index
 pcol_t get_frame_pixel(wtype_t weather, uint8_t i) {
     switch(weather) {
         case SUNNY : return frames_sunny[frame_count][i];
@@ -132,14 +135,17 @@ pcol_t get_frame_pixel(wtype_t weather, uint8_t i) {
     }
 }
 
+// Returns the colour for a pixel from the IR animation based on index
 pcol_t get_ir_frame_pixel(uint8_t i) {
     return frames_ir[frame_count][i];
 }
 
+// Returns the colour for a pixel from the alarm animation based on index
 pcol_t get_alarm_frame_pixel(uint8_t i) {
     return frames_alarm[frame_count][i];
 }
 
+// Returns the colour for a pixel from the splash animation based on index
 pcol_t get_splash_frame_pixel(uint8_t i) {
     return frames_splash[frame_count][i];
 }
