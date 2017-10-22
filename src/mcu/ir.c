@@ -234,14 +234,14 @@ void ir_set_data(void) {
 ISR(USART_RX_vect) {
     uint8_t byte = UDR0;
     
-    if (usart_enabled()) {
+    if (usart_enabled() && !connection_established()) {
         // // Enable clock updating flag
         updating_flag = 1;
 
-        // if (byte == 99) {
-        //     connection_flag = 1;
-        //     return;
-        // }
+        if (byte == 99) {
+            connection_flag = 1;
+            return;
+        }
 
         if (add_byte_to_buffer(byte) == BUFFER_FULL) {
             disable_usart();

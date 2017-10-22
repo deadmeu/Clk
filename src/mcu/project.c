@@ -111,6 +111,7 @@ void run_clock(void) {
     uint32_t start_animation_time;
     uint32_t last_animation_frame_time;
     uint32_t start_alarm_time;
+	//uint32_t start_connection_time;
 
     /* Set the time-tracking variables to the current time. */
     last_clock_tick_time = last_display_time = last_hour_marker_display_time 
@@ -127,7 +128,7 @@ void run_clock(void) {
             play_splash_animation();
             reset_updating_flag();
             reset_connection_flag();
-            break;
+			//break;
         }
 
         // Handle new second
@@ -247,6 +248,7 @@ void update_clock(void) {
     clear_display();
 
     play_ir_animation();
+	sound_off();
     call_grid_redraw();
 
     while (usart_enabled() || (get_clock_ticks() - start_update_time < IR_LED_PLAYTIME)) {
@@ -291,6 +293,7 @@ void reset_clock(void) {
     disable_usart();
     USART_flush();
     reset_updating_flag();
+	reset_connection_flag();
     reset_buffer_markers();
     clear_receive_buffer();
     
