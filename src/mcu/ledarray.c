@@ -2,6 +2,9 @@
  * ledarray.c
  *
  * Written by Alex Subaric.
+ * The software uses a library that is licensed under GNU GPL Version 3.
+ * A copy of this library can be found at 
+ * https://github.com/cpldcpu/light_ws2812.
  */ 
 
 #include <avr/io.h>
