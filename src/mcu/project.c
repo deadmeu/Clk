@@ -2,6 +2,8 @@
  * project.c
  *
  * Written by Alex Subaric.
+ * The license conditions and warranties of this software can be found at
+ * http://www.nongnu.org/avr-libc/LICENSE.txt
  */
 
 #include <avr/io.h>
