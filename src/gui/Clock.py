@@ -15,7 +15,7 @@
 
 #####################################
 # Imports Below                     #
-#####################################
+####################################
 
 import tkinter as tk
 from tkinter import *
@@ -955,12 +955,10 @@ def getPorts():
             dongleCurrent = True
         connected.append(p.device)
         i += 1
-    print("Connected COM ports: " + str(connected))
 
     serial_ports = connected
     try:
         port = serial_ports[default]
-        print("port set to: " + port)
     except Exception as e: print(e)
         #print("no devices found")
 
@@ -995,7 +993,8 @@ def dongleConnected():
             if "USB Serial Port" in p.description:
                 dongle = True
                 port = p.device
-                getPortList()
+                if(not dongleCurrent):
+                    getPortList()
                 break
         dongleCurrent = dongle
 def dongleConnectSend():
