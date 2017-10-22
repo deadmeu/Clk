@@ -7,6 +7,7 @@
  * found at
  * http://homepage.hispeed.ch/peterfleury/doxygen/avr-gcc-libraries/group__\
  * pfleury__ic2master.html
+ * This software uses libraries licensed under GNU GPL Version 3.
  */
 
 #include <avr/io.h>
