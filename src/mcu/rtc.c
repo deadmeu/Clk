@@ -3,6 +3,11 @@
  *
  * Written by Huy Nguyen.
  * Modified by Alex Subaric.
+ * A copy of the i2c library used to implement this functionality can be
+ * found at
+ * http://homepage.hispeed.ch/peterfleury/doxygen/avr-gcc-libraries/group__\
+ * pfleury__ic2master.html
+ * This software uses libraries licensed under GNU GPL Version 3.
  */
 
 #include <avr/io.h>

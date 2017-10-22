@@ -5,7 +5,9 @@ ENGG2800 2017 TEAM01 Software
 ==============================================================================================
 Installing the Software
 ==============================================================================================
-1. 
+1. Right-click "install.bat" and select "run as administrator"
+2. When the script has completed there will be a shortcut on your desktop called "Clock"
+3. Double click to run the Clock software
 
 ==============================================================================================
 Using the GUI
@@ -78,6 +80,5 @@ Building software
 ==============================================================================================
 1. Make sure that python 3.X is installed on your machine
 2. run "install-libs.bat" to install the required libraries
-3. run "build.bat" to compile the python script and libraries into an .EXE in the "dist"
-   folder
+3. run "build.bat" to compile the python script and libraries into an .EXE in the "dist" folder
 ==============================================================================================

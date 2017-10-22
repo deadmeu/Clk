@@ -7,7 +7,10 @@
 #                                                                 #
 #   Student Number: 43948378                                      #
 #   Student Name: Barney Whiteman                                 #
-#                                                                 #
+#   This software uses libraries licensed under the               #
+#   GNU General Public License Version 2.                         #
+#   https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html     #
+#   Disclaimer: This software is provided without any warranty.   #
 ###################################################################
 
 #####################################
