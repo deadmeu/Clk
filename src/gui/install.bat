@@ -1,5 +1,6 @@
 @echo off
 
+del "C:\Program Files\Clock"
 mkdir "C:\Program Files\Clock"
 
 xcopy "%~dp0dist\Clock.exe" "C:\Program Files\Clock"
@@ -18,4 +19,7 @@ echo oLink.Save >> %SCRIPT%
 
 cscript /nologo %SCRIPT%
 del %SCRIPT%
+
+xcopy "%USERPROFILE%\Desktop\Clock.lnk" "%USERPROFILE%\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Clock"
+
 pause
