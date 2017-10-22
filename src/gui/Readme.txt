@@ -5,7 +5,9 @@ ENGG2800 2017 TEAM01 Software
 ==============================================================================================
 Installing the Software
 ==============================================================================================
-1. 
+1. Right-click "install.bat" and select "run as administrator"
+2. When the script has completed there will be a shortcut on your desktop called "Clock"
+3. Double click to run the Clock software
 
 ==============================================================================================
 Using the GUI
