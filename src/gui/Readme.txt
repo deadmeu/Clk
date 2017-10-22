@@ -78,6 +78,5 @@ Building software
 ==============================================================================================
 1. Make sure that python 3.X is installed on your machine
 2. run "install-libs.bat" to install the required libraries
-3. run "build.bat" to compile the python script and libraries into an .EXE in the "dist"
-   folder
+3. run "build.bat" to compile the python script and libraries into an .EXE in the "dist" folder
 ==============================================================================================

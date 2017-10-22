@@ -7,7 +7,8 @@
 #                                                                 #
 #   Student Number: 43948378                                      #
 #   Student Name: Barney Whiteman                                 #
-#                                                                 #
+#   This software uses libraries licensed under the               #
+#   GNU General Public License Version 2.                         #
 ###################################################################
 
 #####################################
