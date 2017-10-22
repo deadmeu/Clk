@@ -33,7 +33,7 @@
 #define SECOND_INCREMENT_TIME       1000    // 1 second
 #define IR_LED_PLAYTIME             1500    // 1 second
 #define IR_LED_DELAY                250     // 250 ms
-#define SPLASH_PLAY_TIME			4000	// 4 seconds
+#define SPLASH_PLAY_TIME            4000    // 4 seconds
 
 void initialise_hardware(void);
 void initialise_clock(void);
@@ -90,17 +90,17 @@ void initialise_clock(void) {
 
     eeprom_read_data();
     eeprom_set_data();
-	enable_eeprom();
+    enable_eeprom();
 
-	//clock_update_time();
+    //clock_update_time();
 
-	enable_usart();
+    enable_usart();
 }
 
 /* Handles the main clock program (displaying time, animations, alarm, etc.) */
 void run_clock(void) {
-	/* Variables used for tracking time-delayed events. */
-	uint32_t start_splash_time;
+    /* Variables used for tracking time-delayed events. */
+    uint32_t start_splash_time;
     uint32_t last_clock_tick_time;
     uint32_t last_display_time;
     uint32_t last_hour_marker_display_time;
@@ -109,8 +109,8 @@ void run_clock(void) {
     uint32_t start_animation_time;
     uint32_t last_animation_frame_time;
     uint32_t start_alarm_time;
-	
-	/* Set the time-tracking variables to the current time. */
+
+    /* Set the time-tracking variables to the current time. */
     last_clock_tick_time = last_display_time = last_hour_marker_display_time 
             = last_opacity_update_time = start_animation_time = start_alarm_time
             = last_rtc_update_time =  last_animation_frame_time = start_splash_time
@@ -172,8 +172,8 @@ void run_clock(void) {
             stop_animation();
             call_grid_redraw();
         }
-		
-		// If an animation is playing, turn it off after it's played 
+
+        // If an animation is playing, turn it off after it's played 
         // for long enough (4 seconds).
         if (animation_is_playing() && alarm_is_playing() 
                 && (get_clock_ticks() - start_animation_time >= PLAY_ALARM_TIME)) {
@@ -186,7 +186,7 @@ void run_clock(void) {
             play_alarm_sound();
             play_alarm_animation();
             start_alarm_time = get_clock_ticks();
-			start_animation_time = get_clock_ticks();
+            start_animation_time = get_clock_ticks();
             reset_alarm_flag();
         }
 
@@ -245,7 +245,7 @@ void update_clock(void) {
     clear_display();
 
     play_ir_animation();
-	call_grid_redraw();
+    call_grid_redraw();
 
     while (usart_enabled() || (get_clock_ticks() - start_update_time < IR_LED_PLAYTIME)) {
         if (get_clock_ticks() - start_update_time >= MAX_CLOCK_UPDATE_TIME) {
@@ -254,18 +254,18 @@ void update_clock(void) {
             stop_animation();
             clear_display();
 
-			// Cancel this read
+            // Cancel this read
             return;
         }
 
         // Display the IR animation
         if (get_clock_ticks() - last_animation_frame_time >= IR_LED_DELAY) {
             update_animation_frame();
-			call_grid_redraw();
+            call_grid_redraw();
             last_animation_frame_time = get_clock_ticks();
         }
-		
-		update_display();
+
+        update_display();
         apply_opacity();
         show_display();
     }
@@ -286,15 +286,15 @@ void update_clock(void) {
 
 /* The clock is gracefully stopped. */
 void reset_clock(void) {
-	disable_usart();
-	USART_flush();
+    disable_usart();
+    USART_flush();
     reset_updating_flag();
     reset_buffer_markers();
     clear_receive_buffer();
     
     // Handle EEPROM writing
     //if (eeprom_is_set()) {
-		eeprom_update_data();
+        eeprom_update_data();
         eeprom_write_data();
     //}
     // Update the RTC time
