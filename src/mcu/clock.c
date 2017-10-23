@@ -100,11 +100,6 @@ void init_clock(void) {
     // weather animation frame reset
     reset_frame_count();
 
-    // if (is_new_reset() || !eeprom_is_set()) {
-    //    set_default_values();
-    // }
-    
-    // TODO 
 	if (is_new_reset()) {
 		set_default_values();
 	}
@@ -142,9 +137,6 @@ void disable_new_reset(void) {
 
 // Increments a second on the clock
 void increment_seconds(void) {
-    // if (time++ == MAX_TIME) {
-    //     set_time(0L);
-    // }
     time = (time + 1) % (MAX_TIME + 1);
     
     update_new_minute_flag();

@@ -194,7 +194,6 @@ static void set_data(uint8_t addr, uint8_t value) {
 
 // Returns the rtc time (in seconds)
 uint32_t rtc_get_time(void) {
-    //return (uint32_t)read_hours()*3600 + read_minutes()*60 + read_seconds();
 	return CONV_TIME(read_hours(), read_minutes(), read_seconds());
 }
 

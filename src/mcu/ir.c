@@ -131,16 +131,6 @@ void check_receive_buffer(void) {
  * Copies each data block of the checked buffer into the data struct. 
  */
 void ir_update_data(void) {
-    // uint16_t byte_offset = 0;
-    // uint8_t temp[sizeof(uint32_t)];
-
-    // for (uint8_t i = 0; i < DATA_ELEMENTS; i++) {
-    //     convert_endianness(temp, checked_buffer + byte_offset, 
-    //             data_size_array[i]);
-    //     memcpy(p_data[i], temp, data_size_array[i]);
-    //     byte_offset += data_size_array[i];
-    // }
-
     data.weather_one     = checked_buffer[WEATHER_ONE];
     data.weather_two     = checked_buffer[WEATHER_TWO];
     data.time_alarm_hour = checked_buffer[ALARM_HOUR];

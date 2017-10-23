@@ -58,7 +58,6 @@ void init_timer1(void) {
     /*
 	Using OC1A, so B1 needs to be output.
 	*/
-	// DDRB   |= (1 << PORTB1);
 	TCCR1A |= (1 << COM1A0);
 	TCCR1B |= (1 << CS10) | (1 << WGM12);
     TCNT1   = (0x00);

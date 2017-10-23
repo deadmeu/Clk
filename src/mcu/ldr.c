@@ -37,19 +37,8 @@ uint8_t get_ldr_opacity(void) {
     result = (adc_value > ADC_MAX) ? ADC_MAX : adc_value;
     result = (adc_value < ADC_MIN) ? ADC_MIN : adc_value;
 
-    //return result/10;
-
     // Convert result from ADC value range to opacity value range
-    // result = (((result - ADC_MIN) * OPACITY_RANGE) / ADC_RANGE) + MIN_OPACITY;
     result = (result - ADC_MIN) * (OPACITY_RANGE*100 / ADC_RANGE) / 100 * AMBIENT_MULTIPLIER + MIN_OPACITY;    
-	
-	// if (result < 10) {
-	// 	set_meridiem_colours(1, 255,0,0);
-	// } else if (result >95 ) {
-	// 	set_meridiem_colours(1, 0,255,0);
-	// } else {
-	// 	set_meridiem_colours(1, 0, 0, 255);
-	// }
 
     return (uint8_t) result;
 }
@@ -63,8 +52,6 @@ static uint16_t adc_read(uint8_t pin) {
     // Disable interrupts
     cli();
 
-    //ADMUX &= 0xF0;
-    //ADMUX &= 0x87;
     ADMUX &= 0xF8;
     ADMUX |= pin;
 
