@@ -68,22 +68,27 @@ void init_ir(void) {
     reset_buffer_markers();
 }
 
+// Returns true if an IR connection is made
 uint8_t connection_established(void) {
     return connection_flag;
 }
 
+// Returns true if the clock is updating from IR
 uint8_t clock_is_updating(void) {
     return updating_flag;
 }
 
+// Clears the IR updating flag
 void reset_updating_flag(void) {
     updating_flag = 0;
 }
 
+// Clears the connection flag
 void reset_connection_flag(void) {
     connection_flag = 0;
 }
 
+// Resets the IR buffer markers
 void reset_buffer_markers(void) {
     recv_marker = 0;
     size_marker = 0;
@@ -154,6 +159,7 @@ void convert_endianness(uint8_t *dest, uint8_t *src, uint8_t size) {
     }
 }
 
+// Adds a given byte to the IR receive buffer
 uint8_t add_byte_to_buffer(uint8_t value) {
     receive_buffer[recv_marker][size_marker] = value;
     return increment_size_marker();
@@ -182,6 +188,7 @@ uint8_t increment_size_marker(void) {
     return 0;
 }
 
+// Increments the value of the receive buffer
 uint8_t increment_recv_marker(void) {
     if (++recv_marker == BYTESTREAMS_RECV) {
     /*
@@ -197,7 +204,7 @@ uint8_t increment_recv_marker(void) {
  * Functions for extracting data from the buffer and updating the clock's
  * state.
  ****************************************************************************/
-
+// Updates the received IR data to the clock data
 void ir_set_data(void) {
     // Set the weather data
     if (data.weather_one == EMPTY_VALUE || data.weather_two == EMPTY_VALUE) {
@@ -229,8 +236,7 @@ void ir_set_data(void) {
     }
 }
 
-
-
+// The interrupt function used in UART communication
 ISR(USART_RX_vect) {
     uint8_t byte = UDR0;
     
@@ -252,7 +258,7 @@ ISR(USART_RX_vect) {
 /*****************************************************************************
  * Functions to handle serial communication.
  ****************************************************************************/
-
+// Initialises UART
 void USART_init(uint32_t ubrr) {
     // Disable interrupts to ensure safe copy. Interrupts are only
     // reenabled if they were enabled from the start.
@@ -281,6 +287,7 @@ void USART_init(uint32_t ubrr) {
     if (interrupts_enabled) sei();
 }
 
+// Gets a char from UART
 uint8_t USART_getc(void) {
     while (!(UCSR0A & (1 << RXC0))) {
     /*
@@ -290,6 +297,7 @@ uint8_t USART_getc(void) {
     return UDR0;
 }
 
+// Puts a char to UART
 void USART_putc(uint8_t data) {
     while (!(UCSR0A & (1 << UDRE0))) {
     /*
@@ -299,6 +307,7 @@ void USART_putc(uint8_t data) {
     UDR0 = data;
 }
 
+// Puts a string to UART
 void USART_puts(char *data) {
     while (!(UCSR0A & (1 << UDRE0))) {
     /*
@@ -312,6 +321,7 @@ void USART_puts(char *data) {
     USART_putc('\n');
 }
 
+// Flushes the UART buffer
 void USART_flush(void) {
     char dummy;
     while (UCSR0A & ( 1 << RXC0)) {
@@ -324,7 +334,7 @@ void USART_flush(void) {
  * Functions to handle the message buffer.
  * The buffer is a matrix / 2d array of characters.
  ****************************************************************************/
-
+// Prints the contents of the buffer
 void print_buffer(void) {
     cursor_to_top_left();
     for (int i = 0; i < BYTESTREAMS_RECV; i++) {
@@ -345,7 +355,7 @@ void print_buffer(void) {
 /*****************************************************************************
  * Functions to handle terminal io.
  ****************************************************************************/
-
+// Makes the terminal looks good
 void initialise_terminal(void) {
     /*
      * Clear the screen.
@@ -358,6 +368,7 @@ void initialise_terminal(void) {
     USART_puts("\033[?25l");
 }
 
+// Move the cursor to the top left of the terminal
 void cursor_to_top_left(void) {
     USART_puts("\033[H");
 }

@@ -10,6 +10,8 @@
 #include <stdint.h>
 #include "unique_types.h"
 
+#define OFFSET_ADDR			0x00
+
 typedef struct {
     uint8_t eeprom_enabled;
     wtype_t weather_one;
@@ -28,15 +30,15 @@ typedef struct {
 typedef enum {
     EEPROM_MIN_ADDR  = 0x0000,
     EEPROM_MAX_ADDR  = 0x0400,   // the atmega328p has 1024 bytes of eeprom
-    EEPROM_META_ADDR = 0x0000,
-    WEATHER_ONE_ADDR = 0x0001,
-    WEATHER_TWO_ADDR = 0x0002,
-    ALARM_HOUR_ADDR  = 0x0003,
-    ALARM_MINS_ADDR  = 0x0004,
-    ALARM_SECS_ADDR  = 0x0005, 
-    CLOCK_HOUR_ADDR  = 0x0006,
-    CLOCK_MINS_ADDR  = 0x0007,
-    CLOCK_SECS_ADDR  = 0x0008
+    EEPROM_META_ADDR = 0x0000+OFFSET_ADDR,
+    WEATHER_ONE_ADDR = 0x0001+OFFSET_ADDR,
+    WEATHER_TWO_ADDR = 0x0002+OFFSET_ADDR,
+    ALARM_HOUR_ADDR  = 0x0003+OFFSET_ADDR,
+    ALARM_MINS_ADDR  = 0x0004+OFFSET_ADDR,
+    ALARM_SECS_ADDR  = 0x0005+OFFSET_ADDR, 
+    CLOCK_HOUR_ADDR  = 0x0006+OFFSET_ADDR,
+    CLOCK_MINS_ADDR  = 0x0007+OFFSET_ADDR,
+    CLOCK_SECS_ADDR  = 0x0008+OFFSET_ADDR
 } pmemaddr_t;
 
 typedef enum { EEPROM_DISABLED, EEPROM_ENABLED } eep_t;

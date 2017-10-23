@@ -15,7 +15,7 @@
 #include "animation.h"
 #include "pixel_colour.h"
 
-#define CONV_TIME(h, m, s)      (((uint32_t)h*(uint32_t)3600) + ((uint32_t)m*(uint32_t)60) + (uint32_t)s)
+
 #define HOURS(t)                (t / 3600)
 #define MINUTES(t)              ((t - 3600 * HOURS(t)) / 60)
 #define SECONDS(t)              ((t - 3600 * HOURS(t)) - 60 * MINUTES(t))
@@ -100,14 +100,14 @@ void init_clock(void) {
     // weather animation frame reset
     reset_frame_count();
 
-    if (is_new_reset() || !eeprom_is_set()) {
-       set_default_values();
-    }
+    // if (is_new_reset() || !eeprom_is_set()) {
+    //    set_default_values();
+    // }
     
     // TODO 
-	// if (is_new_reset()) {
-	// 	set_default_values();
-	// }
+	if (is_new_reset()) {
+		set_default_values();
+	}
 
     update_meridiem();
 
@@ -115,6 +115,7 @@ void init_clock(void) {
     total_animation_loops = 0;
     ir_animation_flag = 0;
     alarm_animation_flag = 0;
+    alarm_playing_flag = 0;
 
     opacity = 30;
 }
@@ -156,12 +157,14 @@ void increment_seconds(void) {
     }
 }
 
+// Toggle when a new minute is set
 void update_new_minute_flag(void) {
     if (SECONDS(time) % 60 == 0) {
         new_minute_flag = 1;
     }
 }
 
+// Update the clock time to the rtc time
 uint8_t clock_update_time(void) {
     if (!rtc_running()) return 0;
 
@@ -177,14 +180,17 @@ uint8_t clock_update_time(void) {
     return 1;
 }
 
+// Returns true if the previously checked time is different to the current time
 uint8_t clock_time_changed(void) {
     return time_changed_flag;
 }
 
+// Clears the reset time flag
 void reset_time_changed_flag(void) {
     time_changed_flag = 0;
 }
 
+// Set the colours for AM/PM
 void set_meridiem_colours(merid_t merid, pcol_t col) {
     if (merid != ANTE && merid != POST) {
         return;
@@ -192,29 +198,35 @@ void set_meridiem_colours(merid_t merid, pcol_t col) {
     meridiem_colours[merid] = col;
 }
 
+// Updates the AM/PM meridiem
 void update_meridiem(void) {
     meridiem_flag = (time < MID_DAY_TIME) ? ANTE : POST;
 }
 
+// Enable the playing of the IR animation
 void play_ir_animation(void) {
     play_animation();
     ir_animation_flag = 1;
 }
 
+// Enable the playing of the splash animation
 void play_splash_animation(void) {
     play_animation();
     splash_animation_flag = 1;
 }
 
+// Returns true if the splash animation is playing
 uint8_t splash_playing(void) {
 	return splash_animation_flag;
 }
 
+// Enable the playing of the alarm animation
 void play_alarm_animation(void) {
     play_animation();
     alarm_animation_flag = 1;
 }
 
+// Enable the playing of the weather animation
 void play_weather_animation(void) {
     play_animation();
     playing_weather_index = 0;
@@ -222,15 +234,18 @@ void play_weather_animation(void) {
     update_playing_weather();
 }
 
+// Enable animations
 void play_animation(void) {
     animation_flag = 1;
     reset_frame_count();
 }
 
+// Updates the currently playing weather
 void update_playing_weather(void) {
     playing_weather = current_weather[playing_weather_index];
 }
 
+// Disables all animations
 void stop_animation(void) {
     animation_flag = 0;
     ir_animation_flag = 0;
@@ -238,143 +253,178 @@ void stop_animation(void) {
     splash_animation_flag = 0;
 }
 
+// Plays the alarm sound
 void play_alarm_sound(void) {
     alarm_playing_flag = 1;
 }
 
+// Stops the alarm sound
 void stop_alarm_sound(void) {
     alarm_playing_flag = 0;
 }
 
+// Queues the redrawing of the ring LEDs
 void call_ring_redraw(void) {
     draw_ring_flag = 1;
 }
 
+// Queues the redrawing of the grid LEDs
 void call_grid_redraw(void) {
     draw_grid_flag = 1;
 }
 
+// Returns true if a ring redraw should take place
 uint8_t redraw_ring_needed(void) {
     return draw_ring_flag;
 }
 
+// Returns true if a grid redraw should take place
 uint8_t redraw_grid_needed(void) {
     return draw_grid_flag;
 }
 
+// Returns the hard reset flag
 uint8_t is_new_reset(void) {
     return new_reset_flag;
 }
 
+// Returns true if alarm is playing
 uint8_t alarm_is_playing(void) {
     return alarm_playing_flag;
 }
 
+// Returns true if animation is playing
 uint8_t animation_is_playing(void) {
     return animation_flag;
 }
 
+// Returns true if an alarm is set
 uint8_t alarm_is_set(void) {
     return alarm_set_flag;
 }
 
+// Returns true if eeprom is enabled
 uint8_t eeprom_is_set(void) {
     return eeprom_set_flag;
 }
 
+// Returns true if the weather is set
 uint8_t weather_is_set(void) {
     return weather_set_flag;
 }
 
+// Returns true if usart is enabled
 uint8_t usart_enabled(void) {
     return usart_enabled_flag;
 }
 
+// Returns true if a new minute has been reached
 uint8_t reached_new_minute(void) {
     return new_minute_flag;
 }
 
+// Returns true if the alarm time has been reached
 uint8_t reached_alarm_time(void) {
     return alarm_flag;
 }
 
+// Returns the seconds value of the alarm time
 uint8_t get_alarm_seconds(void) {
     return SECONDS(alarm_time);
 }
 
+// Returns the minutes value of the alarm time
 uint8_t get_alarm_minutes(void) {
     return MINUTES(alarm_time);
 }
 
+// Returns the hours value of the alarm time
 uint8_t get_alarm_hours(void) {
     return HOURS(alarm_time);
 }
 
+// Returns the seconds value of the clock time
 uint8_t get_clock_seconds(void) {
     return SECONDS(time);
 }
 
+// Returns the minutes value of the clock time
 uint8_t get_clock_minutes(void) {
     return MINUTES(time);
 }
 
+// Returns the hours value of the clock time
 uint8_t get_clock_hours(void) {
     return HOURS(time);
 }
 
+// Returns the clock time (in seconds)
 uint32_t get_time(void) {
     return time;
 }
 
+// Disables the alarm set flag
 void disable_alarm(void) {
     alarm_set_flag = 0;
 }
 
+// Enables the alarm set flag
 void enable_alarm(void) {
     alarm_set_flag = 1;
 }
 
+// Enables the usart flag
 void enable_usart(void) {
     usart_enabled_flag = 1;
 }
 
+// Disables the usart flag
 void disable_usart(void) {
     usart_enabled_flag = 0;
 }
 
+// Disables the weather set flag
 void disable_weather(void) {
     weather_set_flag = 0;
 }
 
+// Enables the weather set flag
 void enable_weather(void) {
     weather_set_flag = 1;
 }
 
+// Disables the eeprom flag
 void disable_eeprom(void) {
     eeprom_set_flag = 0;
 }
 
+// Enables the eeprom
 void enable_eeprom(void) {
     eeprom_set_flag = 1;
 }
 
+// Clears the ring redraw flag
 void reset_ring_redraw(void) {
     draw_ring_flag = 0;
 }
 
+// Clears the grid redraw flag
 void reset_grid_redraw(void) {
     draw_grid_flag = 0;
 }
 
+// Clears both grid and ring redraw flags
 void reset_redraw_flags(void) {
     reset_ring_redraw();
     reset_grid_redraw();
 }
 
+// Clears the new minute flag
 void reset_minute_flag(void) {
     new_minute_flag = 0;
 }
 
+// Clears the alarm flag
 void reset_alarm_flag(void) {
     alarm_flag = 0;
 }
@@ -391,6 +441,7 @@ uint8_t set_time(uint32_t new_time) {
     return 1;
 }
 
+// Sets the clock time using the supplied hour,min,second arguments
 uint8_t set_split_clock_time(uint8_t h, uint8_t m, uint8_t s) {
     if (!(h >= MIN_HOUR && h <= MAX_HOUR && m >= MIN_MINUTE && m <= MAX_MINUTE 
             && s >= MIN_SECOND && s < MAX_SECOND)) {
@@ -401,6 +452,7 @@ uint8_t set_split_clock_time(uint8_t h, uint8_t m, uint8_t s) {
     return 1;
 }
 
+// Sets the alarm time to the supplied time in seconds
 uint8_t set_alarm_time(uint32_t new_time) {
     if (!(new_time >= 0L && new_time <= MAX_TIME)) { // new_time (in seconds) 
                                                      // isn't between 00:00:00 
@@ -411,6 +463,7 @@ uint8_t set_alarm_time(uint32_t new_time) {
     return 1;
 }
 
+// Sets the alarm time using the supplied hour,min,second arguments
 uint8_t set_split_alarm_time(uint8_t h, uint8_t m, uint8_t s) {
     if (!(h >= MIN_HOUR && h <= MAX_HOUR && m >= MIN_MINUTE && m <= MAX_MINUTE 
             && s >= MIN_SECOND && s < MAX_SECOND)) {
@@ -420,6 +473,7 @@ uint8_t set_split_alarm_time(uint8_t h, uint8_t m, uint8_t s) {
     return 1;
 }
 
+// Updates the opacity with the supplied opacity value
 uint8_t set_opacity(uint8_t new_opacity) {
     if (!(new_opacity >= MIN_OPACITY && new_opacity <= MAX_OPACITY)) {
         return 0;
@@ -428,6 +482,7 @@ uint8_t set_opacity(uint8_t new_opacity) {
     return 1;    
 }
 
+// Sets the weather to the supplied weather types
 uint8_t set_weather(wtype_t weather_one, wtype_t weather_two) {
     if (!(weather_one >= SUNNY && weather_one <= WINDY 
             && weather_two >= SUNNY && weather_two <= WINDY)) {
@@ -439,23 +494,28 @@ uint8_t set_weather(wtype_t weather_one, wtype_t weather_two) {
     return 1;
 }
 
+// Returns the first weather type
 wtype_t get_weather_one(void) {
     return (weather_is_set()) ? current_weather[0] : SUNNY;
 }
 
+// Returns the second weather type
 wtype_t get_weather_two(void) {
     return (weather_is_set()) ? current_weather[1] : SUNNY;
 }
 
+// Enables the grid and ring LEDs
 void show_display(void) {
     enable_leds(led_ring, RING_LEDS, RING_PIN);
     enable_leds(led_grid, GRID_LEDS, GRID_PIN);
 }
 
+// Toggles the drawing of the hour marker
 void toggle_hour_marker(void) {
     hour_marker_flag ^= 1;
 }
 
+// Applies the opacity with the rgb array, to the led array
 void apply_opacity(void) {
     // Adjust the ring 
     for (uint8_t i = 0; i < RING_LEDS; i++) {
@@ -474,6 +534,7 @@ void apply_opacity(void) {
     }
 }
 
+// Moves to the next animation frame
 void update_animation_frame(void) {
     if (ir_animation_flag || alarm_animation_flag) {
 		incr_frame_count();
@@ -493,10 +554,12 @@ void update_animation_frame(void) {
     
 }
 
+// Updates the opacity with the LDR value
 void update_opacity(void) {
     set_opacity(get_ldr_opacity());
 }
 
+// Updates the display's RGB array
 void update_display(void) {
     // Update entire ring
     if (draw_ring_flag) {
@@ -550,6 +613,7 @@ void update_display(void) {
     }
 }
 
+// Immediately clears the display
 void clear_display(void) {
     init_leds();
     show_display();

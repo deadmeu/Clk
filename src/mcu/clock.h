@@ -12,6 +12,7 @@
 
 #define RING_LEDS           12
 #define GRID_LEDS           16
+#define CONV_TIME(h, m, s)      (((uint32_t)h*(uint32_t)3600) + ((uint32_t)m*(uint32_t)60) + (uint32_t)s)
 
 typedef enum { ANTE, POST } merid_t;
 

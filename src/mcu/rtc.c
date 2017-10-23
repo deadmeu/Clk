@@ -14,9 +14,11 @@
 #include <avr/interrupt.h>
 #include <string.h>
 #include <stdio.h>
+#include <stdint.h>
 #include <util/delay.h>
 
 #include "rtc.h"
+#include "clock.h"
 #include "i2c_lib/i2c_master.h"
 
 #define MCP7940N_WRITE  0b11011110
@@ -39,6 +41,7 @@ static uint8_t read_minutes(void);
 static uint8_t read_seconds(void);
 static uint8_t read_data(uint8_t addr);
 
+// Initialises the RTC
 void init_rtc(void) {
     // Disable interrupts to ensure safe copy. Interrupts are only
     // reenabled if they were enabled from the start.
@@ -86,6 +89,7 @@ void init_rtc(void) {
     if (interrupts_enabled) sei();
 }
 
+// Returns 1 if the rtc has started
 uint8_t rtc_started(void) {
     // Disable interrupts to ensure safe copy. Interrupts are only
     // reenabled if they were enabled from the start.
@@ -109,6 +113,7 @@ uint8_t rtc_started(void) {
     return retval & (1 << ST_BIT);
 }
 
+// Returns 1 if the rtc is running
 uint8_t rtc_running(void) {
     // Disable interrupts to ensure safe copy. Interrupts are only
     // reenabled if they were enabled from the start.
@@ -132,6 +137,7 @@ uint8_t rtc_running(void) {
     return retval & (1 << OSCRUN_BIT);
 }
 
+// Sets the rtc time using the hour, minute, second input arguments
 uint8_t rtc_set_split_time(uint8_t h, uint8_t m, uint8_t s) {
     set_hours(h);
     set_minutes(m);
@@ -144,18 +150,22 @@ uint8_t rtc_set_split_time(uint8_t h, uint8_t m, uint8_t s) {
     return 1;
 }
 
+// Sets the rtc hour value using the input hour argument
 static void set_hours(uint8_t hours) {
     set_data(RTCHOUR_ADDR, hours);
 }
 
+// Sets the rtc minute value using the input minute argument
 static void set_minutes(uint8_t minutes) {
     set_data(RTCMIN_ADDR, minutes);
 }
 
+// Sets the rtc seconds value using the input seconds argument
 static void set_seconds(uint8_t seconds) {
     set_data(RTCSEC_ADDR, seconds);
 }
 
+// Updates the clock data with the values stored in the internal data struct
 static void set_data(uint8_t addr, uint8_t value) {
     // Disable interrupts to ensure safe copy. Interrupts are only
     // reenabled if they were enabled from the start.
@@ -182,22 +192,28 @@ static void set_data(uint8_t addr, uint8_t value) {
     if (interrupts_enabled) sei();
 }
 
+// Returns the rtc time (in seconds)
 uint32_t rtc_get_time(void) {
-    return read_hours()*3600 + read_minutes()*60 + read_seconds();
+    //return (uint32_t)read_hours()*3600 + read_minutes()*60 + read_seconds();
+	return CONV_TIME(read_hours(), read_minutes(), read_seconds());
 }
 
+// Returns the rtc hour value
 static uint8_t read_hours(void) {
     return read_data(RTCHOUR_ADDR) & ~(1 << TIMEFORMAT_BIT);
 }
 
+// Returns the rtc minute value
 static uint8_t read_minutes(void) {
     return read_data(RTCMIN_ADDR);
 }
 
+// Returns the rtc second value
 static uint8_t read_seconds(void) {
     return read_data(RTCSEC_ADDR);
 }
 
+// Reads values from a specified address of the rtc buffers
 static uint8_t read_data(uint8_t addr) {
     // Disable interrupts to ensure safe copy. Interrupts are only
     // reenabled if they were enabled from the start.

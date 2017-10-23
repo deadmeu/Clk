@@ -67,6 +67,7 @@ void init_timer1(void) {
     sei();
 }
 
+// Returns the clock ticks counter
 uint32_t get_clock_ticks(void) {
     uint32_t result;
 

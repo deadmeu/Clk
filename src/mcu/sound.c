@@ -58,6 +58,7 @@ uint32_t start_delay_time;
 uint16_t delay_duration;
 uint8_t note_index;
 
+// Initialises sound variables
 void setup_sound(void) {
     note_index = 0;
     delay_duration = 0;
@@ -83,6 +84,7 @@ void play_note(uint16_t note) {
     OCR1A = (2000000 / note * 2) - 1;
 }
 
+// Updates the current sound state
 void update_sound(void) {
     if (alarm_is_playing()) {
         sound_on();

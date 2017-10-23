@@ -298,10 +298,9 @@ void reset_clock(void) {
     clear_receive_buffer();
     
     // Handle EEPROM writing
-    //if (eeprom_is_set()) {
-        eeprom_update_data();
-        eeprom_write_data();
-    //}
+    eeprom_update_data();
+    eeprom_write_data();
+
     // Update the RTC time
     rtc_set_split_time(get_clock_hours(), get_clock_minutes(), get_clock_seconds());
 

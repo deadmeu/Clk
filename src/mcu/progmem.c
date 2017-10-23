@@ -25,6 +25,7 @@ pmem_t data;
  * Clock data & eeprom write buffer updating functions
  */
 
+// Updates the internal data struct with the 
 void eeprom_update_data(void) {
     data.eeprom_enabled = eeprom_is_set();
     data.weather_one = get_weather_one();
@@ -37,15 +38,8 @@ void eeprom_update_data(void) {
     data.time_clock_secs = get_clock_seconds();
 }
 
+// Updates the clock data with the internal data struct
 void eeprom_set_data(void) {
-    // // Enable/disable eeprom
-    // if (data.eeprom_enabled == EMPTY_VALUE) {
-    //     disable_eeprom();
-    //     //return;
-    // } else {
-    //     enable_eeprom();
-    // }
-
     // Set the weather data
     if (data.weather_one == EMPTY_VALUE || data.weather_two == EMPTY_VALUE) {
         disable_weather();
@@ -81,6 +75,7 @@ void eeprom_set_data(void) {
  * EEPROM manipulation functions
  *******/
 
+// Clears all eeprom addresses with empty values
 void eeprom_clear(void) {
     // Disable interrupts to ensure safe copy. Interrupts are only
     // reenabled if they were enabled from the start.
@@ -98,6 +93,7 @@ void eeprom_clear(void) {
     if (interrupts_enabled) sei();
 }
 
+// Writes the contents of the internal data struct to eeprom
 void eeprom_write_data(void) {
     // Disable interrupts to ensure safe copy. Interrupts are only
     // reenabled if they were enabled from the start.
@@ -124,6 +120,7 @@ void eeprom_write_data(void) {
     if (interrupts_enabled) sei();
 }
 
+// Reads from eeprom and updates the values of the internal data struct
 uint8_t eeprom_read_data(void) {
     pmem_t temp;                // read buffer struct
     uint8_t ret_val = 1;        // return value - 1 is no error, 0 is error
@@ -163,18 +160,21 @@ uint8_t eeprom_read_data(void) {
     temp.time_alarm_hour = eeprom_read_byte((const uint8_t*) ALARM_HOUR_ADDR);
     if (temp.time_alarm_hour > MAX_HOUR && temp.time_alarm_hour != EMPTY_VALUE) {
         ret_val = 0;
+		temp.time_alarm_hour = EMPTY_VALUE;
     }
 
     // Minutes
     temp.time_alarm_mins = eeprom_read_byte((const uint8_t*) ALARM_MINS_ADDR);
     if (temp.time_alarm_mins > MAX_MINUTE && temp.time_alarm_mins != EMPTY_VALUE) {
         ret_val = 0;
+		temp.time_alarm_mins = EMPTY_VALUE;
     }
 
     // Seconds
     temp.time_alarm_secs = eeprom_read_byte((const uint8_t*) ALARM_SECS_ADDR);
     if (temp.time_alarm_secs > MAX_SECOND && temp.time_alarm_secs != EMPTY_VALUE) {
         ret_val = 0;
+		temp.time_alarm_secs = EMPTY_VALUE;
     }
 
     // Clock time data
@@ -182,18 +182,21 @@ uint8_t eeprom_read_data(void) {
     temp.time_clock_hour = eeprom_read_byte((const uint8_t*) CLOCK_HOUR_ADDR);
     if (temp.time_clock_hour > MAX_HOUR && temp.time_clock_hour != EMPTY_VALUE) {
         ret_val = 0;
+		temp.time_clock_hour = EMPTY_VALUE;
     }
 
     // Minutes
     temp.time_clock_mins = eeprom_read_byte((const uint8_t*) CLOCK_MINS_ADDR);
     if (temp.time_clock_mins > MAX_MINUTE && temp.time_clock_mins != EMPTY_VALUE) {
         ret_val = 0;
+		temp.time_clock_mins = EMPTY_VALUE;
     }
 
     // Seconds
     temp.time_clock_secs = eeprom_read_byte((const uint8_t*) CLOCK_SECS_ADDR);
     if (temp.time_clock_secs > MAX_SECOND && temp.time_clock_secs != EMPTY_VALUE) {
         ret_val = 0;
+		temp.time_clock_secs = EMPTY_VALUE;
     }
 
     // Copy the contents of the buffer struct to the data struct

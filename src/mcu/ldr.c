@@ -19,6 +19,7 @@
 
 static uint16_t adc_read(uint8_t pin);
 
+// Initialise the LDR
 void init_ldr(void) {
     // Set AVCC as reference
     ADMUX = (1 << REFS0);
@@ -27,6 +28,7 @@ void init_ldr(void) {
     ADCSRA = _BV(ADEN);
 }
 
+// Returns the ldr opacity value
 uint8_t get_ldr_opacity(void) {
     uint16_t result;
     uint16_t adc_value = adc_read(ADC_PIN);
@@ -52,6 +54,7 @@ uint8_t get_ldr_opacity(void) {
     return (uint8_t) result;
 }
 
+// Reads a value from ADC
 static uint16_t adc_read(uint8_t pin) {
     // Disable interrupts to ensure safe copy. Interrupts are only
     // reenabled if they were enabled from the start.
